@@ -1,0 +1,97 @@
+services:
+  db:
+    restart: "no"
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    restart: "no"
+    ports:
+      - "5050:5050"
+
+  #TODO: Keep/Remove Celery
+  celeryworker:
+    image: "${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}"
+    restart: "no"
+    volumes:
+      - ./backend/app/app:/app/app
+
+  queue:
+    image: "redis/redis-stack:latest"
+    restart: "no"
+    command: ["/entrypoint.sh"]
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    environment:
+      - REDIS_ARGS=--save 60 1
+
+  flower:
+    ports:
+      - "5555:5555"
+    command: celery flower
+    restart: "no"
+  #End
+
+  mailcatcher:
+    image: schickling/mailcatcher
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+  prestart:
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
+
+  backend:
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
+    restart: "no"
+    ports:
+      - "8888:8888"
+      - "8000:8000"
+    build:
+      args:
+        - INSTALL_JUPYTER=${INSTALL_JUPYTER-false}
+    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+    command:
+      - fastapi
+      - run
+      - --reload
+      - "app/main.py"
+    develop:
+      watch:
+        - path: ./backend/app
+          action: sync
+          target: /app/app
+          ignore:
+            - ./backend/.venv
+            - .venv
+        - path: ./backend/app/pyproject.toml
+          action: rebuild
+    volumes:
+      - ./backend/htmlcov:/app/htmlcov
+      - ./backend/alembic/versions:/app/alembic/versions
+    environment:
+      - JUPYTER=jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
+      - SMTP_HOST=mailcatcher
+      - SMTP_PORT=1025
+      - SMTP_TLS=false
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+
+  frontend:
+    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}"
+    build:
+      dockerfile: Dockerfile.dev
+    restart: "no"
+    ports:
+      - "3000:3000"
+      - "24678:24678"
+      - "4000:4000"
+    # https://docs.docker.com/reference/compose-file/merge/
+    environment: !reset []
+    volumes:
+      - ./frontend:/frontend
+
+networks:
+  scoobydoo: #TODO: Edit network
+    external: false

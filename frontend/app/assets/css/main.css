@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@nuxt/ui-pro";
+/* needed for using TailwindCSS in Nuxt Content MD files */
+@source "../../../content";

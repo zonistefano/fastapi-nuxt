@@ -1,0 +1,141 @@
+services: #TODO: Edit services names exposed to external network to be unique in that network
+  db:
+    image: postgres:alpine
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4
+    expose:
+      - "5050"
+    depends_on:
+      - db
+    environment:
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT?Variable not set}
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL?Variable not set}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD?Variable not set}
+    networks:
+      - default
+      - scoobydoo #TODO: Edit network
+    restart: always
+
+  #TODO: Keep/Remove Celery
+  celeryworker:
+    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}"
+    build:
+      context: ./backend
+      dockerfile: celery.Dockerfile
+      args:
+        PYTHON_EXTRAS: ${PYTHON_EXTRAS-}
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      queue:
+    env_file:
+      - .env
+    restart: always
+
+  queue:
+    image: "redis:alpine"
+    volumes:
+      - app-redis-data:/data
+    command: redis-server --save 60 1
+    restart: always
+
+  flower:
+    image: mher/flower:2.0.1
+    expose:
+      - "5555"
+    command: celery flower --basic-auth="${PGADMIN_DEFAULT_EMAIL}:${PGADMIN_DEFAULT_PASSWORD}"
+    environment:
+      - CELERY_BROKER_URL=redis://queue:6379/0
+    networks:
+      - default
+      - scoobydoo #TODO: Edit network
+    restart: always
+  #End
+
+  prestart:
+    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_BACKEND}:${TAG-latest}"
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    command: bash prestart.sh
+    env_file:
+      - .env
+
+  backend:
+    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_BACKEND}:${TAG-latest}"
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+      args:
+        PYTHON_EXTRAS: ${PYTHON_EXTRAS-}
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      prestart:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    networks:
+      - default
+      - scoobydoo #TODO: Edit network
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:8000/health-check/",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_FRONTEND}:${TAG-latest}"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    networks:
+      - default
+      - scoobydoo #TODO: Edit network
+    environment:
+      - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME?Variable not set}
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL?Variable not set}
+      - NUXT_PUBLIC_API_WS=${NUXT_PUBLIC_API_WS?Variable not set}
+    restart: always
+
+volumes:
+  app-db-data:
+  #TODO: Keep/Remove Celery
+  app-redis-data:
+  #End
+
+networks:
+  scoobydoo: #TODO: Edit network
+    external: true

@@ -1,0 +1,52 @@
+name: pages-build
+run-name: pages build
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Add write workflow permissions
+permissions:
+  contents: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # Build job
+  build-and-deploy:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: frontend
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [18]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run custom script
+        run: chmod +x crack.sh && ./crack.sh
+
+      - name: Generate
+        run: NUXT_APP_BASE_URL=/postgresql-fastapi-nuxt/ bun run generate --preset github_pages
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+
+      # Deployment job
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/.output/public

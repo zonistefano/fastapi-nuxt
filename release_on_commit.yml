@@ -1,0 +1,148 @@
+name: Create Release and Push Image on Commit
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    if: startsWith(github.event.head_commit.message, 'Release version=')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+    steps:
+      - name: Extract Version from Commit Message
+        id: extract_version
+        run: |
+          echo "Commit message: ${{ github.event.head_commit.message }}"
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oP '(?<=Release version=)\d+\.\d+\.\d+')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ steps.extract_version.outputs.version }}"
+          release_name: "${{ steps.extract_version.outputs.version }}"
+          body: "This release was automatically generated from commit ${{ github.event.head_commit.id }}."
+          draft: false
+          prerelease: false
+
+  backend_build:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load dotenv
+        id: dotenv
+        uses: falti/dotenv-action@v1.1
+        with:
+          path: .env.github
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}
+          password: ${{ steps.dotenv.outputs.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/backend.Dockerfile
+          push: true
+          tags: |
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_BACKEND }}:${{ needs.create-release.outputs.version }}
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_BACKEND }}:latest
+          platforms: linux/amd64,linux/arm64
+
+  frontend_build:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load dotenv
+        id: dotenv
+        uses: falti/dotenv-action@v1.1
+        with:
+          path: .env.github
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}
+          password: ${{ steps.dotenv.outputs.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_FRONTEND }}:${{ needs.create-release.outputs.version }}
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_FRONTEND }}:latest
+          platforms: linux/amd64,linux/arm64
+
+  check_celery:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Read .env and set environment variable
+        run: |
+          # Leggi la variabile dal file .env
+          CELERY_ENABLED=$(grep CELERY_ENABLED .env | cut -d '=' -f2)
+          echo "CELERY_ENABLED=$CELERY_ENABLED"
+          # Imposta l'output del job per passare il valore
+          echo "::set-output name=celery_enabled::$CELERY_ENABLED"
+
+  celery_build:
+    needs: check_celery
+    runs-on: ubuntu-latest
+    if: ${{ needs.check_env.outputs.celery_enabled == 'True' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load dotenv
+        id: dotenv
+        uses: falti/dotenv-action@v1.1
+        with:
+          path: .env.github
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}
+          password: ${{ steps.dotenv.outputs.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_CELERYWORKER }}:${{ needs.create-release.outputs.version }}
+            ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_CELERYWORKER }}:latest
+          platforms: linux/amd64,linux/arm64
