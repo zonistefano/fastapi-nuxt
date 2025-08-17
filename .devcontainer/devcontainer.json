@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-  "name": "FastAPI",
+  "name": "FastAPI & NuxtJS",
 
   // Base image. More info: https://github.com/devcontainers/images
   "image": "mcr.microsoft.com/devcontainers/base:debian",
@@ -12,6 +12,7 @@
       "version": "3.13.2",
       "toolsToInstall": "uv"
     },
+    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
@@ -19,7 +20,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  //"postCreateCommand": "",
+  "postCreateCommand": "curl -fsSL https://bun.sh/install | bash",
 
   // Configure tool-specific properties.
   "customizations": {
@@ -28,7 +29,7 @@
         "charliermarsh.ruff",
         "ms-python.python",
         "ms-python.debugpy",
-        
+
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint",
         "Vue.volar",

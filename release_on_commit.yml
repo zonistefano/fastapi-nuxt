@@ -97,25 +97,9 @@ jobs:
             ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_FRONTEND }}:latest
           platforms: linux/amd64,linux/arm64
 
-  check_celery:
+  celery_build:
     needs: create-release
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Read .env and set environment variable
-        run: |
-          # Leggi la variabile dal file .env
-          CELERY_ENABLED=$(grep CELERY_ENABLED .env | cut -d '=' -f2)
-          echo "CELERY_ENABLED=$CELERY_ENABLED"
-          # Imposta l'output del job per passare il valore
-          echo "::set-output name=celery_enabled::$CELERY_ENABLED"
-
-  celery_build:
-    needs: check_celery
-    runs-on: ubuntu-latest
-    if: ${{ needs.check_env.outputs.celery_enabled == 'True' }}
 
     steps:
       - name: Checkout repository
@@ -139,8 +123,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: ./backend
+          file: ./backend/celery.Dockerfile
           push: true
           tags: |
             ${{ steps.dotenv.outputs.DOCKERHUB_USERNAME }}/${{ steps.dotenv.outputs.DOCKER_IMAGE_CELERYWORKER }}:${{ needs.create-release.outputs.version }}

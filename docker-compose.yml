@@ -1,4 +1,4 @@
-services: #TODO: Edit services names exposed to external network to be unique in that network
+services:
   db:
     image: postgres:alpine
     volumes:
@@ -23,12 +23,10 @@ services: #TODO: Edit services names exposed to external network to be unique in
     depends_on:
       - db
     environment:
-      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT?Variable not set}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT-5050}
+      - PGADMIN_DISABLE_POSTFIX=1
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL?Variable not set}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD?Variable not set}
-    networks:
-      - default
-      - scoobydoo #TODO: Edit network
     restart: always
 
   #TODO: Keep/Remove Celery
@@ -37,13 +35,13 @@ services: #TODO: Edit services names exposed to external network to be unique in
     build:
       context: ./backend
       dockerfile: celery.Dockerfile
-      args:
-        PYTHON_EXTRAS: ${PYTHON_EXTRAS-}
     depends_on:
       db:
         condition: service_healthy
         restart: true
       queue:
+        condition: service_healthy
+        restart: true
     env_file:
       - .env
     restart: always
@@ -53,6 +51,12 @@ services: #TODO: Edit services names exposed to external network to be unique in
     volumes:
       - app-redis-data:/data
     command: redis-server --save 60 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "PING"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: always
 
   flower:
@@ -62,9 +66,6 @@ services: #TODO: Edit services names exposed to external network to be unique in
     command: celery flower --basic-auth="${PGADMIN_DEFAULT_EMAIL}:${PGADMIN_DEFAULT_PASSWORD}"
     environment:
       - CELERY_BROKER_URL=redis://queue:6379/0
-    networks:
-      - default
-      - scoobydoo #TODO: Edit network
     restart: always
   #End
 
@@ -86,8 +87,6 @@ services: #TODO: Edit services names exposed to external network to be unique in
     build:
       context: ./backend
       dockerfile: backend.Dockerfile
-      args:
-        PYTHON_EXTRAS: ${PYTHON_EXTRAS-}
     expose:
       - "8000"
     depends_on:
@@ -98,18 +97,9 @@ services: #TODO: Edit services names exposed to external network to be unique in
         condition: service_completed_successfully
     env_file:
       - .env
-    networks:
-      - default
-      - scoobydoo #TODO: Edit network
     restart: always
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:8000/health-check/",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health-check/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,9 +111,6 @@ services: #TODO: Edit services names exposed to external network to be unique in
       dockerfile: Dockerfile
     expose:
       - "3000"
-    networks:
-      - default
-      - scoobydoo #TODO: Edit network
     environment:
       - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME?Variable not set}
       - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL?Variable not set}
@@ -135,7 +122,3 @@ volumes:
   #TODO: Keep/Remove Celery
   app-redis-data:
   #End
-
-networks:
-  scoobydoo: #TODO: Edit network
-    external: true

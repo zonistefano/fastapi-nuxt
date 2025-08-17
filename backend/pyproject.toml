@@ -2,37 +2,31 @@
 name = "app"
 version = "0.1.0"
 description = ''
+license = { text = "MIT" }
 requires-python = ">=3.13"
 dependencies = [
-  "fastapi[standard]==0.115.*",
-  "passlib[bcrypt]>=1.7.4",
-  "tenacity>=9.0.0",
-  "emails>=0.6.0",
-  "alembic>=1.15.1",
-  "sqlmodel==0.0.24",
-  "python-multipart<1.0.0,>=0.0.7",
-  "email-validator<3.0.0.0,>=2.1.1",
-  "pyjwt>=2.10.0",
-  "psycopg2-binary>=2.9.0",
-  "argon2_cffi",
-  "pydantic_settings",
-  "cryptography>=44.0.2",
+  "fastapi[standard]==0.116.*",
+  "tenacity==9.*",
+  "emails==0.6.*",
+  "alembic==1.15.*",
+  "sqlmodel==0.0.*",
+  "python-multipart==0.0.*",
+  "email-validator==2.*",
+  "psycopg2-binary==2.9.*",
+  "pydantic_settings==2.*",
+  "fastapi-myauth==1.*",
+  "celery>=5.5.3",
+  "redis",
+  "celery-redbeat",
 ]
 
 [dependency-groups]
 dev = [
-  "ruff>=0.11.5",
-  "pyyaml",
+  "ruff>=0.12.8",
   "pytest<8.0.0,>=7.4.3",
   "coverage<8.0.0,>=7.4.3",
   "freezegun>=1.5.1",
-]
-
-[project.optional-dependencies]
-celery = [
-  "celery>=5.4.0",
-  "redis",
-  "celery-redbeat",
+  "pre-commit<4.0.0,>=3.6.2",
 ]
 
 [tool.ruff]
@@ -63,3 +57,8 @@ keep-runtime-typing = true
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.semantic_release]
+commit_parser = "conventional"
+tag_format = "v{version}"
+version_toml = ["pyproject.toml:project.version"]

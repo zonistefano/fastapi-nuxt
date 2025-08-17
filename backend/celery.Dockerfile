@@ -7,14 +7,13 @@ ENV C_FORCE_ROOT=1
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV PATH="/app/.venv/bin:$PATH"
-ARG PYTHON_EXTRAS
 
 WORKDIR /app/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project ${PYTHON_EXTRAS}
+    uv sync --frozen --no-install-project
 
 ENV PYTHONPATH=/app
 
@@ -25,6 +24,6 @@ COPY ./pyproject.toml ./uv.lock ./alembic.ini /app/
 COPY /app /app/app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync ${PYTHON_EXTRAS}
+    uv sync
 
 CMD ["bash", "worker-start.sh"]

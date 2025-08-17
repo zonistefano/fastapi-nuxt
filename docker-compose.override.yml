@@ -11,7 +11,6 @@ services:
 
   #TODO: Keep/Remove Celery
   celeryworker:
-    image: "${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}"
     restart: "no"
     volumes:
       - ./backend/app/app:/app/app
@@ -39,11 +38,7 @@ services:
       - "1080:1080"
       - "1025:1025"
 
-  prestart:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
-
   backend:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
     restart: "no"
     ports:
       - "8888:8888"
@@ -79,7 +74,6 @@ services:
       - SMTP_PASSWORD=
 
   frontend:
-    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}"
     build:
       dockerfile: Dockerfile.dev
     restart: "no"
@@ -91,7 +85,3 @@ services:
     environment: !reset []
     volumes:
       - ./frontend:/frontend
-
-networks:
-  scoobydoo: #TODO: Edit network
-    external: false

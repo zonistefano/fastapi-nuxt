@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from fastapi_myauth.email import send_web_contact_email
 
 from app import models
-from app.utilities import send_web_contact_email
 
 router = APIRouter()
 

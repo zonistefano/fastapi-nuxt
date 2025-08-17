@@ -1,3 +1,34 @@
-- Rate limiting inside this package and ready to use for other API (ex: slowapi)
-- Ability to enable mandatory email validation for password registrations
-- Rewrite documentation correctly
+frontend deps
+
+documentazione
+
+sistemare documentazione e aggiungere:
+
+init script fix prject name to be prefixed
+
+- nel frontend queste altre component library da usare senza installare (o installandole) https://pagedone.io https://www.penguinui.com https://flowbite.com https://daisyui.com
+
+frontend token expired probabilmente non gestito correttamente. quando senza token ma con lo store the profilo pieno mi lascia loggato ma poi da errori perchè per le chiamate in cui serve autenticazione non va.
+
+https://openfeature.dev/docs/tutorials/getting-started/python
+
+Frontend SEO, head and so on
+https://i18n.nuxtjs.org/docs/guide/seo
+useSEOMeta
+useHead
+
+semantic-release
+action-semantic-pull-request
+
+plausible vs umami
+
+elk
+
+og-image
+
+https://github.com/muonsoft/openapi-mock
+
+fastapi dependency overrides useful for changing deps functioning in a specific personalized project
+
+
+https://loadforge.com/guides/implementing-rate-limits-in-fastapi-a-step-by-step-guide
