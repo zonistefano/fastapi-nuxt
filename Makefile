@@ -99,7 +99,7 @@ clean_frontend: ## Clean frontend environment (remove node_modules, caches, etc.
 
 dev: ## Start all services for development (backend, frontend, db, celery).
 	@echo "$(YELLOW)==> Starting all development Docker services...$(NC)"
-	$(DOCKER_COMPOSE_DEV) up --build -d
+	$(DOCKER_COMPOSE_DEV) up --build --watch
 	@echo "$(GREEN)Development Docker services are up and running.$(NC)"
 
 dev_backend: dev_db_up ## Start only backend and database for development.
@@ -119,7 +119,7 @@ dev_frontend_local: ## Run the Nuxt frontend locally in development mode (outsid
 dev_db_up: ## Start only the database service and run prestart script (migrations, data init) for development.
 	@echo "$(YELLOW)==> Starting database service and running prestart script...$(NC)"
 	$(DOCKER_COMPOSE_DEV) up -d $(DB_SERVICE_NAME)
-	$(DOCKER_COMPOSE_DEV) run --rm $(PRESTART_SERVICE_NAME)
+	$(DOCKER_COMPOSE_DEV) run --build --rm $(PRESTART_SERVICE_NAME)
 	@echo "$(GREEN)Database service is up and prestart script has completed.$(NC)"
 
 dev_down: ## Stop and remove all development Docker Compose services.
@@ -236,8 +236,8 @@ format: format_backend format_frontend ## Auto-format code for both backend and 
 
 format_backend:
 	@echo "$(YELLOW)==> Auto-formatting backend code locally (using ruff)...$(NC)"
-	uv run ruff format $(BACKEND_DIR)
-	uv run ruff check $(BACKEND_DIR) --fix
+	@cd ${BACKEND_DIR} && uv run ruff format $(BACKEND_DIR)
+	@cd ${BACKEND_DIR} && uv run ruff check $(BACKEND_DIR) --fix
 	@echo "$(GREEN)Backend code formatted locally.$(NC)"
 
 format_frontend:
@@ -246,10 +246,14 @@ format_frontend:
 	@cd $(FRONTEND_DIR) && $(FRONTEND_LINT_FIX_CMD)
 	@echo "$(GREEN)Frontend code formatted.$(NC)"
 
-backend_makemigrations: dev_db_up ## Create new Alembic migration inside the running backend container.
-	@echo "$(YELLOW)==> Creating new Alembic migration inside docker container. Describe it:$(NC)"
-	@command_to_run="$$(read -p 'Migration message: ' msg; echo "alembic revision --autogenerate -m \"$$msg\"")"
-	$(DOCKER_COMPOSE_DEV) exec $(BACKEND_SERVICE_NAME) $$command_to_run
+backend_makemigrations: dev_db_up ## Create new Alembic migration inside a temporary backend container.
+	@echo "$(YELLOW)==> Creating new Alembic migration inside a temporary docker container. Describe it:$(NC)"
+	@read -p 'Migration message: ' user_msg; \
+		if [ -z "$$user_msg" ]; then \
+			echo "$(RED)Error: Migration message cannot be empty. Aborting.$(NC)"; \
+			exit 1; \
+		fi; \
+		$(DOCKER_COMPOSE_DEV) run --rm -w /app $(BACKEND_SERVICE_NAME) sh -c "alembic revision --autogen -m \"$$user_msg\""
 	@echo "$(GREEN)Alembic migration created in container. Please review the generated script.$(NC)"
 
 .ONESHELL: # Allows multi-line commands in a single shell for targets.

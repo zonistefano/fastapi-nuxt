@@ -1,7 +1,9 @@
 from sqlmodel import Session, create_engine
 
-from app import crud, models
 from app.core.config import settings
+
+from ..crud import crud_user
+from ..models import auth_components
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -20,12 +22,12 @@ def init_db(session: Session) -> None:
     # This works because the models are already imported and registered from app.models
     # SQLModel.metadata.create_all(engine)
 
-    user = crud.user.get_by_email(session, email=settings.FIRST_SUPERUSER)
+    user = crud_user.get_by_email(session, email=settings.FIRST_SUPERUSER)
     if not user:
         # Create user auth
-        user_in = models.UserCreate(
+        user_in = auth_components.UserCreate(
             email=settings.FIRST_SUPERUSER,
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = crud.user.create(session, obj_in=user_in)
+        user = crud_user.create(session, obj_in=user_in)

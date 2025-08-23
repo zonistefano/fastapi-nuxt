@@ -3,9 +3,9 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from fastapi_myauth.models import EmailContent
 
 from app.core.config import settings
-from app.models import EmailContent
 
 
 @pytest.fixture

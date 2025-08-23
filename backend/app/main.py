@@ -5,6 +5,8 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.logging_conf import configure_logging
 
+from .core.auth import auth_router
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/openapi.json",
@@ -25,6 +27,7 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(auth_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/health-check/")
