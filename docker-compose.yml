@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:alpine
+    image: pgvector/pgvector:pg17
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     environment:
@@ -116,6 +116,22 @@ services:
       - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL?Variable not set}
       - NUXT_PUBLIC_API_WS=${NUXT_PUBLIC_API_WS?Variable not set}
     restart: always
+
+  indexer:
+    command: uv run /app/app/search_indexer/core.py
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./documents:/app/documents
 
 volumes:
   app-db-data:

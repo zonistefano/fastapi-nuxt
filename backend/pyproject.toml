@@ -18,6 +18,9 @@ dependencies = [
   "celery>=5.5.3",
   "redis",
   "celery-redbeat",
+  "cocoindex[embeddings]>=0.1.79",
+  "pgvector>=0.4.1",
+  "numpy",
 ]
 
 [dependency-groups]

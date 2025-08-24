@@ -85,3 +85,6 @@ services:
     environment: !reset []
     volumes:
       - ./frontend:/frontend
+
+  indexer:
+    restart: "no"
