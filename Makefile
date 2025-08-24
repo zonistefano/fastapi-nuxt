@@ -97,7 +97,7 @@ clean_frontend: ## Clean frontend environment (remove node_modules, caches, etc.
 # 2. Local Development
 # ==============================================================================
 
-dev: ## Start all services for development (backend, frontend, db, celery).
+dev: setup ## Start all services for development (backend, frontend, db, celery).
 	@echo "$(YELLOW)==> Starting all development Docker services...$(NC)"
 	$(DOCKER_COMPOSE_DEV) up --build --watch
 	@echo "$(GREEN)Development Docker services are up and running.$(NC)"

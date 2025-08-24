@@ -5,6 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app import models  # noqa: F401
+from app.core.config import settings
 from sqlmodel import SQLModel
 
 # this is the Alembic Config object, which provides
@@ -30,11 +31,7 @@ target_metadata = SQLModel.metadata
 
 
 def get_url():
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    server = os.getenv("POSTGRES_SERVER", "db")
-    db = os.getenv("POSTGRES_DB", "app")
-    return f"postgresql://{user}:{password}@{server}/{db}"
+    return str(settings.SQLALCHEMY_DATABASE_URI)
 
 
 def run_migrations_offline():

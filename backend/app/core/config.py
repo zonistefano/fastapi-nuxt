@@ -59,7 +59,7 @@ class Settings(BaseSettings):
             return v
         return str(
             PostgresDsn.build(  # pyright: ignore
-                scheme="postgresql",
+                scheme="postgresql+psycopg",
                 username=values.data.get("POSTGRES_USER"),
                 password=values.data.get("POSTGRES_PASSWORD"),
                 host=values.data.get("POSTGRES_SERVER"),
