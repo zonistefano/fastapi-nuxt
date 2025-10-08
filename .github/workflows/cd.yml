@@ -83,7 +83,7 @@ jobs:
           git_committer_email: "actions@users.noreply.github.com"
 
       - name: Setup | Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
