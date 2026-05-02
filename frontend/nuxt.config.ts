@@ -1,10 +1,5 @@
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
+// https://nuxt.com/docs/4.x/api/nuxt-config
 export default defineNuxtConfig({
-  // opting in Nuxt 4 features
-  future: {
-    compatibilityVersion: 4,
-  },
-
   css: ["~/assets/css/main.css"],
 
   nitro: {
@@ -18,7 +13,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
-    // https://nuxt.com/docs/api/composables/use-runtime-config#using-the-env-file
+    // https://nuxt.com/docs/4.x/api/composables/use-runtime-config#using-the-env-file
     // Private keys are only available on the server
     // apiSecret: 'my-secret-key',
     // Public keys that are exposed to the client
@@ -30,7 +25,7 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    "@nuxt/ui-pro",
+    "@nuxt/ui",
     "@nuxt/content",
     "@nuxtjs/i18n",
     "@pinia/nuxt",
@@ -38,7 +33,6 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/eslint",
     "nuxt-umami",
-    "@compodium/nuxt",
   ],
 
   piniaPluginPersistedstate: {
@@ -70,7 +64,6 @@ export default defineNuxtConfig({
       cookieKey: "i18n_redirected",
       redirectOn: "root",
     },
-    lazy: true,
     strategy: "prefix_and_default",
   },
 
@@ -79,5 +72,5 @@ export default defineNuxtConfig({
     host: "https://umami.zoni.ovh",
   },
 
-  compatibilityDate: "2025-04-05",
+  compatibilityDate: "2026-05-01",
 })

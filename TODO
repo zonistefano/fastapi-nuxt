@@ -32,3 +32,15 @@ fastapi dependency overrides useful for changing deps functioning in a specific 
 
 
 https://loadforge.com/guides/implementing-rate-limits-in-fastapi-a-step-by-step-guide
+
+
+
+ADD TO BACKEND AND FRONTEND WORKING AI CHAT WITH BACKEND AS PROXY FOR LLM copying chat template
+
+ADD TO FRONTEND WORKING TEXT EDITOR WITH COLLABORATION AND SAVING IN BACKEND POSTGRES copying editor template
+
+REWRITE DOCUMENTATION
+
+WRITE REPO INSTRUCTION FOR LLM
+
+ADD ROO CLINE SETTINGS FOR LLM GIVING ALSO NUXT UI MCP AND SO ON.

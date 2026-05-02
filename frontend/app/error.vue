@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app"
-import * as locales from "@nuxt/ui-pro/locale"
+import * as locales from "@nuxt/ui/locale"
 
 const props = defineProps<{
   error: NuxtError
