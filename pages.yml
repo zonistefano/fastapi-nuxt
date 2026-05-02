@@ -37,9 +37,6 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run custom script
-        run: chmod +x crack.sh && ./crack.sh
-
       - name: Generate
         run: NUXT_APP_BASE_URL=/postgresql-fastapi-nuxt/ bun run generate --preset github_pages
         env:

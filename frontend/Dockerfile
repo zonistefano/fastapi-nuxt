@@ -3,12 +3,10 @@ FROM node:${NODE_VERSION}${LINUX_VERSION:+-$LINUX_VERSION} AS build
 
 WORKDIR /frontend
 
-COPY --link package.json bun.lock crack.sh /frontend/
+COPY --link package.json bun.lock /frontend/
 
 RUN npm install -g bun
 RUN bun install --frozen-lockfile
-RUN chmod +x ./crack.sh
-RUN ./crack.sh
 
 COPY --link . /frontend
 

@@ -34,9 +34,6 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run custom script
-        run: chmod +x crack.sh && ./crack.sh
-
       - name: Generate
         run: bun run generate --preset=cloudflare_pages
         env:
