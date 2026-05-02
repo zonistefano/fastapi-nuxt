@@ -3,13 +3,12 @@
     "charliermarsh.ruff",
     "ms-python.python",
     "ms-python.debugpy",
-    
+
     "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
     "Vue.volar",
     "nuxt.mdc",
 
-    "GitHub.copilot",
     "GitHub.copilot-chat",
     "esbenp.prettier-vscode",
     "ms-azuretools.vscode-docker",

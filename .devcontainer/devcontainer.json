@@ -4,15 +4,12 @@
   "name": "FastAPI & NuxtJS",
 
   // Base image. More info: https://github.com/devcontainers/images
-  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.13.2",
-      "toolsToInstall": "uv"
-    },
     "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
@@ -35,7 +32,6 @@
         "Vue.volar",
         "nuxt.mdc",
 
-        "GitHub.copilot",
         "GitHub.copilot-chat",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
