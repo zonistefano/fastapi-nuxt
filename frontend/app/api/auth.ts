@@ -51,7 +51,7 @@ export const apiAuth = {
     })
   },
   async requestNewTOTP(token: string) {
-    return await useFetch<INewTOTP>(`${apiCore.url()}/users/new-totp`, {
+    return await useFetch<INewTOTP>(`${apiCore.url()}/login/new-totp`, {
       method: "POST",
       headers: apiCore.headers(token),
     })
@@ -85,18 +85,18 @@ export const apiAuth = {
   },
   // USER PROFILE MANAGEMENT
   async createProfile(data: IUserOpenProfileCreate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/`, {
+    return await useFetch<IUserProfile>(`${apiCore.url()}/login/signup`, {
       method: "POST",
       body: data,
     })
   },
   async getProfile(token: string) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/`, {
+    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, {
       headers: apiCore.headers(token),
     })
   },
   async updateProfile(token: string, data: IUserProfileUpdate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/`, {
+    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, {
       method: "PUT",
       body: data,
       headers: apiCore.headers(token),
@@ -139,7 +139,7 @@ export const apiAuth = {
   },
   // ADMIN USER MANAGEMENT
   async getAllUsers(token: string) {
-    return await useFetch<IUserProfile[]>(`${apiCore.url()}/users/all`, {
+    return await useFetch<IUserProfile[]>(`${apiCore.url()}/users/`, {
       headers: apiCore.headers(token),
     })
   },

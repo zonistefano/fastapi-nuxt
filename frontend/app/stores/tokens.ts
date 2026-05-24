@@ -33,7 +33,7 @@ export const useTokenStore = defineStore("tokens", {
             this.setMagicToken(response.value as unknown as IWebToken)
           else this.setTokens(response.value as unknown as ITokenResponse)
         } else throw "Error"
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login error",
           description:
@@ -62,7 +62,7 @@ export const useTokenStore = defineStore("tokens", {
             this.setTokens(response.value as unknown as ITokenResponse)
           } else throw "Error"
         }
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login error",
           description:
@@ -82,7 +82,7 @@ export const useTokenStore = defineStore("tokens", {
         if (response.value) {
           this.setTokens(response.value as unknown as ITokenResponse)
         } else throw "Error"
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Two-factor error",
           description:
@@ -110,7 +110,7 @@ export const useTokenStore = defineStore("tokens", {
               this.refresh,
             )
             if (response.value) this.setTokens(response.value)
-          } catch (error) {
+          } catch {
             this.deleteTokens()
           }
         } else {

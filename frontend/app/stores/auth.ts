@@ -28,7 +28,7 @@ export const useAuthStore = defineStore("authUser", {
       path: "/",
       secure: true,
       maxAge: 60 * 60 * 24 * 90,
-      expires: new Date(new Date().getTime() + 60 * 60 * 24 * 90),
+      expires: new Date(new Date().getTime() + 90 * 24 * 60 * 60 * 1000),
     }),
   },
   getters: {
@@ -49,7 +49,7 @@ export const useAuthStore = defineStore("authUser", {
         await this.tokenStore.getTokens(payload)
         if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
           await this.getUserProfile()
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login error",
           description:
@@ -65,7 +65,7 @@ export const useAuthStore = defineStore("authUser", {
         await this.tokenStore.validateMagicTokens(token)
         if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
           await this.getUserProfile()
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login error",
           description:
@@ -81,7 +81,7 @@ export const useAuthStore = defineStore("authUser", {
         await this.tokenStore.validateTOTPClaim(claim)
         if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
           await this.getUserProfile()
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login error",
           description:
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore("authUser", {
           username: this.email,
           password: payload.password,
         })
-      } catch (error) {
+      } catch {
         toast.add({
           title: "Login creation error",
           description:
@@ -119,7 +119,8 @@ export const useAuthStore = defineStore("authUser", {
               this.tokenStore.token,
             )
             if (response.value) this.setUserProfile(response.value)
-          } catch (error) {
+            else this.logOut()
+          } catch {
             this.logOut()
           }
         }
@@ -142,7 +143,7 @@ export const useAuthStore = defineStore("authUser", {
                 description: "Your settings have been updated.",
               })
             } else throw "Error"
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Profile update error",
             description:
@@ -169,7 +170,7 @@ export const useAuthStore = defineStore("authUser", {
               description: response.value.msg,
             })
           } else throw "Error"
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Error enabling two-factor authentication",
             description:
@@ -195,7 +196,7 @@ export const useAuthStore = defineStore("authUser", {
               description: response.value.msg,
             })
           } else throw "Error"
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Error disabling two-factor authentication",
             description:
@@ -230,7 +231,7 @@ export const useAuthStore = defineStore("authUser", {
               description: response.value.msg,
             })
           }
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Validation error",
             description: "Please check your email and try again.",
@@ -257,7 +258,7 @@ export const useAuthStore = defineStore("authUser", {
               })
             }
           }
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Validation error",
             description:
@@ -283,7 +284,7 @@ export const useAuthStore = defineStore("authUser", {
                 "If that login exists, we'll send you an email to reset your password.",
             })
           } else throw "Error"
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Login error",
             description:
@@ -319,7 +320,7 @@ export const useAuthStore = defineStore("authUser", {
               })
             else throw "Error"
           }
-        } catch (error) {
+        } catch {
           toast.add({
             title: "Login error",
             description:
