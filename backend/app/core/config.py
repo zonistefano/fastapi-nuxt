@@ -101,5 +101,8 @@ class Settings(BaseSettings):
     USERS_OPEN_REGISTRATION: bool = True
     EMAIL_TEST_USER: EmailStr = "test@example.com"
 
+    OPENAI_API_KEY: str | None = None
+    OPENAI_MODEL: str = "gpt-5.2"
+
 
 settings = Settings()  # pyright: ignore

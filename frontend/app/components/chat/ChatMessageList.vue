@@ -1,30 +1,14 @@
 <script setup lang="ts">
-// Placeholder for message data and logic
-import { ref } from "vue"
-const messages = ref([
-  { id: "1", role: "assistant", content: "Hello! How can I help you today?" },
-  {
-    id: "2",
-    role: "user",
-    content: "I need help converting React components to Vue.",
-  },
-  {
-    id: "3",
-    role: "assistant",
-    content: "Sure, I can help with that. Please provide the React code.",
-  },
-  {
-    id: "4",
-    role: "user",
-    content: "Here is the code: <MyComponent />",
-  },
-  {
-    id: "5",
-    role: "assistant",
-    content: "Great! Let's start with that.",
-  },
-])
-const isLoading = ref(false) // Placeholder
+import type { IChatMessage } from "~/types"
+
+defineProps<{
+  messages: IChatMessage[]
+  isLoading?: boolean
+}>()
+
+defineEmits<{
+  regenerate: [message: IChatMessage]
+}>()
 </script>
 
 <template>
@@ -37,8 +21,10 @@ const isLoading = ref(false) // Placeholder
         <ChatMessage
           v-for="message in messages"
           :key="message.id"
+          :message-id="message.id"
           :role="message.role"
           :content="message.content"
+          @regenerate="$emit('regenerate', message)"
         />
         <ChatThinkingMessage
           v-if="isLoading && messages[messages.length - 1]?.role === 'user'"

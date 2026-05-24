@@ -10,13 +10,6 @@
 
     <!-- Message Content Area -->
     <div class="flex w-full flex-col gap-2">
-      <!-- Placeholder for Attachments -->
-      <!-- <div v-if="attachments" class="flex flex-row justify-end gap-2"> ... </div> -->
-
-      <!-- Placeholder for Reasoning -->
-      <!-- <ChatMessageReasoning v-if="reasoning" :reasoning="reasoning" /> -->
-
-      <!-- Message Text (View Mode) -->
       <div
         v-if="!isEditing"
         :class="[
@@ -25,14 +18,11 @@
             : '',
         ]"
       >
-        <!-- Using UMarkdown or similar would go here -->
-        <p>
+        <p class="whitespace-pre-wrap">
           {{ content }}
         </p>
-        <!-- Placeholder for Markdown rendering -->
       </div>
 
-      <!-- Message Editor (Edit Mode - User only) -->
       <ChatMessageEdit
         v-if="isEditing && role === 'user'"
         v-model="editedContent"
@@ -41,12 +31,12 @@
         @send="saveAndRegenerate"
       />
 
-      <!-- Message Actions -->
       <div
-        v-if="role === 'user' && !isEditing"
+        v-if="!isEditing"
         class="flex items-center gap-1 pr-1 pt-1"
       >
         <UButton
+          v-if="role === 'user'"
           icon="i-heroicons-pencil-square"
           size="xs"
           color="neutral"
@@ -62,13 +52,16 @@
           title="Copy message"
           @click="copyContent"
         />
+        <UButton
+          v-if="role === 'assistant'"
+          icon="i-heroicons-arrow-path"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          title="Regenerate"
+          @click="$emit('regenerate')"
+        />
       </div>
-
-      <!-- Placeholder for Tool Invocations -->
-      <!-- <div v-if="toolInvocations" class="flex flex-col gap-4"> ... </div> -->
-
-      <!-- Placeholder for Message Actions -->
-      <!-- <ChatMessageActions v-if="!isReadonly" /> -->
     </div>
   </div>
 </template>
@@ -77,17 +70,25 @@
 import { useClipboard } from "@vueuse/core"
 
 const props = defineProps({
+  messageId: {
+    type: String,
+    required: true,
+  },
   role: {
     type: String,
     required: true,
-    validator: (value: string) => ["user", "assistant"].includes(value),
+    validator: (value: string) =>
+      ["user", "assistant", "system"].includes(value),
   },
   content: {
     type: String,
     default: "",
   },
-  // Add other props like attachments, reasoning, toolInvocations, vote, isLoading etc. later
 })
+
+defineEmits<{
+  regenerate: []
+}>()
 
 // --- Edit State ---
 const isEditing = ref(false)
@@ -104,14 +105,13 @@ watch(
 )
 
 function startEditing() {
-  editedContent.value = props.content // Reset to original content on edit start
+  editedContent.value = props.content
   isEditing.value = true
-  // Consider focusing the textarea nextTick
 }
 
 function cancelEditing() {
   isEditing.value = false
-  editedContent.value = props.content // Revert changes
+  editedContent.value = props.content
 }
 
 function saveEdit() {
@@ -136,11 +136,9 @@ const { copy, copied, isSupported } = useClipboard({
 function copyContent() {
   if (isSupported.value) {
     copy()
-    // Optionally show feedback, e.g., using UToast
     console.log("Copied:", copied.value)
   } else {
     console.error("Clipboard API not supported")
-    // Optionally show error feedback
   }
 }
 </script>

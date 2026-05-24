@@ -72,5 +72,9 @@ export default defineNuxtConfig({
     host: "https://umami.zoni.ovh",
   },
 
+  content: {
+    experimental: { sqliteConnector: "native" },
+  },
+
   compatibilityDate: "2026-05-01",
 })
