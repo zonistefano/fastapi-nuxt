@@ -91,20 +91,23 @@ async function toggleActive(email: string, is_active: boolean) {
   }
 }
 
-async function toggleMod(email: string, is_superuser: boolean) {
+async function toggleMod(id: string, is_superuser: boolean) {
   await token.refreshTokens()
   const data: IUserProfileUpdate = {
-    email: email,
     is_superuser: is_superuser,
   }
-  const { data: response } = await apiAuth.toggleUserState(token.token, data)
-  if (!response.value || !response.value.msg) {
+  const { data: response } = await apiAuth.updateUserById(
+    token.token,
+    id,
+    data,
+  )
+  if (!response.value) {
     toast.add({
       title: "Update error",
-      description: response.value ? response.value.msg : "Invalid request.",
+      description: "Invalid request.",
       icon: "i-heroicons-exclamation-circle",
     })
-    const user = userProfiles.value.find((user) => user.email === email)
+    const user = userProfiles.value.find((user) => user.id === id)
     if (user) user.is_superuser = !is_superuser
   }
 }
@@ -222,7 +225,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
         <template #is_superuser-data="{ row }">
           <USwitch
             v-model="row.is_superuser"
-            @click="toggleMod(row.email, !row.is_superuser)"
+            @click="toggleMod(row.id, !row.is_superuser)"
           />
         </template>
         <template #hashed_password-data="{ row }">

@@ -53,7 +53,7 @@ useSeoMeta({
     >
       <template #top>
         <div
-          class="dark:bg-(--ui-primary) absolute left-1/2 size-60 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[300px] sm:size-80"
+          class="absolute left-1/2 size-60 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[300px] sm:size-80 dark:bg-(--ui-primary)"
         />
 
         <LazyStarsBg />
@@ -128,7 +128,7 @@ useSeoMeta({
 
     <UPageCTA v-bind="page.cta" variant="naked" class="overflow-hidden">
       <div
-        class="dark:bg-(--ui-primary) sm:size-50 absolute left-1/2 size-40 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[250px]"
+        class="absolute left-1/2 size-40 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[250px] sm:size-50 dark:bg-(--ui-primary)"
       />
 
       <LazyStarsBg />

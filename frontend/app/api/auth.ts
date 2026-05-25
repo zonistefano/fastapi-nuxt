@@ -85,10 +85,13 @@ export const apiAuth = {
   },
   // USER PROFILE MANAGEMENT
   async createProfile(data: IUserOpenProfileCreate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/login/signup`, {
-      method: "POST",
-      body: data,
-    })
+    return await useFetch<IUserProfile | IMsg>(
+      `${apiCore.url()}/login/signup`,
+      {
+        method: "POST",
+        body: data,
+      },
+    )
   },
   async getProfile(token: string) {
     return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, {
@@ -130,11 +133,10 @@ export const apiAuth = {
       },
     )
   },
-  async validateEmail(token: string, validation: string) {
-    return await useFetch<IMsg>(`${apiCore.url()}/users/validate-email`, {
-      method: "POST",
-      body: { validation },
-      headers: apiCore.headers(token),
+  async confirmEmail(token: string) {
+    return await useFetch<IMsg>(`${apiCore.url()}/login/confirm-email`, {
+      method: "GET",
+      query: { token },
     })
   },
   // ADMIN USER MANAGEMENT
@@ -152,6 +154,13 @@ export const apiAuth = {
   },
   async createUserProfile(token: string, data: IUserProfileCreate) {
     return await useFetch<IUserProfile>(`${apiCore.url()}/users/create`, {
+      method: "POST",
+      body: data,
+      headers: apiCore.headers(token),
+    })
+  },
+  async updateUserById(token: string, id: string, data: IUserProfileUpdate) {
+    return await useFetch<IUserProfile>(`${apiCore.url()}/users/${id}`, {
       method: "POST",
       body: data,
       headers: apiCore.headers(token),

@@ -32,7 +32,9 @@ async function logout() {
         {
           label: 'Logout',
           icon: 'i-heroicons-arrow-right-end-on-rectangle',
-          click: logout,
+          onSelect() {
+            logout()
+          },
         },
       ],
     ]"

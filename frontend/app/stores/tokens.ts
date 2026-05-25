@@ -12,6 +12,9 @@ export const useTokenStore = defineStore("tokens", {
   getters: {
     token: (state) => state.access_token,
     refresh: (state) => state.refresh_token,
+    hasActiveAccessToken: (state) => {
+      return Boolean(state.access_token) && !tokenExpired(state.access_token)
+    },
   },
   actions: {
     async getTokens(payload: { username: string; password?: string }) {
@@ -51,6 +54,8 @@ export const useTokenStore = defineStore("tokens", {
         const localClaim = tokenParser(data)
         const magicClaim = tokenParser(token)
         if (
+          localClaim &&
+          magicClaim &&
           Object.prototype.hasOwnProperty.call(localClaim, "fingerprint") &&
           Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
           localClaim["fingerprint"] === magicClaim["fingerprint"]
@@ -61,7 +66,7 @@ export const useTokenStore = defineStore("tokens", {
           if (response.value) {
             this.setTokens(response.value as unknown as ITokenResponse)
           } else throw "Error"
-        }
+        } else throw "Error"
       } catch {
         toast.add({
           title: "Login error",

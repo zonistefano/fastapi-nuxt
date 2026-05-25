@@ -36,7 +36,10 @@ export const useAuthStore = defineStore("authUser", {
       return state.id && state.is_superuser && state.is_active
     },
     profile: (state) => state,
-    loggedIn: (state) => state.id !== "",
+    loggedIn: (state) => {
+      const tokenStore = useTokenStore()
+      return Boolean(state.id) && tokenStore.hasActiveAccessToken
+    },
     tokenStore: () => {
       return useTokenStore()
     },
@@ -92,24 +95,6 @@ export const useAuthStore = defineStore("authUser", {
       }
     },
     // PROFILE MANAGEMENT
-    async createUserProfile(payload: IUserOpenProfileCreate) {
-      const toast = useToast()
-      try {
-        const { data: response } = await apiAuth.createProfile(payload)
-        if (response.value) this.setUserProfile(response.value)
-        await this.tokenStore.getTokens({
-          username: this.email,
-          password: payload.password,
-        })
-      } catch {
-        toast.add({
-          title: "Login creation error",
-          description:
-            "Please check your details, or internet connection, and try again.",
-          icon: "i-heroicons-exclamation-circle",
-        })
-      }
-    },
     async getUserProfile() {
       if (!this.loggedIn) {
         await this.tokenStore.refreshTokens()
@@ -240,33 +225,25 @@ export const useAuthStore = defineStore("authUser", {
         }
       }
     },
-    async validateEmail(validationToken: string) {
+    async confirmEmail(validationToken: string) {
       const toast = useToast()
-      await this.tokenStore.refreshTokens()
-      if (this.tokenStore.token && !this.email_validated) {
-        try {
-          const { data: response } = await apiAuth.validateEmail(
-            this.tokenStore.token,
-            validationToken,
-          )
-          if (response.value) {
-            this.email_validated = true
-            if (response.value) {
-              toast.add({
-                title: "Success",
-                description: response.value.msg,
-              })
-            }
-          }
-        } catch {
+      try {
+        const { data: response } = await apiAuth.confirmEmail(validationToken)
+        if (response.value) {
           toast.add({
-            title: "Validation error",
-            description:
-              "Invalid token. Check your email and resend validation.",
-            icon: "i-heroicons-exclamation-circle",
+            title: "Success",
+            description: response.value.msg,
           })
+          return true
         }
+      } catch {
+        toast.add({
+          title: "Validation error",
+          description: "Invalid token. Check your email link and try again.",
+          icon: "i-heroicons-exclamation-circle",
+        })
       }
+      return false
     },
     async recoverPassword(email: string) {
       const toast = useToast()
@@ -304,6 +281,8 @@ export const useAuthStore = defineStore("authUser", {
           const localClaim = tokenParser(claim)
           const magicClaim = tokenParser(token)
           if (
+            localClaim &&
+            magicClaim &&
             Object.prototype.hasOwnProperty.call(localClaim, "fingerprint") &&
             Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
             localClaim["fingerprint"] === magicClaim["fingerprint"]
@@ -319,7 +298,7 @@ export const useAuthStore = defineStore("authUser", {
                 description: response.value.msg,
               })
             else throw "Error"
-          }
+          } else throw "Error"
         } catch {
           toast.add({
             title: "Login error",
