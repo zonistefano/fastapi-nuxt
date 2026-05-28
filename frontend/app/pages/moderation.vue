@@ -63,7 +63,6 @@ const columns = computed(() =>
 )
 
 async function getAllUsers() {
-  await token.refreshTokens()
   const { data: response } = await apiAuth.getAllUsers(token.token)
   if (response.value && response.value.length)
     userProfiles.value = response.value
@@ -75,7 +74,6 @@ onMounted(async () => {
 
 async function toggleActive(email: string, is_active: boolean) {
   const user = userProfiles.value.find((user) => user.email === email)
-  await token.refreshTokens()
   const data: IUserProfileUpdate = {
     email: email,
     is_active: is_active,
@@ -92,15 +90,10 @@ async function toggleActive(email: string, is_active: boolean) {
 }
 
 async function toggleMod(id: string, is_superuser: boolean) {
-  await token.refreshTokens()
   const data: IUserProfileUpdate = {
     is_superuser: is_superuser,
   }
-  const { data: response } = await apiAuth.updateUserById(
-    token.token,
-    id,
-    data,
-  )
+  const { data: response } = await apiAuth.updateUserById(token.token, id, data)
   if (!response.value) {
     toast.add({
       title: "Update error",
@@ -126,7 +119,6 @@ const modal_state = reactive<Partial<Schema>>({
 
 async function submit(event: FormSubmitEvent<Schema>) {
   if (event.data.email) {
-    await token.refreshTokens()
     const data: IUserProfileCreate = {
       email: event.data.email,
       password: generateUUID(),

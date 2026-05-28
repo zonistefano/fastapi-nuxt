@@ -56,7 +56,6 @@ async function submit(event: FormSubmitEvent<Schema>) {
       await authStore.updateUserProfile(profile)
     }
     if (event.data.totp !== authStore.profile.totp_secret && event.data.totp) {
-      await tokenStore.refreshTokens()
       const { data: response } = await apiAuth.requestNewTOTP(tokenStore.token)
       if (response.value) {
         totpNew.value.key = response.value.key

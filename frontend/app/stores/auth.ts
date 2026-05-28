@@ -97,7 +97,6 @@ export const useAuthStore = defineStore("authUser", {
     // PROFILE MANAGEMENT
     async getUserProfile() {
       if (!this.loggedIn) {
-        await this.tokenStore.refreshTokens()
         if (this.tokenStore.token) {
           try {
             const { data: response } = await apiAuth.getProfile(
@@ -113,7 +112,6 @@ export const useAuthStore = defineStore("authUser", {
     },
     async updateUserProfile(payload: IUserProfileUpdate) {
       const toast = useToast()
-      await this.tokenStore.refreshTokens()
       if (this.loggedIn && this.tokenStore.token) {
         try {
           const { data: response } = await apiAuth.updateProfile(
@@ -141,7 +139,6 @@ export const useAuthStore = defineStore("authUser", {
     // MANAGING TOTP
     async enableTOTPAuthentication(payload: IEnableTOTP) {
       const toast = useToast()
-      await this.tokenStore.refreshTokens()
       if (this.loggedIn && this.tokenStore.token) {
         try {
           const { data: response } = await apiAuth.enableTOTPAuthentication(
@@ -167,7 +164,6 @@ export const useAuthStore = defineStore("authUser", {
     },
     async disableTOTPAuthentication(payload: IUserProfileUpdate) {
       const toast = useToast()
-      await this.tokenStore.refreshTokens()
       if (this.loggedIn && this.tokenStore.token) {
         try {
           const { data: response } = await apiAuth.disableTOTPAuthentication(
@@ -204,7 +200,6 @@ export const useAuthStore = defineStore("authUser", {
     },
     async sendEmailValidation() {
       const toast = useToast()
-      await this.tokenStore.refreshTokens()
       if (this.tokenStore.token && !this.email_validated) {
         try {
           const { data: response } = await apiAuth.requestValidationEmail(

@@ -8,8 +8,6 @@ const authStore = useAuthStore()
 const toast = useToast()
 const route = useRoute()
 
-await tokenStore.refreshTokens()
-
 const { data: chats, refresh } = await apiChat.list(tokenStore.token)
 const { groups } = useChatGroups(chats)
 
@@ -48,7 +46,6 @@ function chatActions(chat: IChatSummary): DropdownMenuItem[][] {
         onSelect: async () => {
           const next = window.prompt("Rename chat", chat.title)
           if (!next?.trim()) return
-          await tokenStore.refreshTokens()
           await apiChat.rename(tokenStore.token, chat.id, next.trim())
           await refresh()
         },
@@ -60,7 +57,6 @@ function chatActions(chat: IChatSummary): DropdownMenuItem[][] {
         icon: "i-lucide-trash",
         color: "error" as const,
         onSelect: async () => {
-          await tokenStore.refreshTokens()
           try {
             await apiChat.remove(tokenStore.token, chat.id)
             await refresh()
@@ -111,7 +107,8 @@ watch(
           orientation="vertical"
           :ui="{
             link: 'overflow-hidden pr-8',
-            linkTrailing: 'absolute inset-e-1 opacity-0 group-hover:opacity-100 group-has-data-[state=open]:opacity-100',
+            linkTrailing:
+              'absolute inset-e-1 opacity-0 group-hover:opacity-100 group-has-data-[state=open]:opacity-100',
           }"
         >
           <template #chat-trailing="{ item }">

@@ -18,7 +18,6 @@ const messages = ref<IChatMessage[]>([])
 const isLoading = ref(false)
 const abortController = shallowRef<AbortController | null>(null)
 
-await tokenStore.refreshTokens()
 const { data, error } = await apiChat.get(tokenStore.token, chatId.value)
 
 if (error.value) {
@@ -60,12 +59,16 @@ async function readStream(response: Response, assistantId: string) {
 
       if (event === "delta") {
         const data = JSON.parse(payload) as { content: string }
-        const assistant = messages.value.find((message) => message.id === assistantId)
+        const assistant = messages.value.find(
+          (message) => message.id === assistantId,
+        )
         if (assistant) assistant.content += data.content
       }
       if (event === "done") {
         const data = JSON.parse(payload) as IChatStreamDone
-        const index = messages.value.findIndex((message) => message.id === assistantId)
+        const index = messages.value.findIndex(
+          (message) => message.id === assistantId,
+        )
         if (index >= 0) messages.value[index] = data.message
       }
       if (event === "error") {
@@ -79,7 +82,6 @@ async function readStream(response: Response, assistantId: string) {
 async function streamFrom(url: string, body?: Record<string, string>) {
   if (isLoading.value) return
 
-  await tokenStore.refreshTokens()
   if (!tokenStore.token) return navigateTo("/login")
 
   const controller = new AbortController()
@@ -109,11 +111,14 @@ async function streamFrom(url: string, body?: Record<string, string>) {
     await readStream(response, assistantId)
     await refreshNuxtData("chats")
   } catch (error) {
-    messages.value = messages.value.filter((message) => message.id !== assistantId)
+    messages.value = messages.value.filter(
+      (message) => message.id !== assistantId,
+    )
     if (!(error instanceof DOMException && error.name === "AbortError")) {
       toast.add({
         title: "Chat error",
-        description: error instanceof Error ? error.message : "Streaming failed.",
+        description:
+          error instanceof Error ? error.message : "Streaming failed.",
         icon: "i-heroicons-exclamation-circle",
         color: "error",
       })
@@ -151,7 +156,8 @@ function stop() {
 }
 
 onMounted(async () => {
-  const prompt = typeof route.query.prompt === "string" ? route.query.prompt : ""
+  const prompt =
+    typeof route.query.prompt === "string" ? route.query.prompt : ""
   if (prompt) {
     await router.replace({ path: route.path })
     input.value = prompt

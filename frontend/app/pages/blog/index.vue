@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { readableDate } from "@/utilities"
 
-definePageMeta({
-  middleware: ["refresh"],
-})
-
 const { locale } = useI18n()
 const collection: `blog_${typeof locale.value}` = `blog_${locale.value}`
 const { data: blogPosts } = await useAsyncData(useRoute().path, () =>

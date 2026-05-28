@@ -1,8 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  middleware: ["refresh"],
-})
-
 const { locale } = useI18n()
 const route = useRoute()
 const pathWithoutLocale = route.path.replace(

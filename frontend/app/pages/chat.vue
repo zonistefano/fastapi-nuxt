@@ -23,7 +23,6 @@ async function createChat(prompt?: string) {
   if (!content || loading.value) return
 
   loading.value = true
-  await tokenStore.refreshTokens()
   if (!tokenStore.token) {
     loading.value = false
     return navigateTo("/login")
@@ -63,7 +62,9 @@ async function createChat(prompt?: string) {
     </UDashboardNavbar>
     <div class="flex min-h-0 flex-1 flex-col">
       <div class="grow overflow-y-auto px-2.5 pt-6">
-        <div class="mx-auto flex h-full w-full max-w-5xl flex-col justify-center gap-6">
+        <div
+          class="mx-auto flex h-full w-full max-w-5xl flex-col justify-center gap-6"
+        >
           <ChatOverview />
           <div class="flex flex-wrap justify-center gap-2">
             <UButton
