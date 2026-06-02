@@ -15,7 +15,7 @@ const emit = defineEmits<{
 <template>
   <div class="mx-auto w-full max-w-6xl px-2.5 pb-4">
     <form
-      class="bg-(--ui-bg-elevated) flex flex-col gap-2 rounded-3xl p-1.5"
+      class="flex flex-col gap-2 rounded-3xl bg-(--ui-bg-elevated) p-1.5"
       @submit.prevent="emit('submit')"
     >
       <UTextarea

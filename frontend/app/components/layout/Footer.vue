@@ -1,7 +1,7 @@
 <template>
   <UFooter>
     <template #left>
-      <div class="text-(--ui-text-muted) text-sm">
+      <div class="text-sm text-(--ui-text-muted)">
         Copyright © {{ new Date().getFullYear() }}.
         <NuxtLinkLocale to="/privacy">Privacy Policy.</NuxtLinkLocale>
       </div>

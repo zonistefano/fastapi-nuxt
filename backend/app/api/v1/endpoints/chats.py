@@ -171,12 +171,18 @@ def regenerate_message(
     chat = _owned_chat_or_404(db, chat_id=chat_id, user_id=current_user.id)
     chat_id_value = chat.id
     stored_messages = crud_chat.get_messages(db, chat_id=chat_id_value)
-    if not stored_messages or not any(message.role == "user" for message in stored_messages):
+    if not stored_messages or not any(
+        message.role == "user" for message in stored_messages
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No user message to regenerate from",
         )
-    prompt_messages = stored_messages[:-1] if stored_messages[-1].role == "assistant" else stored_messages
+    prompt_messages = (
+        stored_messages[:-1]
+        if stored_messages[-1].role == "assistant"
+        else stored_messages
+    )
     messages = [
         {"role": message.role, "content": message.content}
         for message in prompt_messages

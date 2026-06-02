@@ -29,11 +29,7 @@ export const apiChat = {
       method: "DELETE",
     })
   },
-  async stream(
-    id: string,
-    body: Record<string, string>,
-    signal?: AbortSignal,
-  ) {
+  async stream(id: string, body: Record<string, string>, signal?: AbortSignal) {
     return await apiCore.stream(`/chats/${id}/messages/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

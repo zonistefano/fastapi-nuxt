@@ -11,7 +11,9 @@ class ChatBase(SQLModel):
 class Chat(ChatBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="user.id", index=True, nullable=False)
-    created: datetime = Field(default_factory=datetime.utcnow, nullable=False, index=True)
+    created: datetime = Field(
+        default_factory=datetime.utcnow, nullable=False, index=True
+    )
     modified: datetime = Field(
         default_factory=datetime.utcnow,
         nullable=False,
@@ -31,7 +33,9 @@ class ChatMessageBase(SQLModel):
 class ChatMessage(ChatMessageBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     chat_id: UUID = Field(foreign_key="chat.id", index=True, nullable=False)
-    created: datetime = Field(default_factory=datetime.utcnow, nullable=False, index=True)
+    created: datetime = Field(
+        default_factory=datetime.utcnow, nullable=False, index=True
+    )
     chat: Chat | None = Relationship(back_populates="messages")
 
 

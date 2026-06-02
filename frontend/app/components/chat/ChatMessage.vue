@@ -14,7 +14,7 @@
         v-if="!isEditing"
         :class="[
           role === 'user'
-            ? 'bg-(--ui-primary) text-(--ui-bg) rounded-xl px-3 py-2'
+            ? 'rounded-xl bg-(--ui-primary) px-3 py-2 text-(--ui-bg)'
             : '',
         ]"
       >
@@ -31,10 +31,7 @@
         @send="saveAndRegenerate"
       />
 
-      <div
-        v-if="!isEditing"
-        class="flex items-center gap-1 pr-1 pt-1"
-      >
+      <div v-if="!isEditing" class="flex items-center gap-1 pt-1 pr-1">
         <UButton
           v-if="role === 'user'"
           icon="i-heroicons-pencil-square"

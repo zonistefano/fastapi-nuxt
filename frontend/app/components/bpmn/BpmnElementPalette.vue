@@ -24,7 +24,7 @@ function handleDragStart(event: DragEvent, elementType: string) {
 <template>
   <UCard :ui="{ body: 'p-2 sm:p-2', header: 'p2 sm:p-2' }">
     <template #header>
-      <h3 class="text-(--ui-neutral) text-sm font-semibold">Elements</h3>
+      <h3 class="text-sm font-semibold text-(--ui-neutral)">Elements</h3>
     </template>
 
     <div class="grid grid-cols-2 gap-2">

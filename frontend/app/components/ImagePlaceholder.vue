@@ -1,10 +1,10 @@
 <template>
   <UPageCard variant="subtle">
     <div
-      class="rounded-(--ui-radius) border-(--ui-border-accented) relative flex aspect-video items-center justify-center overflow-hidden border border-dashed px-4 opacity-75"
+      class="relative flex aspect-video items-center justify-center overflow-hidden rounded-(--ui-radius) border border-dashed border-(--ui-border-accented) px-4 opacity-75"
     >
       <svg
-        class="stroke-(--ui-border-inverted)/10 absolute inset-0 h-full w-full"
+        class="absolute inset-0 h-full w-full stroke-(--ui-border-inverted)/10"
         fill="none"
       >
         <defs>

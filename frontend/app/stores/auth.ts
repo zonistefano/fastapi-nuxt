@@ -268,11 +268,7 @@ export const useAuthStore = defineStore("authUser", {
             Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
             localClaim["fingerprint"] === magicClaim["fingerprint"]
           ) {
-            const response = await apiAuth.resetPassword(
-              password,
-              claim,
-              token,
-            )
+            const response = await apiAuth.resetPassword(password, claim, token)
             if (response)
               toast.add({
                 title: "Success",

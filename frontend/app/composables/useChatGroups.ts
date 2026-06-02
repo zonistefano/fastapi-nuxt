@@ -3,7 +3,11 @@ import type { IChatSummary } from "~/types"
 export function useChatGroups(chats: Ref<IChatSummary[] | null | undefined>) {
   const groups = computed(() => {
     const today = new Date()
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    )
     const startOfYesterday = new Date(startOfToday)
     startOfYesterday.setDate(startOfToday.getDate() - 1)
     const startOfLastWeek = new Date(startOfToday)

@@ -18,7 +18,7 @@ const nodeIcon = computed(() => props.data.icon || "i-heroicons-cog-6-tooth")
 
 <template>
   <div
-    class="rounded-(--ui-radius) group border border-blue-500 bg-blue-100 text-center shadow-md dark:border-blue-400 dark:bg-blue-900"
+    class="group rounded-(--ui-radius) border border-blue-500 bg-blue-100 text-center shadow-md dark:border-blue-400 dark:bg-blue-900"
   >
     <Handle
       type="target"

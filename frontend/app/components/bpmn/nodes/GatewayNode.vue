@@ -45,7 +45,7 @@ const nodeIcon = computed(() => {
     />
 
     <div
-      class="rounded-(--ui-radius) absolute h-10 w-10 rotate-45 bg-yellow-100"
+      class="absolute h-10 w-10 rotate-45 rounded-(--ui-radius) bg-yellow-100"
     />
 
     <UIcon v-if="nodeIcon" :name="nodeIcon" class="h-7 w-7" />

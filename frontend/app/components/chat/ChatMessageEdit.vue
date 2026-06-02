@@ -6,7 +6,7 @@ defineEmits(["save", "cancel", "send"])
 
 <template>
   <div class="mx-auto w-full max-w-6xl">
-    <div class="bg-(--ui-bg-elevated) flex flex-col gap-2 rounded-3xl p-1.5">
+    <div class="flex flex-col gap-2 rounded-3xl bg-(--ui-bg-elevated) p-1.5">
       <!-- Placeholder for Suggested Actions -->
       <!-- <ChatSuggestedActions v-if="showSuggestions" /> -->
 

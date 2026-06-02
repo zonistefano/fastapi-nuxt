@@ -11,7 +11,7 @@ defineProps<
 
 <template>
   <div
-    class="bg-(--ui-bg) group h-10 w-10 rounded-full shadow-md"
+    class="group h-10 w-10 rounded-full bg-(--ui-bg) shadow-md"
     :class="[
       data.eventType === 'start'
         ? 'border-2 border-green-300'
