@@ -62,6 +62,11 @@ export const apiCore = {
     const tokenStore = useTokenStore()
     const { key: _key, ...fetchOptions } = options
 
+    if (!tokenStore.hasValidToken) {
+      const authStore = useAuthStore()
+      authStore.logOut()
+    }
+
     try {
       return await $fetch<T>(path, {
         baseURL: this.url(),

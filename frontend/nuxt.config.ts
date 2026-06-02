@@ -38,8 +38,8 @@ export default defineNuxtConfig({
   piniaPluginPersistedstate: {
     cookieOptions: {
       path: "/",
-      // maxAge: 60 * 60 * 24 * 30,
       secure: true,
+      sameSite: "lax",
     },
   },
 

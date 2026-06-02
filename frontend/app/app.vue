@@ -11,6 +11,9 @@ const themeColor = computed(() =>
 )
 
 const config = useRuntimeConfig()
+const authStore = useAuthStore()
+
+await authStore.getUserProfile()
 
 useHead({
   htmlAttrs: {

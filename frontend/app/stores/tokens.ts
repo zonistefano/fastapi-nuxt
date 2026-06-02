@@ -1,6 +1,6 @@
 import type { ITokenResponse, IWebToken } from "~/types"
 import { apiAuth } from "@/api"
-import { tokenExpired, tokenParser } from "@/utilities"
+import { tokenExpired, tokenParser, tokenIsTOTP } from "@/utilities"
 
 let refreshPromise: Promise<boolean> | null = null
 
@@ -19,6 +19,12 @@ export const useTokenStore = defineStore("tokens", {
     },
     hasUsableRefreshToken: (state) => {
       return Boolean(state.refresh_token) && !tokenExpired(state.refresh_token)
+    },
+    hasValidToken(): boolean {
+      return (
+        (this.hasActiveAccessToken || this.hasUsableRefreshToken) &&
+        !tokenIsTOTP(this.token)
+      )
     },
   },
   actions: {

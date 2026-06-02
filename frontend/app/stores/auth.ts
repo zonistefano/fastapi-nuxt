@@ -5,8 +5,7 @@ import type {
   IWebToken,
 } from "~/types"
 import { apiAuth } from "@/api"
-import { tokenIsTOTP, tokenParser } from "@/utilities"
-import { useTokenStore } from "./tokens"
+import { tokenParser } from "@/utilities"
 
 export const useAuthStore = defineStore("authUser", {
   state: (): IUserProfile => ({
@@ -21,13 +20,7 @@ export const useAuthStore = defineStore("authUser", {
   }),
   persist: {
     storage: piniaPluginPersistedstate.cookies({
-      // https://prazdevs.github.io/pinia-plugin-persistedstate/frameworks/nuxt-3.html
-      // https://nuxt.com/docs/api/composables/use-cookie#options
-      // in seconds
-      path: "/",
-      secure: true,
       maxAge: 60 * 60 * 24 * 90,
-      expires: new Date(new Date().getTime() + 90 * 24 * 60 * 60 * 1000),
     }),
   },
   getters: {
@@ -35,12 +28,8 @@ export const useAuthStore = defineStore("authUser", {
       return state.id && state.is_superuser && state.is_active
     },
     profile: (state) => state,
-    loggedIn: (state) => {
-      const tokenStore = useTokenStore()
-      return (
-        Boolean(state.id) &&
-        (tokenStore.hasActiveAccessToken || tokenStore.hasUsableRefreshToken)
-      )
+    loggedIn(): boolean {
+      return Boolean(this.id) && this.tokenStore.hasValidToken
     },
     tokenStore: () => {
       return useTokenStore()
@@ -52,8 +41,7 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.getTokens(payload)
-        if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
-          await this.getUserProfile()
+        await this.getUserProfile()
       } catch {
         toast.add({
           title: "Login error",
@@ -68,8 +56,7 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.validateMagicTokens(token)
-        if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
-          await this.getUserProfile()
+        await this.getUserProfile()
       } catch {
         toast.add({
           title: "Login error",
@@ -84,8 +71,7 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.validateTOTPClaim(claim)
-        if (this.tokenStore.token && !tokenIsTOTP(this.tokenStore.token))
-          await this.getUserProfile()
+        await this.getUserProfile()
       } catch {
         toast.add({
           title: "Login error",
@@ -98,16 +84,12 @@ export const useAuthStore = defineStore("authUser", {
     },
     // PROFILE MANAGEMENT
     async getUserProfile() {
-      if (!this.loggedIn) {
-        if (this.tokenStore.token) {
-          try {
-            const { data: response } = await apiAuth.getProfile()
-            if (response.value) this.setUserProfile(response.value)
-            else this.logOut()
-          } catch {
-            this.logOut()
-          }
-        }
+      try {
+        const { data: response } = await apiAuth.getProfile()
+        if (response.value) this.setUserProfile(response.value)
+        else this.logOut()
+      } catch {
+        this.logOut()
       }
     },
     async updateUserProfile(payload: IUserProfileUpdate) {
