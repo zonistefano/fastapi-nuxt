@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { IChatMessage, IChatStreamDone } from "~/types"
-import { apiChat, apiCore } from "@/api"
+import { apiChat } from "@/api"
 
 definePageMeta({
   layout: "chat",
@@ -10,7 +10,6 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const tokenStore = useTokenStore()
 
 const chatId = computed(() => String(route.params.id))
 const input = ref("")
@@ -18,7 +17,7 @@ const messages = ref<IChatMessage[]>([])
 const isLoading = ref(false)
 const abortController = shallowRef<AbortController | null>(null)
 
-const { data, error } = await apiChat.get(tokenStore.token, chatId.value)
+const { data, error } = await apiChat.get(chatId.value)
 
 if (error.value) {
   throw createError({
@@ -79,10 +78,8 @@ async function readStream(response: Response, assistantId: string) {
   }
 }
 
-async function streamFrom(url: string, body?: Record<string, string>) {
+async function streamFrom(regenerate = false, body?: Record<string, string>) {
   if (isLoading.value) return
-
-  if (!tokenStore.token) return navigateTo("/login")
 
   const controller = new AbortController()
   abortController.value = controller
@@ -98,15 +95,15 @@ async function streamFrom(url: string, body?: Record<string, string>) {
   })
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        ...apiCore.headers(tokenStore.token),
-        "Content-Type": "application/json",
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    })
+    const response = regenerate
+      ? await apiChat.regenerate(chatId.value, controller.signal)
+      : await apiChat.stream(chatId.value, body || {}, controller.signal)
+    if (response.status === 403) {
+      messages.value = messages.value.filter(
+        (message) => message.id !== assistantId,
+      )
+      return
+    }
     if (!response.ok) throw new Error("Unable to stream assistant response")
     await readStream(response, assistantId)
     await refreshNuxtData("chats")
@@ -140,7 +137,7 @@ async function submitMessage() {
     content,
     created: new Date().toISOString(),
   })
-  await streamFrom(apiChat.streamUrl(chatId.value), { content })
+  await streamFrom(false, { content })
 }
 
 async function regenerate() {
@@ -148,7 +145,7 @@ async function regenerate() {
   if (messages.value[messages.value.length - 1]?.role === "assistant") {
     messages.value.pop()
   }
-  await streamFrom(apiChat.regenerateUrl(chatId.value))
+  await streamFrom(true)
 }
 
 function stop() {

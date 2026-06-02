@@ -1,7 +1,6 @@
 import type {
   IUserProfile,
   IUserProfileUpdate,
-  IUserOpenProfileCreate,
   IEnableTOTP,
   IWebToken,
 } from "~/types"
@@ -38,7 +37,10 @@ export const useAuthStore = defineStore("authUser", {
     profile: (state) => state,
     loggedIn: (state) => {
       const tokenStore = useTokenStore()
-      return Boolean(state.id) && tokenStore.hasActiveAccessToken
+      return (
+        Boolean(state.id) &&
+        (tokenStore.hasActiveAccessToken || tokenStore.hasUsableRefreshToken)
+      )
     },
     tokenStore: () => {
       return useTokenStore()
@@ -99,9 +101,7 @@ export const useAuthStore = defineStore("authUser", {
       if (!this.loggedIn) {
         if (this.tokenStore.token) {
           try {
-            const { data: response } = await apiAuth.getProfile(
-              this.tokenStore.token,
-            )
+            const { data: response } = await apiAuth.getProfile()
             if (response.value) this.setUserProfile(response.value)
             else this.logOut()
           } catch {
@@ -112,20 +112,16 @@ export const useAuthStore = defineStore("authUser", {
     },
     async updateUserProfile(payload: IUserProfileUpdate) {
       const toast = useToast()
-      if (this.loggedIn && this.tokenStore.token) {
+      if (this.loggedIn) {
         try {
-          const { data: response } = await apiAuth.updateProfile(
-            this.tokenStore.token,
-            payload,
-          )
-          if (response.value)
-            if (response.value) {
-              this.setUserProfile(response.value)
-              toast.add({
-                title: "Profile update",
-                description: "Your settings have been updated.",
-              })
-            } else throw "Error"
+          const response = await apiAuth.updateProfile(payload)
+          if (response) {
+            this.setUserProfile(response)
+            toast.add({
+              title: "Profile update",
+              description: "Your settings have been updated.",
+            })
+          } else throw "Error"
         } catch {
           toast.add({
             title: "Profile update error",
@@ -139,17 +135,14 @@ export const useAuthStore = defineStore("authUser", {
     // MANAGING TOTP
     async enableTOTPAuthentication(payload: IEnableTOTP) {
       const toast = useToast()
-      if (this.loggedIn && this.tokenStore.token) {
+      if (this.loggedIn) {
         try {
-          const { data: response } = await apiAuth.enableTOTPAuthentication(
-            this.tokenStore.token,
-            payload,
-          )
-          if (response.value) {
+          const response = await apiAuth.enableTOTPAuthentication(payload)
+          if (response) {
             this.totp_secret = true
             toast.add({
               title: "Two-factor authentication",
-              description: response.value.msg,
+              description: response.msg,
             })
           } else throw "Error"
         } catch {
@@ -164,17 +157,14 @@ export const useAuthStore = defineStore("authUser", {
     },
     async disableTOTPAuthentication(payload: IUserProfileUpdate) {
       const toast = useToast()
-      if (this.loggedIn && this.tokenStore.token) {
+      if (this.loggedIn) {
         try {
-          const { data: response } = await apiAuth.disableTOTPAuthentication(
-            this.tokenStore.token,
-            payload,
-          )
-          if (response.value) {
+          const response = await apiAuth.disableTOTPAuthentication(payload)
+          if (response) {
             this.totp_secret = false
             toast.add({
               title: "Two-factor authentication",
-              description: response.value.msg,
+              description: response.msg,
             })
           } else throw "Error"
         } catch {
@@ -200,15 +190,13 @@ export const useAuthStore = defineStore("authUser", {
     },
     async sendEmailValidation() {
       const toast = useToast()
-      if (this.tokenStore.token && !this.email_validated) {
+      if (this.loggedIn && !this.email_validated) {
         try {
-          const { data: response } = await apiAuth.requestValidationEmail(
-            this.tokenStore.token,
-          )
-          if (response.value) {
+          const response = await apiAuth.requestValidationEmail()
+          if (response) {
             toast.add({
               title: "Validation sent",
-              description: response.value.msg,
+              description: response.msg,
             })
           }
         } catch {
@@ -223,11 +211,11 @@ export const useAuthStore = defineStore("authUser", {
     async confirmEmail(validationToken: string) {
       const toast = useToast()
       try {
-        const { data: response } = await apiAuth.confirmEmail(validationToken)
-        if (response.value) {
+        const response = await apiAuth.confirmEmail(validationToken)
+        if (response) {
           toast.add({
             title: "Success",
-            description: response.value.msg,
+            description: response.msg,
           })
           return true
         }
@@ -244,12 +232,10 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       if (!this.loggedIn) {
         try {
-          const { data: response } = await apiAuth.recoverPassword(email)
-          if (response.value) {
-            if (Object.prototype.hasOwnProperty.call(response.value, "claim"))
-              this.tokenStore.setMagicToken(
-                response.value as unknown as IWebToken,
-              )
+          const response = await apiAuth.recoverPassword(email)
+          if (response) {
+            if (Object.prototype.hasOwnProperty.call(response, "claim"))
+              this.tokenStore.setMagicToken(response as unknown as IWebToken)
             toast.add({
               title: "Success",
               description:
@@ -282,15 +268,15 @@ export const useAuthStore = defineStore("authUser", {
             Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
             localClaim["fingerprint"] === magicClaim["fingerprint"]
           ) {
-            const { data: response } = await apiAuth.resetPassword(
+            const response = await apiAuth.resetPassword(
               password,
               claim,
               token,
             )
-            if (response.value)
+            if (response)
               toast.add({
                 title: "Success",
-                description: response.value.msg,
+                description: response.msg,
               })
             else throw "Error"
           } else throw "Error"

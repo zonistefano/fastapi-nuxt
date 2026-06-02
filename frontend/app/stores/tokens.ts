@@ -2,6 +2,8 @@ import type { ITokenResponse, IWebToken } from "~/types"
 import { apiAuth } from "@/api"
 import { tokenExpired, tokenParser } from "@/utilities"
 
+let refreshPromise: Promise<boolean> | null = null
+
 export const useTokenStore = defineStore("tokens", {
   state: (): ITokenResponse => ({
     access_token: "",
@@ -15,6 +17,9 @@ export const useTokenStore = defineStore("tokens", {
     hasActiveAccessToken: (state) => {
       return Boolean(state.access_token) && !tokenExpired(state.access_token)
     },
+    hasUsableRefreshToken: (state) => {
+      return Boolean(state.refresh_token) && !tokenExpired(state.refresh_token)
+    },
   },
   actions: {
     async getTokens(payload: { username: string; password?: string }) {
@@ -23,18 +28,15 @@ export const useTokenStore = defineStore("tokens", {
       let response
       try {
         if (payload.password !== undefined)
-          ({ data: response } = await apiAuth.loginWithOauth(
+          response = await apiAuth.loginWithOauth(
             payload.username,
             payload.password,
-          ))
-        else
-          ({ data: response } = await apiAuth.loginWithMagicLink(
-            payload.username,
-          ))
-        if (response.value) {
-          if (Object.prototype.hasOwnProperty.call(response.value, "claim"))
-            this.setMagicToken(response.value as unknown as IWebToken)
-          else this.setTokens(response.value as unknown as ITokenResponse)
+          )
+        else response = await apiAuth.loginWithMagicLink(payload.username)
+        if (response) {
+          if (Object.prototype.hasOwnProperty.call(response, "claim"))
+            this.setMagicToken(response as unknown as IWebToken)
+          else this.setTokens(response as unknown as ITokenResponse)
         } else throw "Error"
       } catch {
         toast.add({
@@ -60,11 +62,11 @@ export const useTokenStore = defineStore("tokens", {
           Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
           localClaim["fingerprint"] === magicClaim["fingerprint"]
         ) {
-          const { data: response } = await apiAuth.validateMagicLink(token, {
+          const response = await apiAuth.validateMagicLink(token, {
             claim: data,
           })
-          if (response.value) {
-            this.setTokens(response.value as unknown as ITokenResponse)
+          if (response) {
+            this.setTokens(response as unknown as ITokenResponse)
           } else throw "Error"
         } else throw "Error"
       } catch {
@@ -80,12 +82,11 @@ export const useTokenStore = defineStore("tokens", {
     async validateTOTPClaim(data: string) {
       const toast = useToast()
       try {
-        const { data: response } = await apiAuth.loginWithTOTP(
-          this.access_token,
-          { claim: data },
-        )
-        if (response.value) {
-          this.setTokens(response.value as unknown as ITokenResponse)
+        const response = await apiAuth.loginWithTOTP(this.access_token, {
+          claim: data,
+        })
+        if (response) {
+          this.setTokens(response as unknown as ITokenResponse)
         } else throw "Error"
       } catch {
         toast.add({
@@ -106,22 +107,28 @@ export const useTokenStore = defineStore("tokens", {
       this.token_type = payload.token_type
     },
     async refreshTokens() {
-      let hasExpired = this.token ? tokenExpired(this.token) : true
-      if (hasExpired) {
-        hasExpired = this.refresh ? tokenExpired(this.refresh) : true
-        if (!hasExpired) {
-          try {
-            const { data: response } = await apiAuth.getRefreshedToken(
-              this.refresh,
-            )
-            if (response.value) this.setTokens(response.value)
-          } catch {
-            this.deleteTokens()
-          }
-        } else {
-          this.deleteTokens()
-        }
+      if (this.hasActiveAccessToken) return true
+      if (!this.hasUsableRefreshToken) {
+        this.deleteTokens()
+        return false
       }
+      if (refreshPromise) return await refreshPromise
+
+      refreshPromise = apiAuth
+        .getRefreshedToken(this.refresh)
+        .then((response) => {
+          this.setTokens(response)
+          return true
+        })
+        .catch(() => {
+          this.deleteTokens()
+          return false
+        })
+        .finally(() => {
+          refreshPromise = null
+        })
+
+      return await refreshPromise
     },
     // reset state using `$reset`
     deleteTokens() {

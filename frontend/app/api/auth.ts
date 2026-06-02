@@ -18,12 +18,12 @@ export const apiAuth = {
   },
   // LOGIN WITH MAGIC LINK OR OAUTH2 (USERNAME/PASSWORD)
   async loginWithMagicLink(email: string) {
-    return await useFetch<IWebToken>(`${apiCore.url()}/login/magic/${email}`, {
+    return await $fetch<IWebToken>(`${apiCore.url()}/login/magic/${email}`, {
       method: "POST",
     })
   },
   async validateMagicLink(token: string, data: IWebToken) {
-    return await useFetch<ITokenResponse>(`${apiCore.url()}/login/claim`, {
+    return await $fetch<ITokenResponse>(`${apiCore.url()}/login/claim`, {
       method: "POST",
       body: data,
       headers: apiCore.headers(token),
@@ -35,7 +35,7 @@ export const apiAuth = {
     const params = new URLSearchParams()
     params.append("username", username)
     params.append("password", password)
-    return await useFetch<ITokenResponse>(`${apiCore.url()}/login/oauth`, {
+    return await $fetch<ITokenResponse>(`${apiCore.url()}/login/oauth`, {
       method: "POST",
       body: params,
       // @ts-expect-error: Content-Disposition is not seen as a valid header
@@ -44,70 +44,62 @@ export const apiAuth = {
   },
   // TOTP SETUP AND AUTHENTICATION
   async loginWithTOTP(token: string, data: IWebToken) {
-    return await useFetch<ITokenResponse>(`${apiCore.url()}/login/totp`, {
+    return await $fetch<ITokenResponse>(`${apiCore.url()}/login/totp`, {
       method: "POST",
       body: data,
       headers: apiCore.headers(token),
     })
   },
-  async requestNewTOTP(token: string) {
-    return await useFetch<INewTOTP>(`${apiCore.url()}/login/new-totp`, {
+  async requestNewTOTP() {
+    return await apiCore.request<INewTOTP>("/login/new-totp", {
       method: "POST",
-      headers: apiCore.headers(token),
     })
   },
-  async enableTOTPAuthentication(token: string, data: IEnableTOTP) {
-    return await useFetch<IMsg>(`${apiCore.url()}/login/totp`, {
+  async enableTOTPAuthentication(data: IEnableTOTP) {
+    return await apiCore.request<IMsg>("/login/totp", {
       method: "PUT",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
-  async disableTOTPAuthentication(token: string, data: IUserProfileUpdate) {
-    return await useFetch<IMsg>(`${apiCore.url()}/login/totp`, {
+  async disableTOTPAuthentication(data: IUserProfileUpdate) {
+    return await apiCore.request<IMsg>("/login/totp", {
       method: "DELETE",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
   // MANAGE JWT TOKENS (REFRESH / REVOKE)
   async getRefreshedToken(token: string) {
-    return await useFetch<ITokenResponse>(`${apiCore.url()}/login/refresh`, {
+    return await $fetch<ITokenResponse>(`${apiCore.url()}/login/refresh`, {
       method: "POST",
       headers: apiCore.headers(token),
     })
   },
-  async revokeRefreshedToken(token: string) {
-    return await useFetch<IMsg>(`${apiCore.url()}/login/revoke`, {
+  async revokeRefreshedToken() {
+    return await apiCore.request<IMsg>("/login/revoke", {
       method: "POST",
-      headers: apiCore.headers(token),
     })
   },
   // USER PROFILE MANAGEMENT
   async createProfile(data: IUserOpenProfileCreate) {
-    return await useFetch<IUserProfile | IMsg>(
-      `${apiCore.url()}/login/signup`,
-      {
-        method: "POST",
-        body: data,
-      },
-    )
-  },
-  async getProfile(token: string) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, {
-      headers: apiCore.headers(token),
+    return await $fetch<IUserProfile | IMsg>(`${apiCore.url()}/login/signup`, {
+      method: "POST",
+      body: data,
     })
   },
-  async updateProfile(token: string, data: IUserProfileUpdate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/me`, {
+  async getProfile() {
+    return await apiCore.useRequest<IUserProfile>("/users/me", {
+      key: "user-profile",
+    })
+  },
+  async updateProfile(data: IUserProfileUpdate) {
+    return await apiCore.request<IUserProfile>("/users/me", {
       method: "PUT",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
   // ACCOUNT RECOVERY
   async recoverPassword(email: string) {
-    return await useFetch<IMsg | IWebToken>(
+    return await $fetch<IMsg | IWebToken>(
       `${apiCore.url()}/login/recover/${email}`,
       {
         method: "POST",
@@ -115,7 +107,7 @@ export const apiAuth = {
     )
   },
   async resetPassword(password: string, claim: string, token: string) {
-    return await useFetch<IMsg>(`${apiCore.url()}/login/reset`, {
+    return await $fetch<IMsg>(`${apiCore.url()}/login/reset`, {
       method: "POST",
       body: {
         new_password: password,
@@ -124,46 +116,39 @@ export const apiAuth = {
       headers: apiCore.headers(token),
     })
   },
-  async requestValidationEmail(token: string) {
-    return await useFetch<IMsg>(
-      `${apiCore.url()}/users/send-validation-email`,
-      {
-        method: "POST",
-        headers: apiCore.headers(token),
-      },
-    )
+  async requestValidationEmail() {
+    return await apiCore.request<IMsg>("/users/send-validation-email", {
+      method: "POST",
+    })
   },
   async confirmEmail(token: string) {
-    return await useFetch<IMsg>(`${apiCore.url()}/login/confirm-email`, {
+    return await $fetch<IMsg>(`${apiCore.url()}/login/confirm-email`, {
       method: "GET",
       query: { token },
     })
   },
   // ADMIN USER MANAGEMENT
-  async getAllUsers(token: string) {
-    return await useFetch<IUserProfile[]>(`${apiCore.url()}/users/`, {
-      headers: apiCore.headers(token),
+  async getAllUsers() {
+    return await apiCore.useRequest<IUserProfile[]>("/users/", {
+      key: "users",
     })
   },
-  async toggleUserState(token: string, data: IUserProfileUpdate) {
-    return await useFetch<IMsg>(`${apiCore.url()}/users/toggle-state`, {
+  async toggleUserState(data: IUserProfileUpdate) {
+    return await apiCore.request<IMsg>("/users/toggle-state", {
       method: "POST",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
-  async createUserProfile(token: string, data: IUserProfileCreate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/create`, {
+  async createUserProfile(data: IUserProfileCreate) {
+    return await apiCore.request<IUserProfile>("/users/create", {
       method: "POST",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
-  async updateUserById(token: string, id: string, data: IUserProfileUpdate) {
-    return await useFetch<IUserProfile>(`${apiCore.url()}/users/${id}`, {
+  async updateUserById(id: string, data: IUserProfileUpdate) {
+    return await apiCore.request<IUserProfile>(`/users/${id}`, {
       method: "POST",
       body: data,
-      headers: apiCore.headers(token),
     })
   },
 }

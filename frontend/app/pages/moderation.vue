@@ -52,7 +52,6 @@ const defaultColumns = [
   },
 ]
 
-const token = useTokenStore()
 const toast = useToast()
 const selectedColumns = ref(defaultColumns)
 const isNewUserModalOpen = ref(false)
@@ -63,7 +62,7 @@ const columns = computed(() =>
 )
 
 async function getAllUsers() {
-  const { data: response } = await apiAuth.getAllUsers(token.token)
+  const { data: response } = await apiAuth.getAllUsers()
   if (response.value && response.value.length)
     userProfiles.value = response.value
 }
@@ -78,11 +77,11 @@ async function toggleActive(email: string, is_active: boolean) {
     email: email,
     is_active: is_active,
   }
-  const { data: response } = await apiAuth.toggleUserState(token.token, data)
-  if (!response.value || !response.value.msg) {
+  const response = await apiAuth.toggleUserState(data)
+  if (!response || !response.msg) {
     toast.add({
       title: "Update error",
-      description: response.value ? response.value.msg : "Invalid request.",
+      description: response ? response.msg : "Invalid request.",
       icon: "i-heroicons-exclamation-circle",
     })
     if (user) user.is_active = !is_active
@@ -93,8 +92,8 @@ async function toggleMod(id: string, is_superuser: boolean) {
   const data: IUserProfileUpdate = {
     is_superuser: is_superuser,
   }
-  const { data: response } = await apiAuth.updateUserById(token.token, id, data)
-  if (!response.value) {
+  const response = await apiAuth.updateUserById(id, data)
+  if (!response) {
     toast.add({
       title: "Update error",
       description: "Invalid request.",
@@ -124,11 +123,8 @@ async function submit(event: FormSubmitEvent<Schema>) {
       password: generateUUID(),
       full_name: event.data.full_name ? event.data.full_name : "",
     }
-    const { data: response } = await apiAuth.createUserProfile(
-      token.token,
-      data,
-    )
-    if (!response.value) {
+    const response = await apiAuth.createUserProfile(data)
+    if (!response) {
       toast.add({
         title: "Update error",
         description: "Invalid request.",
@@ -207,7 +203,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
       </UModal>
 
-      <UTable :rows="userProfiles" :columns="columns" class="w-full">
+      <UTable :data="userProfiles" :columns="columns" class="w-full">
         <template #is_active-data="{ row }">
           <USwitch
             v-model="row.is_active"

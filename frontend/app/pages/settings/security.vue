@@ -6,7 +6,6 @@ import type { IUserProfileUpdate, INewTOTP, IEnableTOTP } from "~/types"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
 const authStore = useAuthStore()
-const tokenStore = useTokenStore()
 const totpModal = ref(false)
 const totpNew = ref({} as INewTOTP)
 const totpClaim = ref({} as IEnableTOTP)
@@ -56,11 +55,11 @@ async function submit(event: FormSubmitEvent<Schema>) {
       await authStore.updateUserProfile(profile)
     }
     if (event.data.totp !== authStore.profile.totp_secret && event.data.totp) {
-      const { data: response } = await apiAuth.requestNewTOTP(tokenStore.token)
-      if (response.value) {
-        totpNew.value.key = response.value.key
-        totpNew.value.uri = response.value.uri
-        totpClaim.value.uri = response.value.uri
+      const response = await apiAuth.requestNewTOTP()
+      if (response) {
+        totpNew.value.key = response.key
+        totpNew.value.uri = response.uri
+        totpClaim.value.uri = response.uri
         totpClaim.value.password = event.data.original
         totpModal.value = true
       }

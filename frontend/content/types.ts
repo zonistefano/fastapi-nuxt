@@ -39,7 +39,7 @@ export const linkSchema = z.object({
 export const imageSchema = z.object({
   src: z.string().nonempty(),
   alt: z.string().optional(),
-  loading: z.string().optional(),
+  loading: z.enum(["lazy", "eager"]).optional(),
   srcset: z.string().optional(),
 })
 

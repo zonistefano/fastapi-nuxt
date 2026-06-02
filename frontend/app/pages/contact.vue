@@ -34,7 +34,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
       description: "Thanks so much for contacting us.",
     })
     navigateTo("/")
-  } catch (error) {
+  } catch {
     toast.add({
       title: "Contact error",
       description:

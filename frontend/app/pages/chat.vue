@@ -6,7 +6,6 @@ definePageMeta({
   middleware: ["authenticated"],
 })
 
-const tokenStore = useTokenStore()
 const toast = useToast()
 const input = ref("")
 const loading = ref(false)
@@ -23,13 +22,9 @@ async function createChat(prompt?: string) {
   if (!content || loading.value) return
 
   loading.value = true
-  if (!tokenStore.token) {
-    loading.value = false
-    return navigateTo("/login")
-  }
 
   try {
-    const chat = await apiChat.create(tokenStore.token, content)
+    const chat = await apiChat.create(content)
     await refreshNuxtData("chats")
     input.value = ""
     await navigateTo({

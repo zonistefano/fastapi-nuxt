@@ -3,12 +3,11 @@ import type { DropdownMenuItem } from "@nuxt/ui"
 import type { IChatSummary } from "~/types"
 import { apiChat } from "@/api"
 
-const tokenStore = useTokenStore()
 const authStore = useAuthStore()
 const toast = useToast()
 const route = useRoute()
 
-const { data: chats, refresh } = await apiChat.list(tokenStore.token)
+const { data: chats, refresh } = await apiChat.list()
 const { groups } = useChatGroups(chats)
 
 const links = computed(() => [
@@ -46,7 +45,7 @@ function chatActions(chat: IChatSummary): DropdownMenuItem[][] {
         onSelect: async () => {
           const next = window.prompt("Rename chat", chat.title)
           if (!next?.trim()) return
-          await apiChat.rename(tokenStore.token, chat.id, next.trim())
+          await apiChat.rename(chat.id, next.trim())
           await refresh()
         },
       },
@@ -58,7 +57,7 @@ function chatActions(chat: IChatSummary): DropdownMenuItem[][] {
         color: "error" as const,
         onSelect: async () => {
           try {
-            await apiChat.remove(tokenStore.token, chat.id)
+            await apiChat.remove(chat.id)
             await refresh()
             if (route.path === `/chat/${chat.id}`) await navigateTo("/chat")
           } catch {

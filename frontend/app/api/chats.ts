@@ -2,42 +2,50 @@ import type { IChat, IChatSummary } from "~/types"
 import { apiCore } from "./core"
 
 export const apiChat = {
-  async list(token: string) {
-    return await useFetch<IChatSummary[]>(`${apiCore.url()}/chats`, {
-      headers: apiCore.headers(token),
+  async list() {
+    return await apiCore.useRequest<IChatSummary[]>("/chats", {
       key: "chats",
     })
   },
-  async create(token: string, title?: string) {
-    return await $fetch<IChatSummary>(`${apiCore.url()}/chats`, {
+  async create(title?: string) {
+    return await apiCore.request<IChatSummary>("/chats", {
       method: "POST",
       body: { title },
-      headers: apiCore.headers(token),
     })
   },
-  async get(token: string, id: string) {
-    return await useFetch<IChat>(`${apiCore.url()}/chats/${id}`, {
-      headers: apiCore.headers(token),
+  async get(id: string) {
+    return await apiCore.useRequest<IChat>(`/chats/${id}`, {
       key: `chat-${id}`,
     })
   },
-  async rename(token: string, id: string, title: string) {
-    return await $fetch<IChatSummary>(`${apiCore.url()}/chats/${id}`, {
+  async rename(id: string, title: string) {
+    return await apiCore.request<IChatSummary>(`/chats/${id}`, {
       method: "PATCH",
       body: { title },
-      headers: apiCore.headers(token),
     })
   },
-  async remove(token: string, id: string) {
-    return await $fetch<unknown>(`${apiCore.url()}/chats/${id}`, {
+  async remove(id: string) {
+    return await apiCore.request<unknown>(`/chats/${id}`, {
       method: "DELETE",
-      headers: apiCore.headers(token),
     })
   },
-  streamUrl(id: string) {
-    return `${apiCore.url()}/chats/${id}/messages/stream`
+  async stream(
+    id: string,
+    body: Record<string, string>,
+    signal?: AbortSignal,
+  ) {
+    return await apiCore.stream(`/chats/${id}/messages/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    })
   },
-  regenerateUrl(id: string) {
-    return `${apiCore.url()}/chats/${id}/regenerate`
+  async regenerate(id: string, signal?: AbortSignal) {
+    return await apiCore.stream(`/chats/${id}/regenerate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal,
+    })
   },
 }
