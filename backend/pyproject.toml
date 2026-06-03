@@ -15,7 +15,6 @@ dependencies = [
   "psycopg[binary]==3.2.*",
   "pydantic_settings==2.*",
   "fastapi-myauth==1.*",
-  "openai>=2.0.0",
   "celery>=5.5.3",
   "redis",
   "celery-redbeat",

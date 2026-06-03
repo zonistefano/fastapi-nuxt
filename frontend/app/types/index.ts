@@ -15,20 +15,7 @@ import type {
   INotification,
 } from "./utilities"
 
-import type {
-  IChat,
-  IChatMessage,
-  IChatStreamDone,
-  IChatSummary,
-  ChatRole,
-} from "./chat"
-
 export type {
-  ChatRole,
-  IChat,
-  IChatMessage,
-  IChatStreamDone,
-  IChatSummary,
   IUserProfile,
   IUserProfileUpdate,
   IUserProfileCreate,
