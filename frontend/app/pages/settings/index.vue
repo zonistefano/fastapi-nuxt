@@ -23,12 +23,10 @@ const state = reactive<Partial<Schema>>({
 
 async function submit(event: FormSubmitEvent<Schema>) {
   const profile = {} as IUserProfileUpdate
-  console.log("submit")
   if (
     (!authStore.profile.hashed_password && !event.data.original) ||
     (authStore.profile.hashed_password && event.data.original)
   ) {
-    console.log("2")
     if (event.data.original) profile.original = event.data.original
     if (event.data.email) {
       profile.email = event.data.email

@@ -12,8 +12,16 @@ services:
   #TODO: Keep/Remove Celery
   celeryworker:
     restart: "no"
-    volumes:
-      - ./backend/app/app:/app/app
+    develop:
+      watch:
+        - path: ./backend/app
+          action: sync
+          target: /app/app
+          ignore:
+            - ./backend/.venv
+            - .venv
+        - path: ./backend/app/pyproject.toml
+          action: rebuild
 
   queue:
     image: "redis/redis-stack:latest"
