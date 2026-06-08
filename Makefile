@@ -104,7 +104,7 @@ dev: setup ## Start all services for development (backend, frontend, db, celery)
 
 dev_backend: dev_db_up ## Start only backend and database for development.
 	@echo "$(YELLOW)==> Starting backend and database for development...$(NC)"
-	$(DOCKER_COMPOSE_DEV) up --build -d $(DB_SERVICE_NAME) $(BACKEND_SERVICE_NAME)
+	$(DOCKER_COMPOSE_DEV) up --build --watch $(DB_SERVICE_NAME) $(BACKEND_SERVICE_NAME)
 	@echo "$(GREEN)Backend and database services are up.$(NC)"
 
 dev_frontend: ## Start only frontend for development.
@@ -116,9 +116,13 @@ dev_frontend_local: ## Run the Nuxt frontend locally in development mode (outsid
 	@echo "$(YELLOW)==> Running Nuxt frontend locally (outside Docker)...$(NC)"
 	@cd $(FRONTEND_DIR) && $(FRONTEND_DEV_CMD)
 
-dev_db_up: ## Start only the database service and run prestart script (migrations, data init) for development.
-	@echo "$(YELLOW)==> Starting database service and running prestart script...$(NC)"
+dev_db_only: ## Start only the database service for development.
+	@echo "$(YELLOW)==> Starting database service...$(NC)"
 	$(DOCKER_COMPOSE_DEV) up -d $(DB_SERVICE_NAME)
+	@echo "$(GREEN)Database service is up.$(NC)"
+
+dev_db_up: dev_db_only ## Start the database and run migrations and initial data setup.
+	@echo "$(YELLOW)==> Starting database service and running prestart script...$(NC)"
 	$(DOCKER_COMPOSE_DEV) run --build --rm $(PRESTART_SERVICE_NAME)
 	@echo "$(GREEN)Database service is up and prestart script has completed.$(NC)"
 
@@ -181,7 +185,7 @@ test: test_backend test_frontend ## Run all (backend and frontend) tests.
 
 test_backend: ## Run backend tests inside the Docker container.
 	@echo "$(YELLOW)==> Running backend tests inside Docker container...$(NC)"
-	$(DOCKER_COMPOSE_DEV) run --rm $(BACKEND_SERVICE_NAME) sh -c "$(BACKEND_TEST_SCRIPT)"
+	$(DOCKER_COMPOSE_DEV) run --build --rm $(BACKEND_SERVICE_NAME) sh -c "$(BACKEND_TEST_SCRIPT)"
 	@echo "$(GREEN)Backend tests completed in container.$(NC)"
 
 test_frontend: ## Run frontend tests.
@@ -246,14 +250,14 @@ format_frontend:
 	@cd $(FRONTEND_DIR) && $(FRONTEND_LINT_FIX_CMD)
 	@echo "$(GREEN)Frontend code formatted.$(NC)"
 
-backend_makemigrations: dev_db_up ## Create new Alembic migration inside a temporary backend container.
+backend_makemigrations: dev_db_only ## Create new Alembic migration inside a temporary backend container.
 	@echo "$(YELLOW)==> Creating new Alembic migration inside a temporary docker container. Describe it:$(NC)"
 	@read -p 'Migration message: ' user_msg; \
 		if [ -z "$$user_msg" ]; then \
 			echo "$(RED)Error: Migration message cannot be empty. Aborting.$(NC)"; \
 			exit 1; \
 		fi; \
-		$(DOCKER_COMPOSE_DEV) run --rm -w /app $(BACKEND_SERVICE_NAME) sh -c "alembic revision --autogen -m \"$$user_msg\""
+		$(DOCKER_COMPOSE_DEV) run --build --rm --no-deps -w /app $(BACKEND_SERVICE_NAME) sh -c "alembic upgrade head && alembic revision --autogenerate -m \"$$user_msg\""
 	@echo "$(GREEN)Alembic migration created in container. Please review the generated script.$(NC)"
 
 .ONESHELL: # Allows multi-line commands in a single shell for targets.

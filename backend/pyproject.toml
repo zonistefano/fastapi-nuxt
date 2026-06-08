@@ -18,6 +18,7 @@ dependencies = [
   "celery>=5.5.3",
   "redis",
   "celery-redbeat",
+  "httpx>=0.28.0",
 ]
 
 [dependency-groups]

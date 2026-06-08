@@ -17,11 +17,6 @@
   // Python
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python3",
   "python.analysis.typeCheckingMode": "standard",
-  "python.analysis.diagnosticSeverityOverrides": {
-    "reportUnknownMemberType": "none",
-    "reportIncompatibleVariableOverride": "none",
-    "reportIncompatibleMethodOverride": "none"
-  },
   "python.analysis.autoImportCompletions": true,
   "python.analysis.exclude": [
     "**/.*",

@@ -1,16 +1,15 @@
 from sqlmodel import Session, create_engine
 
-from app.core.config import settings
-
-from ..crud import crud_user
-from ..models import auth_components
+from ..src.auth.config import auth_settings
+from ..src.auth.crud import crud_user
+from ..src.auth.models import auth_components
+from .config import settings
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
-# for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
 
 
 def init_db(session: Session) -> None:
@@ -22,12 +21,12 @@ def init_db(session: Session) -> None:
     # This works because the models are already imported and registered from app.models
     # SQLModel.metadata.create_all(engine)
 
-    user = crud_user.get_by_email(session, email=settings.FIRST_SUPERUSER)
+    user = crud_user.get_by_email(session, email=auth_settings.FIRST_SUPERUSER)
     if not user:
         # Create user auth
         user_in = auth_components.UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
+            email=auth_settings.FIRST_SUPERUSER,
+            password=auth_settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
             email_validated=True,
         )

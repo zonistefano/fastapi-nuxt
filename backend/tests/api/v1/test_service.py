@@ -5,8 +5,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from fastapi_myauth.models import EmailContent
 
-from app.core.config import settings
-
 
 @pytest.fixture
 def contact_data() -> dict:
@@ -17,9 +15,9 @@ def contact_data() -> dict:
     }
 
 
-@patch("app.api.v1.endpoints.services.send_web_contact_email")
+@patch("app.src.auth.api.endpoints.services.send_web_contact_email")
 def test_send_email_success(mock_send_email, client: TestClient, contact_data: dict):
-    response = client.post(f"{settings.API_V1_STR}/services/contact", json=contact_data)
+    response = client.post("/services/contact", json=contact_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["msg"] == "Web contact email sent"
     mock_send_email.assert_called_once()
@@ -30,23 +28,23 @@ def test_send_email_missing_fields(client: TestClient, contact_data: dict):
     # Missing email
     payload = contact_data.copy()
     payload.pop("email")
-    response = client.post(f"{settings.API_V1_STR}/services/contact", json=payload)
+    response = client.post("/services/contact", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # Missing subject
     payload = contact_data.copy()
     payload.pop("subject")
-    response = client.post(f"{settings.API_V1_STR}/services/contact", json=payload)
+    response = client.post("/services/contact", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # Missing content
     payload = contact_data.copy()
     payload.pop("content")
-    response = client.post(f"{settings.API_V1_STR}/services/contact", json=payload)
+    response = client.post("/services/contact", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def test_send_email_invalid_email_format(client: TestClient, contact_data: dict):
     contact_data["email"] = "invalid-email"
-    response = client.post(f"{settings.API_V1_STR}/services/contact", json=contact_data)
+    response = client.post("/services/contact", json=contact_data)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

@@ -8,8 +8,6 @@ init script fix prject name to be prefixed
 
 - nel frontend queste altre component library da usare senza installare (o installandole) https://pagedone.io https://www.penguinui.com https://flowbite.com https://daisyui.com
 
-frontend token expired probabilmente non gestito correttamente. quando senza token ma con lo store the profilo pieno mi lascia loggato ma poi da errori perchè per le chiamate in cui serve autenticazione non va.
-
 https://openfeature.dev/docs/tutorials/getting-started/python
 
 Frontend SEO, head and so on
@@ -42,5 +40,3 @@ ADD TO FRONTEND WORKING TEXT EDITOR WITH COLLABORATION AND SAVING IN BACKEND POS
 REWRITE DOCUMENTATION
 
 WRITE REPO INSTRUCTION FOR LLM
-
-ADD ROO CLINE SETTINGS FOR LLM GIVING ALSO NUXT UI MCP AND SO ON.
