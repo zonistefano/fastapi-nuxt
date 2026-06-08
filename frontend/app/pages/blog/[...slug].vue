@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { readableDate } from "@/utilities"
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const route = useRoute()
 const pathWithoutLocale = route.path.replace(
   new RegExp(`^/${locale.value}(/|$)`),
@@ -14,7 +14,7 @@ const { data: page } = await useAsyncData(route.path, () =>
 if (!page.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: "Page not found",
+    statusMessage: t("common.pageNotFound"),
     fatal: true,
   })
 }
@@ -40,7 +40,7 @@ useSeoMeta({
         <UBadge v-bind="page.badge" variant="subtle" />
         <span class="text-(--ui-text-muted)">&middot;</span>
         <time class="text-(--ui-text-muted)">{{
-          readableDate(page.date)
+          readableDate(page.date, true, locale)
         }}</time>
       </template>
 
@@ -54,7 +54,11 @@ useSeoMeta({
           target="_blank"
           size="sm"
         >
-          <UAvatar v-bind="author.avatar" alt="Author avatar" size="2xs" />
+          <UAvatar
+            v-bind="author.avatar"
+            :alt="t('blog.authorAvatar')"
+            size="2xs"
+          />
 
           {{ author.name }}
         </UButton>

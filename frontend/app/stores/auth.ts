@@ -5,7 +5,7 @@ import type {
   IWebToken,
 } from "~/types"
 import { apiAuth } from "@/api"
-import { tokenParser } from "@/utilities"
+import { tokenParser, translate as t } from "@/utilities"
 
 export const useAuthStore = defineStore("authUser", {
   state: (): IUserProfile => ({
@@ -44,9 +44,8 @@ export const useAuthStore = defineStore("authUser", {
         await this.getUserProfile()
       } catch {
         toast.add({
-          title: "Login error",
-          description:
-            "Please check your details, or internet connection, and try again.",
+          title: t("notifications.loginError"),
+          description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.logOut()
@@ -59,9 +58,8 @@ export const useAuthStore = defineStore("authUser", {
         await this.getUserProfile()
       } catch {
         toast.add({
-          title: "Login error",
-          description:
-            "Please check your details, or internet connection, and try again.",
+          title: t("notifications.loginError"),
+          description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.logOut()
@@ -74,9 +72,8 @@ export const useAuthStore = defineStore("authUser", {
         await this.getUserProfile()
       } catch {
         toast.add({
-          title: "Login error",
-          description:
-            "Please check your details, or internet connection, and try again.",
+          title: t("notifications.loginError"),
+          description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.logOut()
@@ -100,15 +97,14 @@ export const useAuthStore = defineStore("authUser", {
           if (response) {
             this.setUserProfile(response)
             toast.add({
-              title: "Profile update",
-              description: "Your settings have been updated.",
+              title: t("notifications.profileUpdated"),
+              description: t("notifications.profileUpdatedDescription"),
             })
           } else throw "Error"
         } catch {
           toast.add({
-            title: "Profile update error",
-            description:
-              "Please check your submission, or internet connection, and try again.",
+            title: t("notifications.profileUpdateError"),
+            description: t("notifications.submissionErrorDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
         }
@@ -123,15 +119,14 @@ export const useAuthStore = defineStore("authUser", {
           if (response) {
             this.totp_secret = true
             toast.add({
-              title: "Two-factor authentication",
+              title: t("notifications.twoFactor"),
               description: response.msg,
             })
           } else throw "Error"
         } catch {
           toast.add({
-            title: "Error enabling two-factor authentication",
-            description:
-              "Please check your submission, or internet connection, and try again.",
+            title: t("notifications.enableTwoFactorError"),
+            description: t("notifications.submissionErrorDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
         }
@@ -145,15 +140,14 @@ export const useAuthStore = defineStore("authUser", {
           if (response) {
             this.totp_secret = false
             toast.add({
-              title: "Two-factor authentication",
+              title: t("notifications.twoFactor"),
               description: response.msg,
             })
           } else throw "Error"
         } catch {
           toast.add({
-            title: "Error disabling two-factor authentication",
-            description:
-              "Please check your submission, or internet connection, and try again.",
+            title: t("notifications.disableTwoFactorError"),
+            description: t("notifications.submissionErrorDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
         }
@@ -177,14 +171,14 @@ export const useAuthStore = defineStore("authUser", {
           const response = await apiAuth.requestValidationEmail()
           if (response) {
             toast.add({
-              title: "Validation sent",
+              title: t("notifications.validationSent"),
               description: response.msg,
             })
           }
         } catch {
           toast.add({
-            title: "Validation error",
-            description: "Please check your email and try again.",
+            title: t("notifications.validationError"),
+            description: t("notifications.validationErrorDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
         }
@@ -196,15 +190,15 @@ export const useAuthStore = defineStore("authUser", {
         const response = await apiAuth.confirmEmail(validationToken)
         if (response) {
           toast.add({
-            title: "Success",
+            title: t("common.success"),
             description: response.msg,
           })
           return true
         }
       } catch {
         toast.add({
-          title: "Validation error",
-          description: "Invalid token. Check your email link and try again.",
+          title: t("notifications.validationError"),
+          description: t("notifications.invalidTokenDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
       }
@@ -219,16 +213,14 @@ export const useAuthStore = defineStore("authUser", {
             if (Object.prototype.hasOwnProperty.call(response, "claim"))
               this.tokenStore.setMagicToken(response as unknown as IWebToken)
             toast.add({
-              title: "Success",
-              description:
-                "If that login exists, we'll send you an email to reset your password.",
+              title: t("common.success"),
+              description: t("notifications.recoveryDescription"),
             })
           } else throw "Error"
         } catch {
           toast.add({
-            title: "Login error",
-            description:
-              "Please check your details, or internet connection, and try again.",
+            title: t("notifications.loginError"),
+            description: t("notifications.loginErrorDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
           this.tokenStore.deleteTokens()
@@ -253,16 +245,15 @@ export const useAuthStore = defineStore("authUser", {
             const response = await apiAuth.resetPassword(password, claim, token)
             if (response)
               toast.add({
-                title: "Success",
+                title: t("common.success"),
                 description: response.msg,
               })
             else throw "Error"
           } else throw "Error"
         } catch {
           toast.add({
-            title: "Login error",
-            description:
-              "Ensure you're using the same browser and that the token hasn't expired.",
+            title: t("notifications.loginError"),
+            description: t("notifications.sameBrowserDescription"),
             icon: "i-heroicons-exclamation-circle",
           })
           this.tokenStore.deleteTokens()

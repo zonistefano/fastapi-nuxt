@@ -5,13 +5,14 @@ import { apiService } from "@/api"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
 const toast = useToast()
+const { t } = useI18n()
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
+  email: z.email(t("validation.invalidEmail")),
   message: z
-    .string()
-    .min(10, "Must be at least 10 characters")
-    .max(500, "Must be at most 500 characters"),
+    .string(t("validation.stringRequired"))
+    .min(10, t("validation.minCharacters", { count: 10 }))
+    .max(500, t("validation.maxCharacters", { count: 500 })),
 })
 
 type Schema = z.output<typeof schema>
@@ -24,21 +25,20 @@ const state = reactive<Partial<Schema>>({
 async function submit(event: FormSubmitEvent<Schema>) {
   const data: ISendEmail = {
     email: event.data.email,
-    subject: `Website contact from: ${event.data.email} `,
+    subject: t("contact.emailSubject", { email: event.data.email }),
     content: event.data.message,
   }
   try {
     await apiService.postEmailContact(data)
     toast.add({
-      title: "Message sent",
-      description: "Thanks so much for contacting us.",
+      title: t("contact.sentTitle"),
+      description: t("contact.sentDescription"),
     })
     navigateTo("/")
   } catch {
     toast.add({
-      title: "Contact error",
-      description:
-        "Something went wrong with your email. Please check your details, or internet connection, and try again.",
+      title: t("contact.errorTitle"),
+      description: t("contact.errorDescription"),
       icon: "i-heroicons-exclamation-circle",
     })
   }
@@ -49,22 +49,22 @@ async function submit(event: FormSubmitEvent<Schema>) {
   <div class="flex flex-col lg:grid lg:grid-cols-10 lg:gap-8">
     <UPageSection
       class="lg:col-span-5"
-      title="Contact Us"
-      description="We would love to hear from you."
+      :title="t('contact.title')"
+      :description="t('contact.description')"
       :features="[
         {
-          title: 'Address',
-          description: '545 Mavis Island, Chicago, IL 99191',
+          title: t('contact.address'),
+          description: t('contact.addressValue'),
           icon: 'i-heroicons-building-office-2',
         },
         {
-          title: 'Phone Number',
-          description: '+39333',
+          title: t('contact.phone'),
+          description: t('contact.phoneValue'),
           icon: 'i-heroicons-phone',
         },
         {
-          title: 'Email Address',
-          description: 'hello@example.com',
+          title: t('contact.emailAddress'),
+          description: t('contact.emailValue'),
           icon: 'i-heroicons-envelope',
         },
       ]"
@@ -76,13 +76,13 @@ async function submit(event: FormSubmitEvent<Schema>) {
       :state="state"
       @submit="submit"
     >
-      <UFormField label="Email" name="email">
+      <UFormField :label="t('common.email')" name="email">
         <UInput v-model="state.email" />
       </UFormField>
-      <UFormField label="Message" name="message">
+      <UFormField :label="t('contact.message')" name="message">
         <UTextarea v-model="state.message" autoresize :maxrows="10" />
       </UFormField>
-      <UButton type="submit"> Submit </UButton>
+      <UButton type="submit">{{ t("common.submit") }}</UButton>
     </UForm>
   </div>
 </template>

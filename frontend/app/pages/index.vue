@@ -2,7 +2,7 @@
 import { tokenIsTOTP } from "@/utilities"
 import AnimatedBeamExample from "~/components/AnimatedBeamExample.vue"
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const collection: `index_${typeof locale.value}` = `index_${locale.value}`
 const { data: page } = await useAsyncData(useRoute().path, () =>
@@ -11,7 +11,7 @@ const { data: page } = await useAsyncData(useRoute().path, () =>
 if (!page.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: "Page not found",
+    statusMessage: t("common.pageNotFound"),
     fatal: true,
   })
 }
@@ -79,8 +79,8 @@ useSeoMeta({
     </UPageSection>
 
     <UPageSection
-      title="Connect everything"
-      description="Feed your data to our platform and get the most out of it."
+      :title="t('home.integrationsTitle')"
+      :description="t('home.integrationsDescription')"
       orientation="horizontal"
     >
       <AnimatedBeamExample />

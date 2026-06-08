@@ -8,11 +8,12 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 const redirectRoute = "/"
 
-const schema = z.object({
-  email: z.string().email("Invalid email"),
-})
+const schema =  z.object({
+    email: z.email(t("validation.invalidEmail")),
+  })
 
 type Schema = z.output<typeof schema>
 
@@ -34,7 +35,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
 <template>
   <UContainer class="py-12">
     <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-      Recover your account
+      {{ t("auth.recover.title") }}
     </h2>
     <UForm
       class="mt-8 max-w-xs space-y-4 sm:max-w-sm lg:max-w-md"
@@ -42,10 +43,10 @@ async function submit(event: FormSubmitEvent<Schema>) {
       :state="state"
       @submit="submit"
     >
-      <UFormField label="Email" name="email">
+      <UFormField :label="t('common.email')" name="email">
         <UInput v-model="state.email" />
       </UFormField>
-      <UButton type="submit"> Submit </UButton>
+      <UButton type="submit">{{ t("common.submit") }}</UButton>
     </UForm>
   </UContainer>
 </template>

@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { Handle, Position, type NodeProps } from "@vue-flow/core"
 
-// Define only the props the component actually uses
 const props = defineProps<
   NodeProps<{
     label?: string
     icon?: string
   }>
 >()
+const { t } = useI18n()
 
 const nodeLabel = computed(() => {
   if (typeof props.data.label === "string") return props.label
-  return "Task"
+  return t("bpmn.task")
 })
 const nodeIcon = computed(() => props.data.icon || "i-heroicons-cog-6-tooth")
 </script>

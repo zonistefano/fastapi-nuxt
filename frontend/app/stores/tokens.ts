@@ -1,6 +1,11 @@
 import type { ITokenResponse, IWebToken } from "~/types"
 import { apiAuth } from "@/api"
-import { tokenExpired, tokenParser, tokenIsTOTP } from "@/utilities"
+import {
+  tokenExpired,
+  tokenParser,
+  tokenIsTOTP,
+  translate as t,
+} from "@/utilities"
 
 let refreshPromise: Promise<boolean> | null = null
 
@@ -46,9 +51,8 @@ export const useTokenStore = defineStore("tokens", {
         } else throw "Error"
       } catch {
         toast.add({
-          title: "Login error",
-          description:
-            "Please check your details, or internet connection, and try again.",
+          title: t("notifications.loginError"),
+          description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.deleteTokens()
@@ -77,9 +81,8 @@ export const useTokenStore = defineStore("tokens", {
         } else throw "Error"
       } catch {
         toast.add({
-          title: "Login error",
-          description:
-            "Ensure you're using the same browser and that the token hasn't expired.",
+          title: t("notifications.loginError"),
+          description: t("notifications.sameBrowserDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.deleteTokens()
@@ -96,9 +99,8 @@ export const useTokenStore = defineStore("tokens", {
         } else throw "Error"
       } catch {
         toast.add({
-          title: "Two-factor error",
-          description:
-            "Unable to validate your verification code. Make sure it is the latest.",
+          title: t("notifications.twoFactorError"),
+          description: t("notifications.twoFactorErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
         this.deleteTokens()

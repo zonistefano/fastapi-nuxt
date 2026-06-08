@@ -6,6 +6,7 @@ definePageMeta({
 })
 
 const bpmnCanvasRef = ref<InstanceType<typeof BpmnCanvas> | null>(null)
+const { t } = useI18n()
 const selectedElement = ref<BpmnElement | null>(null)
 const isPropertiesPanelOpen = ref(false)
 
@@ -73,7 +74,7 @@ function handleDeleteElement(elementId: string | undefined) {
     <!-- Properties Panel (Right Panel/Slideover) -->
     <USlideover
       v-model:open="isPropertiesPanelOpen"
-      title="Properties"
+      :title="t('bpmn.properties')"
       :ui="{ wrapper: 'w-screen max-w-md' }"
     >
       <template #body>

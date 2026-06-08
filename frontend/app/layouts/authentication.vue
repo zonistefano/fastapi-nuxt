@@ -1,11 +1,12 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
+const { t } = useI18n()
 </script>
 
 <template>
   <Body>
     <UHeader :to="localePath('/')">
-      <template #title> Nuxt Starter </template>
+      <template #title>{{ t("app.name") }}</template>
     </UHeader>
 
     <UMain>

@@ -1,12 +1,14 @@
-function readableDate(term: Date | string, showYear: boolean = true) {
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString
-  // https://stackoverflow.com/a/66590756/295606
-  // https://stackoverflow.com/a/67196206/295606
+function readableDate(
+  term: Date | string,
+  showYear: boolean = true,
+  locale?: string,
+) {
   const readable = term instanceof Date ? term : new Date(term)
-  const day = readable.toLocaleDateString("en-UK", { day: "numeric" })
-  const month = readable.toLocaleDateString("en-UK", { month: "short" })
+  const dateLocale = locale || useNuxtApp().$i18n.locale.value
+  const day = readable.toLocaleDateString(dateLocale, { day: "numeric" })
+  const month = readable.toLocaleDateString(dateLocale, { month: "short" })
   if (showYear) {
-    const year = readable.toLocaleDateString("en-UK", { year: "numeric" })
+    const year = readable.toLocaleDateString(dateLocale, { year: "numeric" })
     return `${day} ${month} ${year}`
   }
   return `${day} ${month}`

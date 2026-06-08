@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const route = useRoute()
 const pathWithoutLocale = route.path.replace(
   new RegExp(`^/${locale.value}(/|$)`),
@@ -12,7 +12,7 @@ const { data: page } = await useAsyncData(route.path, () =>
 if (!page.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: "Page not found",
+    statusMessage: t("common.pageNotFound"),
     fatal: true,
   })
 }

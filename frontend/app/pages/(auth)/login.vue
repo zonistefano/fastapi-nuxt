@@ -11,6 +11,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const route = useRoute()
+const { t } = useI18n()
 const redirectAfterLogin = "/"
 const redirectAfterMagic = "/magic"
 const redirectTOTP = "/totp"
@@ -20,9 +21,9 @@ const oauth = ref(false)
 const fields = [
   {
     name: "email",
-    label: "Email",
+    label: t("common.email"),
     type: "text" as const,
-    placeholder: "Enter your email",
+    placeholder: t("auth.login.emailPlaceholder"),
     required: true,
   },
 ]
@@ -31,19 +32,21 @@ const fields_oauth = [
   ...fields,
   {
     name: "password",
-    label: "Password",
+    label: t("common.password"),
     type: "password" as const,
-    placeholder: "Enter your password",
+    placeholder: t("auth.login.passwordPlaceholder"),
   },
 ]
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
+  email: z.email(t("validation.invalidEmail")),
 })
 
 const schema_oauth = z.object({
   ...schema.shape,
-  password: z.string().min(8, "Must be at least 8 characters"),
+  password: z
+    .string(t("validation.stringRequired"))
+    .min(8, t("validation.minCharacters", { count: 8 })),
 })
 
 type Schema = z.output<typeof schema>
@@ -77,21 +80,21 @@ onMounted(async () => {
 <template>
   <UAuthForm
     class="w-full max-w-md"
-    title="Login"
-    description="Enter your credentials to access your account."
+    :title="t('auth.login.title')"
+    :description="t('auth.login.description')"
     icon="i-heroicons-user-circle"
     :fields="oauth ? fields_oauth : fields"
     :schema="oauth ? schema_oauth : schema"
     @submit="submit"
   >
     <template #password-hint>
-      <NuxtLinkLocale to="/recover-password"
-        >Forgot your password?</NuxtLinkLocale
-      >
+      <NuxtLinkLocale to="/recover-password">{{
+        t("auth.login.forgotPassword")
+      }}</NuxtLinkLocale>
     </template>
     <template #validation>
       <div class="flex items-center justify-between">
-        <p class="text-sm">Use password?</p>
+        <p class="text-sm">{{ t("auth.login.usePassword") }}</p>
         <USwitch v-model="oauth" color="primary" />
       </div>
     </template>

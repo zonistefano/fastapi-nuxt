@@ -6,6 +6,7 @@ import type { IUserProfileUpdate, INewTOTP, IEnableTOTP } from "~/types"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 const totpModal = ref(false)
 const totpNew = ref({} as INewTOTP)
 const totpClaim = ref({} as IEnableTOTP)
@@ -15,14 +16,20 @@ const schema = z
   .object({
     original: !authStore.profile.hashed_password
       ? z.string().optional()
-      : z.string(),
+      : z.string(t("validation.stringRequired")),
     totp: z.boolean(),
-    password: z.string().min(8, "Must be at least 8 characters").optional(),
-    confirmation: z.string().min(8, "Must be at least 8 characters").optional(),
+    password: z
+      .string()
+      .min(8, t("validation.minCharacters", { count: 8 }))
+      .optional(),
+    confirmation: z
+      .string()
+      .min(8, t("validation.minCharacters", { count: 8 }))
+      .optional(),
   })
   .refine((data) => {
     return data.password === data.confirmation
-  }, "Passwords must match")
+  }, t("validation.passwordsMatch"))
 
 type Schema = z.output<typeof schema>
 
@@ -34,7 +41,9 @@ const state = reactive<Partial<Schema>>({
 })
 
 const modal_schema = z.object({
-  claim: z.string().length(6, "Must be 6 number long"),
+  claim: z
+    .string(t("validation.stringRequired"))
+    .length(6, t("validation.codeLength", { count: 6 })),
 })
 
 type modal_Schema = z.output<typeof modal_schema>
@@ -80,18 +89,18 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
 <template>
   <div class="mx-auto flex w-full flex-col gap-4 sm:gap-6 lg:max-w-2xl">
     <UPageCard
-      title="Security"
+      :title="t('settings.security.title')"
       :description="
         !authStore.profile.hashed_password
-          ? 'Secure your account by adding a password, or enabling two-factor security. Or both.'
-          : 'Secure your account further by enabling two-factor security. Any changes will require you to enter your original password.'
+          ? t('settings.security.descriptionWithoutPassword')
+          : t('settings.security.descriptionWithPassword')
       "
     >
       <UForm :state="state" :schema="schema" class="space-y-4" @submit="submit">
         <UFormField
           v-if="authStore.profile.hashed_password"
           name="original"
-          label="Original password"
+          :label="t('settings.security.originalPassword')"
           required
         >
           <UInput
@@ -102,11 +111,11 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
           />
         </UFormField>
 
-        <UFormField name="totp" label="Use two-factor authentication">
+        <UFormField name="totp" :label="t('settings.security.useTotp')">
           <USwitch v-model="state.totp" />
         </UFormField>
 
-        <UFormField name="password" label="New password">
+        <UFormField name="password" :label="t('settings.security.newPassword')">
           <UInput
             id="password"
             v-model="state.password"
@@ -115,7 +124,10 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
           />
         </UFormField>
 
-        <UFormField name="confirmation" label="Repeat new password">
+        <UFormField
+          name="confirmation"
+          :label="t('settings.security.repeatNewPassword')"
+        >
           <UInput
             id="confirmation"
             v-model="state.confirmation"
@@ -124,25 +136,27 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
           />
         </UFormField>
 
-        <UButton type="submit" label="Save changes" color="neutral" />
+        <UButton
+          type="submit"
+          :label="t('common.saveChanges')"
+          color="neutral"
+        />
       </UForm>
     </UPageCard>
 
     <UModal
       v-model="totpModal"
-      title="Enable 2FA"
+      :title="t('settings.security.enableTitle')"
       icon="i-heroicons-qr-code"
       :ui="{ title: 'font-bold text-xl lg:text-2xl' }"
     >
       <template #body>
         <ol class="ml-6 list-decimal">
           <li>
-            Download an authenticator app that supports Time-based One-Time
-            Password (TOTP) for your mobile device.
+            {{ t("settings.security.enableStepDownload") }}
           </li>
           <li>
-            Open the app and scan the QR code below to pair your mobile with
-            your account.
+            {{ t("settings.security.enableStepScan") }}
             <QrcodeVue
               :value="totpNew.uri"
               :size="qrSize"
@@ -150,12 +164,11 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
               render-as="svg"
               class="mx-auto my-2"
             />
-            <p>If you can't scan, you can type in the following key:</p>
+            <p>{{ t("settings.security.manualKey") }}</p>
             <p class="my-2 text-center font-semibold">{{ totpNew.key }}</p>
           </li>
           <li>
-            Enter the code generated by your Authenticator app below to pair
-            your account:
+            {{ t("settings.security.enableStepVerify") }}
           </li>
         </ol>
         <UForm
@@ -164,11 +177,11 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
           :state="modal_state"
           @submit="enableTOTP"
         >
-          <UFormField label="6-digit verification code" name="claim">
+          <UFormField :label="t('settings.security.sixDigitCode')" name="claim">
             <UInput v-model="modal_state.claim" />
           </UFormField>
           <div class="flex justify-end">
-            <UButton type="submit" label="Enable" />
+            <UButton type="submit" :label="t('settings.security.enable')" />
           </div>
         </UForm>
       </template>

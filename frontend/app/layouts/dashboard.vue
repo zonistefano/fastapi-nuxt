@@ -2,32 +2,41 @@
 // Navigation
 const localePath = useLocalePath()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
-const links = [
+const links = computed(() => [
   {
     id: "settings",
-    label: "Settings",
-    to: "/settings",
+    label: t("nav.settings"),
+    to: localePath("/settings"),
     icon: "i-heroicons-cog-8-tooth",
     children: [
       {
-        label: "Account",
-        to: "/settings",
+        label: t("nav.account"),
+        to: localePath("/settings"),
         exact: true,
       },
       {
-        label: "Security",
-        to: "/settings/security",
+        label: t("nav.security"),
+        to: localePath("/settings/security"),
       },
     ],
   },
-]
+])
+
+const moderationLinks = computed(() => [
+  {
+    label: t("nav.moderation"),
+    icon: "i-heroicons-user-group",
+    to: localePath("/moderation"),
+  },
+])
 </script>
 
 <template>
   <UDashboardGroup unit="rem" storage="local">
     <UDashboardSidebar id="dashboard" collapsible resizable>
-      <template #header> Nuxt UI </template>
+      <template #header>{{ t("app.name") }}</template>
 
       <template #default="{ collapsed }">
         <UNavigationMenu
@@ -41,13 +50,7 @@ const links = [
         <UNavigationMenu
           v-if="authStore.is_superuser"
           :collapsed="collapsed"
-          :items="[
-            {
-              label: 'Moderation',
-              icon: 'i-heroicons-user-group',
-              to: localePath('/moderation'),
-            },
-          ]"
+          :items="moderationLinks"
           orientation="vertical"
         />
       </template>

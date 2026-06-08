@@ -7,7 +7,7 @@ const props = defineProps<{
 }>()
 
 const localePath = useLocalePath()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const colorMode = useColorMode()
 
 const lang = computed(() => locales[locale.value].code)
@@ -28,7 +28,7 @@ useHead({
     { name: "viewport", content: "width=device-width, initial-scale=1" },
     { name: "theme-color", content: themeColor },
   ],
-  title: `Error ${props.error.statusCode} - ${config.public.appName}`,
+  title: `${t("common.error", { code: props.error.status })} - ${config.public.appName}`,
 })
 </script>
 

@@ -19,8 +19,8 @@ export default defineNuxtConfig({
     // Public keys that are exposed to the client
     public: {
       appName: "App_Name",
-      apiWS: "ws://localhost:8000/api",
-      apiUrl: "http://localhost:8000/api",
+      apiWS: "ws://localhost:8000",
+      apiUrl: "http://localhost:8000",
     },
   },
 

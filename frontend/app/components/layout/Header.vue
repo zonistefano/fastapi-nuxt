@@ -11,30 +11,30 @@ const pathWithoutLocale = route.path.replace(
 const navigation = computed(() => [
   { label: t("nav.home"), to: localePath("/") },
   {
-    label: "Docs",
+    label: t("nav.docs"),
     to: localePath("/docs/getting-started"),
     children: [
       {
-        label: "Getting Started",
+        label: t("nav.gettingStarted"),
         to: localePath("/docs/getting-started"),
       },
       {
-        label: "Installation",
+        label: t("nav.installation"),
         to: localePath("/docs/getting-started/installation"),
       },
     ],
     active: pathWithoutLocale.startsWith("/docs"),
   },
   { label: t("nav.blog"), to: localePath("/blog") },
-  { label: "Chat", to: "/chat" },
-  { label: "BPMN", to: "/bpmn-editor" },
+  { label: t("nav.chat"), to: "/chat" },
+  { label: t("nav.bpmn"), to: "/bpmn-editor" },
   { label: t("nav.contact"), to: localePath("/contact") },
 ])
 </script>
 
 <template>
   <UHeader :to="localePath('/')">
-    <template #title> Nuxt Starter </template>
+    <template #title>{{ t("app.name") }}</template>
 
     <UNavigationMenu variant="link" :items="navigation" />
 

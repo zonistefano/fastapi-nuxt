@@ -1,5 +1,7 @@
 import type { FetchOptions } from "ofetch"
 
+import { translate as t } from "@/utilities"
+
 type ApiMethod =
   | "GET"
   | "HEAD"
@@ -19,8 +21,8 @@ type ApiRequestOptions = FetchOptions & {
 function showForbiddenToast() {
   const toast = useToast()
   toast.add({
-    title: "Permission denied",
-    description: "You don't have permission to access this resource.",
+    title: t("notifications.permissionDenied"),
+    description: t("notifications.permissionDeniedDescription"),
     icon: "i-heroicons-exclamation-circle",
     color: "error",
   })

@@ -14,6 +14,8 @@ definePageMeta({
   middleware: ["moderator"],
 })
 
+const { t } = useI18n()
+
 const defaultColumns = [
   {
     accessorKey: "id",
@@ -22,33 +24,33 @@ const defaultColumns = [
   },
   {
     accessorKey: "full_name",
-    header: "Name",
+    header: t("moderation.name"),
     sortable: true,
   },
   {
     accessorKey: "email",
-    header: "Email",
+    header: t("common.email"),
     sortable: true,
   },
   {
     accessorKey: "is_active",
-    header: "Status",
+    header: t("moderation.status"),
   },
   {
     accessorKey: "is_superuser",
-    header: "Moderator",
+    header: t("moderation.moderator"),
   },
   {
     accessorKey: "hashed_password",
-    header: "Password authentication",
+    header: t("moderation.passwordAuthentication"),
   },
   {
     accessorKey: "email_validated",
-    header: "Validated",
+    header: t("moderation.validated"),
   },
   {
     accessorKey: "totp_secret",
-    header: "2FA",
+    header: t("moderation.twoFactor"),
   },
 ]
 
@@ -80,8 +82,8 @@ async function toggleActive(email: string, is_active: boolean) {
   const response = await apiAuth.toggleUserState(data)
   if (!response || !response.msg) {
     toast.add({
-      title: "Update error",
-      description: response ? response.msg : "Invalid request.",
+      title: t("notifications.updateError"),
+      description: response ? response.msg : t("notifications.invalidRequest"),
       icon: "i-heroicons-exclamation-circle",
     })
     if (user) user.is_active = !is_active
@@ -95,8 +97,8 @@ async function toggleMod(id: string, is_superuser: boolean) {
   const response = await apiAuth.updateUserById(id, data)
   if (!response) {
     toast.add({
-      title: "Update error",
-      description: "Invalid request.",
+      title: t("notifications.updateError"),
+      description: t("notifications.invalidRequest"),
       icon: "i-heroicons-exclamation-circle",
     })
     const user = userProfiles.value.find((user) => user.id === id)
@@ -105,8 +107,11 @@ async function toggleMod(id: string, is_superuser: boolean) {
 }
 
 const modal_schema = z.object({
-  full_name: z.string().min(3, "Name must be at least 3 characters").optional(),
-  email: z.string().email(),
+  full_name: z
+    .string()
+    .min(3, t("validation.nameMinCharacters", { count: 3 }))
+    .optional(),
+  email: z.email(t("validation.invalidEmail")),
 })
 
 type Schema = z.output<typeof modal_schema>
@@ -126,15 +131,14 @@ async function submit(event: FormSubmitEvent<Schema>) {
     const response = await apiAuth.createUserProfile(data)
     if (!response) {
       toast.add({
-        title: "Update error",
-        description: "Invalid request.",
+        title: t("notifications.updateError"),
+        description: t("notifications.invalidRequest"),
         icon: "i-heroicons-exclamation-circle",
       })
     } else {
       toast.add({
-        title: "User created",
-        description:
-          "An email has been sent to the user with their new login details.",
+        title: t("moderation.userCreated"),
+        description: t("moderation.userCreatedDescription"),
       })
     }
   }
@@ -145,7 +149,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
   <UDashboardPanel>
     <template #header>
       <UDashboardNavbar
-        title="Users"
+        :title="t('moderation.users')"
         :badge="userProfiles.length"
         :ui="{ right: 'gap-3' }"
       >
@@ -166,10 +170,10 @@ async function submit(event: FormSubmitEvent<Schema>) {
             multiple
             class="hidden lg:block"
           >
-            Display
+            {{ t("moderation.display") }}
           </USelectMenu>
           <UButton
-            label="New user"
+            :label="t('moderation.newUser')"
             trailing-icon="i-heroicons-plus"
             @click="isNewUserModalOpen = true"
           />
@@ -180,8 +184,8 @@ async function submit(event: FormSubmitEvent<Schema>) {
     <template #body>
       <UModal
         v-model:open="isNewUserModalOpen"
-        title="New user"
-        description="Create a new user and notify them."
+        :title="t('moderation.newUser')"
+        :description="t('moderation.newUserDescription')"
       >
         <template #body>
           <UForm
@@ -190,14 +194,14 @@ async function submit(event: FormSubmitEvent<Schema>) {
             :state="modal_state"
             @submit="submit"
           >
-            <UFormField label="Profile name" name="full_name">
+            <UFormField :label="t('moderation.profileName')" name="full_name">
               <UInput v-model="modal_state.full_name" />
             </UFormField>
-            <UFormField label="Email" name="email">
+            <UFormField :label="t('common.email')" name="email">
               <UInput v-model="modal_state.email" />
             </UFormField>
             <div class="flex justify-end">
-              <UButton type="submit" label="Save" />
+              <UButton type="submit" :label="t('common.save')" />
             </div>
           </UForm>
         </template>
@@ -218,21 +222,21 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
         <template #hashed_password-data="{ row }">
           <UBadge
-            :label="row.hashed_password ? 'Yes' : 'No'"
+            :label="row.hashed_password ? t('common.yes') : t('common.no')"
             :color="row.hashed_password ? 'success' : 'error'"
             variant="subtle"
           />
         </template>
         <template #email_validated-data="{ row }">
           <UBadge
-            :label="row.email_validated ? 'Yes' : 'No'"
+            :label="row.email_validated ? t('common.yes') : t('common.no')"
             :color="row.email_validated ? 'success' : 'error'"
             variant="subtle"
           />
         </template>
         <template #totp_secret-data="{ row }">
           <UBadge
-            :label="row.totp_secret ? 'Yes' : 'No'"
+            :label="row.totp_secret ? t('common.yes') : t('common.no')"
             :color="row.totp_secret ? 'success' : 'error'"
             variant="subtle"
           />

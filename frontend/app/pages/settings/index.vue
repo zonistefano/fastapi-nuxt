@@ -4,13 +4,14 @@ import type { IUserProfileUpdate } from "~/types"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const schema = z.object({
   name: z.string().optional(),
-  email: z.string().email("Invalid email"),
+  email: z.email(t("validation.invalidEmail")),
   original: !authStore.profile.hashed_password
     ? z.string().optional()
-    : z.string(),
+    : z.string(t("validation.stringRequired")),
 })
 
 type Schema = z.output<typeof schema>
@@ -47,14 +48,14 @@ async function validate() {
   <div class="mx-auto flex w-full flex-col gap-4 sm:gap-6 lg:max-w-2xl">
     <UForm :state="state" :schema="schema" class="space-y-4" @submit="submit">
       <UPageCard
-        title="Profile"
-        description="These informations will be displayed publicly."
+        :title="t('settings.profile.title')"
+        :description="t('settings.profile.description')"
         variant="naked"
         orientation="horizontal"
         class="mb-4"
       >
         <UButton
-          label="Save changes"
+          :label="t('common.saveChanges')"
           color="neutral"
           type="submit"
           class="w-fit lg:ms-auto"
@@ -63,8 +64,8 @@ async function validate() {
       <UPageCard variant="subtle">
         <UFormField
           name="name"
-          label="Name"
-          description="Will appear on receipts, invoices, and other communication."
+          :label="t('settings.profile.name')"
+          :description="t('settings.profile.nameDescription')"
           class="flex items-start justify-between gap-4 max-sm:flex-col"
         >
           <UInput
@@ -76,8 +77,8 @@ async function validate() {
 
         <UFormField
           name="email"
-          label="Email"
-          description="Used to sign in, for email receipts and product updates."
+          :label="t('common.email')"
+          :description="t('settings.profile.emailDescription')"
           class="flex items-start justify-between gap-4 max-sm:flex-col"
         >
           <UInput
@@ -91,8 +92,8 @@ async function validate() {
         <UFormField
           v-if="authStore.profile.hashed_password"
           name="original"
-          label="Password"
-          description="Enter your current password."
+          :label="t('common.password')"
+          :description="t('settings.profile.currentPassword')"
           class="flex items-start justify-between gap-4 max-sm:flex-col"
           required
         >
@@ -103,13 +104,13 @@ async function validate() {
 
     <UPageCard
       v-if="!authStore.profile.email_validated"
-      title="Validate email address"
-      description="Receive an email to validate your account"
+      :title="t('settings.profile.validateEmailTitle')"
+      :description="t('settings.profile.validateEmailDescription')"
     >
       <template #links>
         <UButton
           type="submit"
-          label="Send email"
+          :label="t('settings.profile.sendEmail')"
           color="neutral"
           @click="validate"
         />

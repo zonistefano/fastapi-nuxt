@@ -10,6 +10,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(["update-properties", "delete-element"])
+const { t } = useI18n()
 
 const state = reactive({
   ...props.element,
@@ -23,15 +24,15 @@ function handleUpdate() {
 
 <template>
   <UForm :state="state" class="space-y-4" @submit="handleUpdate">
-    <UFormField label="ID" name="id" required>
+    <UFormField :label="t('bpmn.id')" name="id" required>
       <UInput v-model="state.id" class="w-full" />
     </UFormField>
 
-    <UFormField label="Type" name="type">
+    <UFormField :label="t('bpmn.type')" name="type">
       <UInput v-model="state.type" class="w-full" />
     </UFormField>
 
-    <UFormField label="Label" name="label">
+    <UFormField :label="t('bpmn.label')" name="label">
       <UInput v-model="state.label" class="w-full" />
     </UFormField>
     <div class="flex justify-between">
@@ -39,9 +40,9 @@ function handleUpdate() {
         variant="outline"
         icon="i-heroicons-trash"
         @click="$emit('delete-element', props.element?.id)"
-        >Delete Element</UButton
+        >{{ t("bpmn.deleteElement") }}</UButton
       >
-      <UButton type="submit"> Update </UButton>
+      <UButton type="submit">{{ t("bpmn.update") }}</UButton>
     </div>
   </UForm>
 </template>

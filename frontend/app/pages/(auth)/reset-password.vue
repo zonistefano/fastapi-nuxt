@@ -9,16 +9,21 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const route = useRoute()
+const { t } = useI18n()
 const redirectRoute = "/login"
 
 const schema = z
   .object({
-    password: z.string().min(8, "Must be at least 8 characters"),
-    confirmation: z.string().min(8, "Must be at least 8 characters"),
+    password: z
+      .string(t("validation.stringRequired"))
+      .min(8, t("validation.minCharacters", { count: 8 })),
+    confirmation: z
+      .string(t("validation.stringRequired"))
+      .min(8, t("validation.minCharacters", { count: 8 })),
   })
   .refine((data) => {
     return data.password === data.confirmation
-  }, "Passwords must match")
+  }, t("validation.passwordsMatch"))
 
 type Schema = z.output<typeof schema>
 
@@ -49,7 +54,7 @@ onMounted(async () => {
 <template>
   <UContainer class="py-12">
     <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-      Reset your password
+      {{ t("auth.reset.title") }}
     </h2>
     <UForm
       class="mt-8 max-w-xs space-y-4 sm:max-w-sm lg:max-w-md"
@@ -57,13 +62,13 @@ onMounted(async () => {
       :state="state"
       @submit="submit"
     >
-      <UFormField label="Password" name="password">
+      <UFormField :label="t('common.password')" name="password">
         <UInput v-model="state.password" type="password" />
       </UFormField>
-      <UFormField label="Repeat Password" name="confirmation">
+      <UFormField :label="t('auth.reset.repeatPassword')" name="confirmation">
         <UInput v-model="state.confirmation" type="password" />
       </UFormField>
-      <UButton type="submit">Submit</UButton>
+      <UButton type="submit">{{ t("common.submit") }}</UButton>
     </UForm>
   </UContainer>
 </template>

@@ -10,10 +10,11 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
+const { t } = useI18n()
 const redirectRoute = "/"
 
 const schema = z.object({
-  claim: z.string().length(6),
+  claim: z.string(t("validation.stringRequired")).length(6),
 })
 
 type Schema = z.output<typeof schema>
@@ -39,10 +40,10 @@ onMounted(async () => {
 <template>
   <UContainer class="py-12">
     <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-      Two-factor authentication
+      {{ t("auth.totp.title") }}
     </h2>
     <p class="mt-4 text-lg">
-      Enter the 6-digit verification code from your app.
+      {{ t("auth.totp.description") }}
     </p>
     <UForm
       class="mt-8 max-w-xs space-y-4 sm:max-w-sm lg:max-w-md"
@@ -50,10 +51,10 @@ onMounted(async () => {
       :state="state"
       @submit="submit"
     >
-      <UFormField label="Verification code" name="claim">
+      <UFormField :label="t('auth.totp.verificationCode')" name="claim">
         <UInput v-model="state.claim" />
       </UFormField>
-      <UButton type="submit" label="Submit" />
+      <UButton type="submit" :label="t('common.submit')" />
     </UForm>
   </UContainer>
 </template>

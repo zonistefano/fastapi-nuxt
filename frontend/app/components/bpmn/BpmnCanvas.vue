@@ -8,6 +8,7 @@ import "@vue-flow/core/dist/theme-default.css"
 import "@vue-flow/minimap/dist/style.css"
 
 const emit = defineEmits(["element-select"])
+const { t } = useI18n()
 
 const {
   nodes,
@@ -30,28 +31,28 @@ const nodesInitial: Node[] = [
   {
     id: "1",
     type: "eventNode",
-    label: "Start",
+    label: t("bpmn.start"),
     position: { x: 220, y: 5 },
     data: { eventType: "start" },
   },
   {
     id: "2",
     type: "taskNode",
-    label: "Task 1",
+    label: t("bpmn.taskNumber", { number: 1 }),
     position: { x: 300, y: 100 },
     data: {},
   },
   {
     id: "g1",
     type: "gatewayNode",
-    label: "Decision?",
+    label: t("bpmn.decision"),
     position: { x: 400, y: 200 },
     data: { gatewayType: "exclusive" },
   },
   {
     id: "3",
     type: "eventNode",
-    label: "End",
+    label: t("bpmn.end"),
     position: { x: 480, y: 300 },
     data: { eventType: "end" },
   },
@@ -98,22 +99,22 @@ function onDrop(event: DragEvent) {
   switch (type) {
     case "startEvent":
       nodeType = "eventNode"
-      nodeLabel = "Start"
+      nodeLabel = t("bpmn.start")
       addNode(nodeType, position, nodeLabel, { eventType: "start" })
       break
     case "endEvent":
       nodeType = "eventNode"
-      nodeLabel = "End"
+      nodeLabel = t("bpmn.end")
       addNode(nodeType, position, nodeLabel, { eventType: "end" })
       break
     case "userTask":
       nodeType = "taskNode"
-      nodeLabel = "User Task"
+      nodeLabel = t("bpmn.userTask")
       addNode(nodeType, position, nodeLabel)
       break
     case "exclusiveGateway":
       nodeType = "gatewayNode"
-      nodeLabel = "Gateway"
+      nodeLabel = t("bpmn.gateway")
       addNode(nodeType, position, nodeLabel, { gatewayType: "exclusive" })
       break
     default:
@@ -149,7 +150,7 @@ function addNode(
     id: newNodeId,
     type: nodeType,
     position: position,
-    label: label || `${nodeType.replace("Node", "")} ${newNodeId}`,
+    label: label || t("bpmn.taskNumber", { number: newNodeId }),
     data: data,
   }
   vueFlowAddNodes([newNode])

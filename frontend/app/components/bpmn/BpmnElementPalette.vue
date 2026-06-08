@@ -1,13 +1,22 @@
 <script setup lang="ts">
 const emit = defineEmits(["elementDragStart"])
+const { t } = useI18n()
 
 const paletteElements = [
-  { type: "startEvent", label: "Start Event", icon: "i-heroicons-play-circle" },
-  { type: "endEvent", label: "End Event", icon: "i-heroicons-stop-circle" },
-  { type: "userTask", label: "User Task", icon: "i-heroicons-user" },
+  {
+    type: "startEvent",
+    label: t("bpmn.startEvent"),
+    icon: "i-heroicons-play-circle",
+  },
+  {
+    type: "endEvent",
+    label: t("bpmn.endEvent"),
+    icon: "i-heroicons-stop-circle",
+  },
+  { type: "userTask", label: t("bpmn.userTask"), icon: "i-heroicons-user" },
   {
     type: "exclusiveGateway",
-    label: "Exclusive Gateway",
+    label: t("bpmn.exclusiveGateway"),
     icon: "i-heroicons-squares-plus",
   },
 ]
@@ -24,7 +33,9 @@ function handleDragStart(event: DragEvent, elementType: string) {
 <template>
   <UCard :ui="{ body: 'p-2 sm:p-2', header: 'p2 sm:p-2' }">
     <template #header>
-      <h3 class="text-sm font-semibold text-(--ui-neutral)">Elements</h3>
+      <h3 class="text-sm font-semibold text-(--ui-neutral)">
+        {{ t("bpmn.elements") }}
+      </h3>
     </template>
 
     <div class="grid grid-cols-2 gap-2">

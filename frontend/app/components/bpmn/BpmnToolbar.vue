@@ -1,5 +1,6 @@
 <script setup lang="ts">
 defineEmits(["zoomIn", "zoomOut", "fitView"])
+const { t } = useI18n()
 </script>
 
 <template>
@@ -7,7 +8,7 @@ defineEmits(["zoomIn", "zoomOut", "fitView"])
     <UPopover :ui="{ content: 'rounded-[calc(var(--ui-radius)*2)]' }">
       <UButton
         icon="i-heroicons-plus-circle"
-        label="Add Element"
+        :label="t('bpmn.addElement')"
         color="neutral"
         variant="soft"
         trailing-icon="i-heroicons-chevron-down-20-solid"
@@ -22,21 +23,21 @@ defineEmits(["zoomIn", "zoomOut", "fitView"])
     <UButtonGroup>
       <UButton
         icon="i-heroicons-magnifying-glass-plus"
-        aria-label="Zoom In"
+        :aria-label="t('bpmn.zoomIn')"
         color="neutral"
         variant="soft"
         @click="$emit('zoomIn')"
       />
       <UButton
         icon="i-heroicons-magnifying-glass-minus"
-        aria-label="Zoom Out"
+        :aria-label="t('bpmn.zoomOut')"
         color="neutral"
         variant="soft"
         @click="$emit('zoomOut')"
       />
       <UButton
         icon="i-heroicons-arrows-pointing-in"
-        aria-label="Fit View"
+        :aria-label="t('bpmn.fitView')"
         color="neutral"
         variant="soft"
         @click="$emit('fitView')"
