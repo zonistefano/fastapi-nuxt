@@ -77,7 +77,7 @@ frontend_setup: ## Install frontend dependencies using bun.
 
 backend_upgrade: ## Upgrade backend dependencies using uv.
 	@echo "$(YELLOW)==> Upgrading backend dependencies with uv...$(NC)"
-	@cd ${BACKEND_DIR} && $(BACKEND_INSTALL_CMD) --upgrade
+	@cd ${BACKEND_DIR} && $(BACKEND_INSTALL_CMD) --upgrade --refresh
 	@echo "$(GREEN)==> Backend upgrade complete.$(NC)"
 
 clean: clean_backend clean_frontend ## Clean all generated files and caches.
