@@ -32,6 +32,7 @@ export default defineNuxtConfig({
     "pinia-plugin-persistedstate/nuxt",
     "@nuxt/image",
     "@nuxt/eslint",
+    "nuxt-llms",
     "nuxt-umami",
   ],
 
@@ -74,6 +75,13 @@ export default defineNuxtConfig({
 
   content: {
     experimental: { sqliteConnector: "native" },
+  },
+
+  llms: {
+    domain: "http://localhost:3000/",
+    title: "Nuxt Docs Template",
+    description:
+      "A template for building documentation with Nuxt UI and Nuxt Content.",
   },
 
   compatibilityDate: "2026-05-01",

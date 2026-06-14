@@ -68,6 +68,49 @@ const starLayers = computed(() => [
   <div
     class="pointer-events-none absolute inset-x-5 inset-y-0 z-[-1] overflow-hidden sm:inset-x-7 lg:inset-x-9"
   >
+    <svg
+      class="pointer-events-none absolute inset-0"
+      viewBox="0 0 1017 181"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g opacity="0.5">
+        <mask id="path-1-inside-1_846_160841" fill="white">
+          <path d="M0 0H1017V181H0V0Z" />
+        </mask>
+        <path
+          d="M0 0H1017V181H0V0Z"
+          fill="url(#paint0_radial_846_160841)"
+          fill-opacity="0.22"
+        />
+      </g>
+      <defs>
+        <radialGradient
+          id="paint0_radial_846_160841"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(508.999 19.5) rotate(90.177) scale(161.501 509.002)"
+        >
+          <stop stop-color="var(--ui-primary)" />
+          <stop offset="1" stop-color="var(--ui-primary)" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient
+          id="paint1_linear_846_160841"
+          x1="10.9784"
+          y1="91"
+          x2="1017"
+          y2="90.502"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stop-color="var(--ui-primary)" stop-opacity="0" />
+          <stop offset="0.395" stop-color="var(--ui-primary)" />
+          <stop offset="1" stop-color="var(--ui-primary)" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+
     <div class="stars absolute inset-x-0 top-0 size-full">
       <div
         v-for="(layer, index) in starLayers"

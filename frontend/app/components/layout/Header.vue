@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import { pathWithoutLocale } from "@/utilities"
+
 const { t } = useI18n()
 const localePath = useLocalePath()
-const { locale } = useI18n()
+const config = useRuntimeConfig()
 const route = useRoute()
-const pathWithoutLocale = route.path.replace(
-  new RegExp(`^/${locale.value}(/|$)`),
-  "/",
-)
+const pathNoLocale = computed(() => pathWithoutLocale(route.path))
 
 const navigation = computed(() => [
   { label: t("nav.home"), to: localePath("/") },
@@ -23,9 +22,13 @@ const navigation = computed(() => [
         to: localePath("/docs/getting-started/installation"),
       },
     ],
-    active: pathWithoutLocale.startsWith("/docs"),
+    active: pathNoLocale.value.startsWith("/docs"),
   },
-  { label: t("nav.blog"), to: localePath("/blog") },
+  {
+    label: t("nav.blog"),
+    to: localePath("/blog"),
+    active: pathNoLocale.value.startsWith("/blog"),
+  },
   { label: t("nav.chat"), to: "/chat" },
   { label: t("nav.bpmn"), to: "/bpmn-editor" },
   { label: t("nav.contact"), to: localePath("/contact") },
@@ -34,7 +37,7 @@ const navigation = computed(() => [
 
 <template>
   <UHeader :to="localePath('/')">
-    <template #title>{{ t("app.name") }}</template>
+    <template #title>{{ config.public.appName }}</template>
 
     <UNavigationMenu variant="link" :items="navigation" />
 
@@ -43,6 +46,17 @@ const navigation = computed(() => [
         :items="navigation"
         orientation="vertical"
         class="-mx-2.5"
+      />
+
+      <USeparator class="my-6" />
+
+      <UButton
+        label="Sign in"
+        color="neutral"
+        variant="subtle"
+        to="/login"
+        block
+        class="mb-3"
       />
     </template>
 

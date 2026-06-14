@@ -1,20 +1,29 @@
 <script setup lang="ts">
+const router = useRouter()
 const localePath = useLocalePath()
-const { t } = useI18n()
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push(localePath("/"))
+  }
+}
 </script>
 
 <template>
-  <Body>
-    <UHeader :to="localePath('/')">
-      <template #title>{{ t("app.name") }}</template>
-    </UHeader>
+  <div class="flex h-screen items-center justify-center px-4">
+    <UButton
+      icon="i-lucide-chevron-left"
+      size="xl"
+      color="neutral"
+      variant="subtle"
+      class="absolute top-8 left-8 z-10 rounded-full"
+      @click="goBack"
+    />
 
-    <UMain>
-      <div class="flex min-h-[inherit] items-center justify-center py-2">
-        <slot />
-      </div>
-    </UMain>
-
-    <LayoutFooter />
-  </Body>
+    <UPageCard variant="subtle" class="w-full max-w-sm">
+      <slot />
+    </UPageCard>
+  </div>
 </template>

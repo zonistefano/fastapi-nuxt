@@ -1,7 +1,4 @@
 export default {
-  app: {
-    name: "Nuxt Starter",
-  },
   common: {
     email: "Email",
     password: "Password",
@@ -45,7 +42,7 @@ export default {
   auth: {
     login: {
       title: "Accedi",
-      description: "Inserisci le credenziali per accedere al tuo account.",
+      description: "Non hai un account?",
       emailPlaceholder: "Inserisci la tua email",
       passwordPlaceholder: "Inserisci la tua password",
       forgotPassword: "Hai dimenticato la password?",
@@ -64,6 +61,13 @@ export default {
     reset: {
       title: "Reimposta la password",
       repeatPassword: "Ripeti la password",
+    },
+    signup: {
+      title: "Registrati",
+      description: "Hai già un account?",
+      namePlaceholder: "Inserisci il tuo nome",
+      emailPlaceholder: "Inserisci la tua email",
+      passwordPlaceholder: "Crea una password",
     },
     totp: {
       title: "Autenticazione a due fattori",

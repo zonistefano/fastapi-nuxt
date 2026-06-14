@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from "@nuxt/ui"
+
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const { t } = useI18n()
 const redirectRoute = "/"
 
-const menuItems = computed(() => [
+const menuItems = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: t("nav.settings"),
@@ -31,15 +33,23 @@ async function logout() {
   <UButton
     v-if="!authStore.loggedIn"
     :to="localePath('/login')"
-    :label="t('nav.login')"
     icon="i-heroicons-arrow-right-20-solid"
     variant="ghost"
-    trailing
+    color="neutral"
+    class="lg:hidden"
   />
+
+  <UButton
+    v-if="!authStore.loggedIn"
+    :to="localePath('/login')"
+    :label="t('nav.login')"
+    trailing-icon="i-heroicons-arrow-right-20-solid"
+    variant="outline"
+    color="neutral"
+    class="hidden lg:inline-flex"
+  />
+
   <UDropdownMenu v-else :items="menuItems">
-    <UAvatar
-      src="https://avatars.githubusercontent.com/u/739984?v=4"
-      :alt="t('nav.account')"
-    />
+    <UAvatar :alt="t('nav.account')" />
   </UDropdownMenu>
 </template>

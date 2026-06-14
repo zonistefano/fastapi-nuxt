@@ -86,7 +86,7 @@ export default defineContentConfig({
       acc[`blog_${locale}`] = defineCollection({
         source: {
           include: `${locale}/blog/**/*.md`,
-          prefix: "/blog",
+          prefix: `/${locale}/blog`,
         },
         type: "page",
         schema: blogSchema,
@@ -95,7 +95,7 @@ export default defineContentConfig({
       acc[`docs_${locale}`] = defineCollection({
         source: {
           include: `${locale}/docs/**/*.md`,
-          prefix: "/docs",
+          prefix: `/${locale}/docs`,
         },
         type: "page",
       })
@@ -103,7 +103,7 @@ export default defineContentConfig({
       acc[`general_${locale}`] = defineCollection({
         source: {
           include: `${locale}/*.md`,
-          prefix: "/",
+          prefix: `/${locale}`,
         },
         type: "page",
       })

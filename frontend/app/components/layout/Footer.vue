@@ -5,7 +5,7 @@ const { t } = useI18n()
 <template>
   <UFooter>
     <template #left>
-      <div class="text-sm text-(--ui-text-muted)">
+      <div class="text-muted text-sm">
         Copyright © {{ new Date().getFullYear() }}.
         <NuxtLinkLocale to="/privacy">{{
           t("footer.privacyPolicy")

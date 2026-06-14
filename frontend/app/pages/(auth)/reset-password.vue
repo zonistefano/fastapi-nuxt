@@ -52,21 +52,25 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UContainer class="py-12">
-    <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+  <UContainer>
+    <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
       {{ t("auth.reset.title") }}
     </h2>
     <UForm
-      class="mt-8 max-w-xs space-y-4 sm:max-w-sm lg:max-w-md"
+      class="mt-6 space-y-4"
       :schema="schema"
       :state="state"
       @submit="submit"
     >
-      <UFormField :label="t('common.password')" name="password">
-        <UInput v-model="state.password" type="password" />
+      <UFormField :label="t('common.password')" name="password" required>
+        <UInput v-model="state.password" class="w-full" type="password" />
       </UFormField>
-      <UFormField :label="t('auth.reset.repeatPassword')" name="confirmation">
-        <UInput v-model="state.confirmation" type="password" />
+      <UFormField
+        :label="t('auth.reset.repeatPassword')"
+        name="confirmation"
+        required
+      >
+        <UInput v-model="state.confirmation" class="w-full" type="password" />
       </UFormField>
       <UButton type="submit">{{ t("common.submit") }}</UButton>
     </UForm>

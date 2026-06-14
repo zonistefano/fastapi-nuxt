@@ -25,7 +25,6 @@ const redirectAfterLogin = "/"
 onMounted(async () => {
   // Check if email is being validated
   if (route.query && route.query.magic) {
-    // No idea: https://stackoverflow.com/q/74759799/295606
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve(true)
@@ -40,6 +39,7 @@ onMounted(async () => {
 
 useSeoMeta({
   description: page.value?.description,
+  ogTitle: page.value?.title,
   ogDescription: page.value?.description,
 })
 </script>
@@ -52,11 +52,11 @@ useSeoMeta({
       :links="page.hero.links"
     >
       <template #top>
-        <div
-          class="absolute left-1/2 size-60 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[300px] sm:size-80 dark:bg-(--ui-primary)"
-        />
-
         <LazyStarsBg />
+      </template>
+
+      <template #title>
+        <MDC :value="page.hero.title" unwrap="p" />
       </template>
 
       <SafariMockup
@@ -127,10 +127,6 @@ useSeoMeta({
     <USeparator />
 
     <UPageCTA v-bind="page.cta" variant="naked" class="overflow-hidden">
-      <div
-        class="absolute left-1/2 size-40 -translate-x-1/2 -translate-y-80 transform rounded-full blur-[250px] sm:size-50 dark:bg-(--ui-primary)"
-      />
-
       <LazyStarsBg />
     </UPageCTA>
   </div>

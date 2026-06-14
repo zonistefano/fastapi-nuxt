@@ -11,9 +11,9 @@ const authStore = useAuthStore()
 const { t } = useI18n()
 const redirectRoute = "/"
 
-const schema =  z.object({
-    email: z.email(t("validation.invalidEmail")),
-  })
+const schema = z.object({
+  email: z.email(t("validation.invalidEmail")),
+})
 
 type Schema = z.output<typeof schema>
 
@@ -33,18 +33,18 @@ async function submit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UContainer class="py-12">
-    <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+  <UContainer>
+    <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
       {{ t("auth.recover.title") }}
     </h2>
     <UForm
-      class="mt-8 max-w-xs space-y-4 sm:max-w-sm lg:max-w-md"
+      class="mt-6 space-y-4"
       :schema="schema"
       :state="state"
       @submit="submit"
     >
-      <UFormField :label="t('common.email')" name="email">
-        <UInput v-model="state.email" />
+      <UFormField :label="t('common.email')" name="email" required>
+        <UInput v-model="state.email" class="w-full" />
       </UFormField>
       <UButton type="submit">{{ t("common.submit") }}</UButton>
     </UForm>

@@ -100,9 +100,9 @@ onMounted(async () => {
     @submit="submit"
   >
     <template #description>
-      {{ t("auth.login.description") }}
-      <NuxtLinkLocale to="/signup" class="text-primary font-medium">{{
-        t("auth.signup.title")
+      {{ t("auth.signup.description") }}
+      <NuxtLinkLocale to="/login" class="text-primary font-medium">{{
+        t("auth.login.title")
       }}</NuxtLinkLocale
       >.
     </template>

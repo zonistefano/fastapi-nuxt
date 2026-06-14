@@ -2,6 +2,7 @@
 // Navigation
 const localePath = useLocalePath()
 const authStore = useAuthStore()
+const config = useRuntimeConfig()
 const { t } = useI18n()
 
 const links = computed(() => [
@@ -36,7 +37,7 @@ const moderationLinks = computed(() => [
 <template>
   <UDashboardGroup unit="rem" storage="local">
     <UDashboardSidebar id="dashboard" collapsible resizable>
-      <template #header>{{ t("app.name") }}</template>
+      <template #header>{{ config.public.appName }}</template>
 
       <template #default="{ collapsed }">
         <UNavigationMenu
