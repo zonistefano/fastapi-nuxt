@@ -59,6 +59,11 @@ function getCommonItemsByKey<T, U, K extends keyof T & keyof U>(
     set2.has(item[key] as unknown as string | number | symbol),
   )
 }
+
+function pathWithoutLocale(path: string, locale: string): string {
+  return path.replace(new RegExp(`^/${locale}(?=/|$)`), "")
+}
+
 export {
   generateUUID,
   getTimeInSeconds,
@@ -67,4 +72,5 @@ export {
   isValidHttpUrl,
   tokenParser,
   getCommonItemsByKey,
+  pathWithoutLocale,
 }

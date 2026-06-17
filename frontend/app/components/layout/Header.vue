@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { pathWithoutLocale } from "@/utilities"
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const config = useRuntimeConfig()
 const route = useRoute()
-const pathNoLocale = computed(() => pathWithoutLocale(route.path))
+const pathNoLocale = computed(() => pathWithoutLocale(route.path, locale.value))
 
 const navigation = computed(() => [
   { label: t("nav.home"), to: localePath("/") },

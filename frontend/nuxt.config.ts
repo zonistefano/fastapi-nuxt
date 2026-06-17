@@ -34,6 +34,7 @@ export default defineNuxtConfig({
     "@nuxt/eslint",
     "nuxt-llms",
     "nuxt-umami",
+    "nuxt-og-image",
   ],
 
   piniaPluginPersistedstate: {
@@ -42,6 +43,10 @@ export default defineNuxtConfig({
       secure: true,
       sameSite: "lax",
     },
+  },
+
+  site: {
+    url: "http://localhost:3000",
   },
 
   i18n: {

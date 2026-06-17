@@ -115,6 +115,7 @@ services:
       - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME?Variable not set}
       - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL?Variable not set}
       - NUXT_PUBLIC_API_WS=${NUXT_PUBLIC_API_WS?Variable not set}
+      - NUXT_OG_IMAGE_SECRET=${NUXT_OG_IMAGE_SECRET?Variable not set}
     restart: always
 
 volumes:

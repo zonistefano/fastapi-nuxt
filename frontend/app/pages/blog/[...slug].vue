@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { readableDate } from "@/utilities"
+import { getContentPath, readableDate } from "@/utilities"
 
 const { locale, t } = useI18n()
 const route = useRoute()
-const pathWithoutLocale = route.path.replace(
-  new RegExp(`^/${locale.value}(/|$)`),
-  "/",
-)
+const contentPath = getContentPath(route.path, locale.value)
 const collection: `blog_${typeof locale.value}` = `blog_${locale.value}`
 const { data: page } = await useAsyncData(route.path, () =>
-  queryCollection(collection).path(pathWithoutLocale).first(),
+  queryCollection(collection).path(contentPath).first(),
 )
 if (!page.value) {
   throw createError({
@@ -20,7 +17,7 @@ if (!page.value) {
 }
 
 const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
-  return queryCollectionItemSurroundings(collection, pathWithoutLocale, {
+  return queryCollectionItemSurroundings(collection, contentPath, {
     fields: ["description"],
   })
 })

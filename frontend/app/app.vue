@@ -31,6 +31,11 @@ useHead({
       : config.public.appName
   },
 })
+
+defineOgImage("DefaultOgImage", {
+  title: config.public.appName,
+  description: "",
+})
 </script>
 
 <template>

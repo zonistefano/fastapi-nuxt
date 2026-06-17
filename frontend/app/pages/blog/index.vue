@@ -2,6 +2,7 @@
 import { readableDate } from "@/utilities"
 
 const { locale, t } = useI18n()
+const localePath = useLocalePath()
 const collection: `blog_${typeof locale.value}` = `blog_${locale.value}`
 const { data: blogPosts } = await useAsyncData(useRoute().path, () =>
   queryCollection(collection).all(),
@@ -34,7 +35,7 @@ useSeoMeta({
         <UBlogPost
           v-for="(post, index) in blogPosts"
           :key="index"
-          :to="post.path"
+          :to="localePath(post.path)"
           :title="post.title"
           :description="post.description"
           :image="post.image"

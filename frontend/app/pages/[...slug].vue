@@ -1,13 +1,12 @@
 <script setup lang="ts">
+import { getContentPath } from "@/utilities"
+
 const { locale, t } = useI18n()
 const route = useRoute()
-const pathWithoutLocale = route.path.replace(
-  new RegExp(`^/${locale.value}(/|$)`),
-  "/",
-)
+const contentPath = getContentPath(route.path, locale.value)
 const collection: `general_${typeof locale.value}` = `general_${locale.value}`
 const { data: page } = await useAsyncData(route.path, () =>
-  queryCollection(collection).path(pathWithoutLocale).first(),
+  queryCollection(collection).path(contentPath).first(),
 )
 if (!page.value) {
   throw createError({

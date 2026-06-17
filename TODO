@@ -42,10 +42,12 @@ REWRITE DOCUMENTATION
 WRITE REPO INSTRUCTION FOR LLM
 
 
-estetica frontend
+estetica frontend (page headers link (i18n, url), ogimage, bpmn, dashboard)
 
 auth backend
 
 auth frontend
+
+frontend favicon e compagnia cantante
 
 nuove funzionalità da aggiungere al backend e frontend

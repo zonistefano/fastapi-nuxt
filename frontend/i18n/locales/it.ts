@@ -106,6 +106,17 @@ export default {
   },
   docs: {
     search: "Cerca...",
+    navigation: "Navigazione",
+  },
+  pageHeaderLinks: {
+    copyPage: "Copia pagina",
+    copyMarkdownLink: "Copia link Markdown",
+    viewAsMarkdown: "Visualizza come Markdown",
+    openInChatGPT: "Apri in ChatGPT",
+    openInClaude: "Apri in Claude",
+    openCopyActionsMenu: "Apri menu azioni di copia",
+    copiedToClipboard: "Copiato negli appunti",
+    aiPrompt: "Leggi {url} così posso farti domande al riguardo.",
   },
   settings: {
     title: "Impostazioni",
