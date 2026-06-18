@@ -28,7 +28,7 @@ useSeoMeta({
     <UPageHeader
       :title="t('blog.title')"
       :description="t('blog.description')"
-      class="py-[50px]"
+      class="py-12.5"
     />
     <UPageBody>
       <UBlogPosts>
@@ -44,6 +44,7 @@ useSeoMeta({
           :badge="post.badge"
           :orientation="index === 0 ? 'horizontal' : 'vertical'"
           :class="[index === 0 && 'col-span-full']"
+          variant="naked"
         />
       </UBlogPosts>
     </UPageBody>

@@ -42,7 +42,7 @@ REWRITE DOCUMENTATION
 WRITE REPO INSTRUCTION FOR LLM
 
 
-estetica frontend (page headers link (i18n, url), ogimage, bpmn, dashboard)
+estetica frontend (bpmn, dashboard)
 
 auth backend
 

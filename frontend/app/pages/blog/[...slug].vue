@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { getContentPath, readableDate } from "@/utilities"
+import {
+  getContentPath,
+  readableDate,
+  getContentLocalizedNavigation,
+} from "@/utilities"
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -22,6 +26,10 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
   })
 })
 
+const localizedSurround = computed(() =>
+  getContentLocalizedNavigation(surround.value || []),
+)
+
 useSeoMeta({
   title: page.value.title,
   ogTitle: page.value.title,
@@ -35,8 +43,8 @@ useSeoMeta({
     <UPageHeader :title="page.title" :description="page.description">
       <template #headline>
         <UBadge v-bind="page.badge" variant="subtle" />
-        <span class="text-(--ui-text-muted)">&middot;</span>
-        <time class="text-(--ui-text-muted)">{{
+        <span class="text-muted">&middot;</span>
+        <time class="text-muted">{{
           readableDate(page.date, true, locale)
         }}</time>
       </template>
@@ -68,7 +76,7 @@ useSeoMeta({
 
         <USeparator v-if="surround?.length" />
 
-        <UContentSurround :surround="surround" />
+        <UContentSurround :surround="localizedSurround" />
       </UPageBody>
 
       <template v-if="page?.body?.toc?.links?.length" #right>

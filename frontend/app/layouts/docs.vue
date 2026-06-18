@@ -53,14 +53,8 @@ provide("navigation", navigation)
                   :label="t('docs.search')"
                   variant="outline"
                   class="w-full"
-                >
-                  <template #trailing>
-                    <div class="ms-auto flex items-center gap-0.5">
-                      <UKbd value="meta" />
-                      <UKbd value="k" />
-                    </div>
-                  </template>
-                </UContentSearchButton>
+                  :collapsed="false"
+                />
               </template>
               <UContentNavigation highlight :navigation="localizedNavigation" />
             </UPageAside>

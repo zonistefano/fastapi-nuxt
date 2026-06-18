@@ -29,8 +29,10 @@ const navigation = computed(() => [
     to: localePath("/blog"),
     active: pathNoLocale.value.startsWith("/blog"),
   },
-  { label: t("nav.chat"), to: "/chat" },
-  { label: t("nav.bpmn"), to: "/bpmn-editor" },
+  { label: t("nav.chat"), to: localePath("/chat") },
+  { label: t("nav.bpmn"), to: localePath("/bpmn-editor") },
+  { label: t("nav.pricing"), to: localePath("/pricing") },
+  { label: t("nav.changelog"), to: localePath("/changelog") },
   { label: t("nav.contact"), to: localePath("/contact") },
 ])
 </script>

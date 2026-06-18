@@ -19,6 +19,8 @@ export default {
     blog: "Blog",
     chat: "Chat",
     bpmn: "BPMN",
+    pricing: "Prezzi",
+    changelog: "Changelog",
     contact: "Contatti",
     settings: "Impostazioni",
     account: "Account",
@@ -75,6 +77,10 @@ export default {
         "Inserisci il codice di verifica a 6 cifre generato dall'app.",
       verificationCode: "Codice di verifica",
     },
+  },
+  changelog: {
+    title: "Registro Aggiornamenti",
+    description: "Tieni traccia degli ultimi aggiornamenti e miglioramenti.",
   },
   contact: {
     title: "Contattaci",
