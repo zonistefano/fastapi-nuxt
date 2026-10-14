@@ -52,6 +52,50 @@ def test_signup_defaults_and_custom_fields(client):
     assert response.json() == profile
 
 
+def test_validation_email_uses_confirmation_challenge(client, monkeypatch):
+    signup(client)
+    headers = bearer(login(client)["access_token"])
+    monkeypatch.setattr(auth.config, "EMAILS_ENABLED", True)
+    with patch(
+        "app.src.auth.api.endpoints.users.send_email_validation_email"
+    ) as send_email:
+        response = client.post("/users/send-validation-email", headers=headers)
+    assert response.status_code == 200
+    email_data = send_email.call_args.args[0]
+    assert email_data.email == EMAIL
+    assert (
+        security.decode_magic_token(email_data.token, config=auth.config).purpose
+        == "email_confirmation"
+    )
+    confirmation = client.get(
+        "/login/confirm-email", params={"token": email_data.token}
+    )
+    assert confirmation.status_code == 200
+    assert client.get("/users/me", headers=headers).json()["email_validated"] is True
+
+
+def test_validation_email_requires_auth_and_reports_disabled_delivery(client):
+    assert client.post("/users/send-validation-email").status_code == 401
+    signup(client)
+    response = client.post(
+        "/users/send-validation-email", headers=bearer(login(client)["access_token"])
+    )
+    assert response.status_code == 503
+
+
+def test_validation_email_failure_rolls_back_challenge(client, db, monkeypatch):
+    signup(client)
+    headers = bearer(login(client)["access_token"])
+    monkeypatch.setattr(auth.config, "EMAILS_ENABLED", True)
+    with patch(
+        "app.src.auth.api.endpoints.users.send_email_validation_email",
+        side_effect=RuntimeError("SMTP failed"),
+    ):
+        response = client.post("/users/send-validation-email", headers=headers)
+    assert response.status_code == 503
+    assert db.exec(select(LoginChallenge)).all() == []
+
+
 def test_signup_without_language_uses_database_default(client):
     assert signup(client)["language"] == "en"
 

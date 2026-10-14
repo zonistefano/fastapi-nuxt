@@ -1,11 +1,3 @@
-frontend deps
-
-documentazione
-
-sistemare documentazione e aggiungere:
-
-init script fix prject name to be prefixed
-
 - nel frontend queste altre component library da usare senza installare (o installandole) https://pagedone.io https://www.penguinui.com https://flowbite.com https://daisyui.com
 
 https://openfeature.dev/docs/tutorials/getting-started/python
@@ -15,39 +7,12 @@ https://i18n.nuxtjs.org/docs/guide/seo
 useSEOMeta
 useHead
 
-semantic-release
-action-semantic-pull-request
-
-plausible vs umami
-
-elk
-
-og-image
-
-https://github.com/muonsoft/openapi-mock
-
-fastapi dependency overrides useful for changing deps functioning in a specific personalized project
-
-
-https://loadforge.com/guides/implementing-rate-limits-in-fastapi-a-step-by-step-guide
-
-
-
 ADD TO BACKEND AND FRONTEND WORKING AI CHAT WITH BACKEND AS PROXY FOR LLM copying chat template
 
 ADD TO FRONTEND WORKING TEXT EDITOR WITH COLLABORATION AND SAVING IN BACKEND POSTGRES copying editor template
 
-REWRITE DOCUMENTATION
-
 WRITE REPO INSTRUCTION FOR LLM
-
 
 estetica frontend (bpmn, dashboard)
 
-auth backend
-
-auth frontend
-
 frontend favicon e compagnia cantante
-
-nuove funzionalità da aggiungere al backend e frontend

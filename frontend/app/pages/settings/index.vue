@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as z from "zod"
-import type { IUserProfileUpdate } from "~/types"
+import type { CustomUserUpdate } from "~/api/generated"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
 const authStore = useAuthStore()
@@ -23,7 +23,7 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function submit(event: FormSubmitEvent<Schema>) {
-  const profile = {} as IUserProfileUpdate
+  const profile: CustomUserUpdate = {}
   if (
     (!authStore.profile.hashed_password && !event.data.original) ||
     (authStore.profile.hashed_password && event.data.original)

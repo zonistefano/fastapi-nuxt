@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import * as z from "zod"
 import QrcodeVue from "qrcode.vue"
-import { apiAuth } from "@/api"
-import type { IUserProfileUpdate, INewTOTP, IEnableTOTP } from "~/types"
+import { loginRequestNewTotp } from "~/api/generated"
+import type {
+  CustomUserUpdate,
+  NewTotpResponse,
+  EnableTotp,
+} from "~/api/generated"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
+const { $api } = useNuxtApp()
 const authStore = useAuthStore()
 const { t } = useI18n()
 const totpModal = ref(false)
-const totpNew = ref({} as INewTOTP)
-const totpClaim = ref({} as IEnableTOTP)
+const totpNew = ref<NewTotpResponse>({ key: "", uri: "" })
+const totpClaim = ref<EnableTotp>({ claim: "", uri: "" })
 const recoveryCodes = ref<string[]>([])
 const recoveryModal = ref(false)
 const qrSize = 200
@@ -55,7 +60,7 @@ const modal_state = reactive<Partial<modal_Schema>>({
 })
 
 async function submit(event: FormSubmitEvent<Schema>) {
-  const profile = {} as IUserProfileUpdate
+  const profile: CustomUserUpdate = {}
   if (
     (!authStore.profile.hashed_password && !event.data.original) ||
     (authStore.profile.hashed_password && event.data.original)
@@ -67,7 +72,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
       return
     }
     if (event.data.totp !== authStore.profile.totp_secret && event.data.totp) {
-      const response = await apiAuth.requestNewTOTP()
+      const response = await loginRequestNewTotp({ client: $api })
       if (response) {
         totpNew.value.key = response.key
         totpNew.value.uri = response.uri
