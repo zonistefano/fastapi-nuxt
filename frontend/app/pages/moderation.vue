@@ -57,6 +57,10 @@ const defaultColumns = [
 const toast = useToast()
 const selectedColumns = ref(defaultColumns)
 const isNewUserModalOpen = ref(false)
+
+function openNewUserModal() {
+  isNewUserModalOpen.value = true
+}
 const userProfiles = ref([] as IUserProfile[])
 
 const columns = computed(() =>
@@ -75,6 +79,8 @@ onMounted(async () => {
 
 async function toggleActive(email: string, is_active: boolean) {
   const user = userProfiles.value.find((user) => user.email === email)
+  const previous = user?.is_active
+  if (user) user.is_active = is_active
   const data: IUserProfileUpdate = {
     email: email,
     is_active: is_active,
@@ -86,11 +92,14 @@ async function toggleActive(email: string, is_active: boolean) {
       description: response ? response.msg : t("notifications.invalidRequest"),
       icon: "i-heroicons-exclamation-circle",
     })
-    if (user) user.is_active = !is_active
+    if (user && previous !== undefined) user.is_active = previous
   }
 }
 
 async function toggleMod(id: string, is_superuser: boolean) {
+  const user = userProfiles.value.find((user) => user.id === id)
+  const previous = user?.is_superuser
+  if (user) user.is_superuser = is_superuser
   const data: IUserProfileUpdate = {
     is_superuser: is_superuser,
   }
@@ -101,8 +110,7 @@ async function toggleMod(id: string, is_superuser: boolean) {
       description: t("notifications.invalidRequest"),
       icon: "i-heroicons-exclamation-circle",
     })
-    const user = userProfiles.value.find((user) => user.id === id)
-    if (user) user.is_superuser = !is_superuser
+    if (user && previous !== undefined) user.is_superuser = previous
   }
 }
 
@@ -175,7 +183,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
           <UButton
             :label="t('moderation.newUser')"
             trailing-icon="i-heroicons-plus"
-            @click="isNewUserModalOpen = true"
+            @click="openNewUserModal"
           />
         </template>
       </UDashboardToolbar>
@@ -208,36 +216,40 @@ async function submit(event: FormSubmitEvent<Schema>) {
       </UModal>
 
       <UTable :data="userProfiles" :columns="columns" class="w-full">
-        <template #is_active-data="{ row }">
+        <template #is_active-cell="{ row }">
           <USwitch
-            v-model="row.is_active"
-            @click="toggleActive(row.email, !row.is_active)"
+            :model-value="row.original.is_active"
+            @update:model-value="toggleActive(row.original.email, $event)"
           />
         </template>
-        <template #is_superuser-data="{ row }">
+        <template #is_superuser-cell="{ row }">
           <USwitch
-            v-model="row.is_superuser"
-            @click="toggleMod(row.id, !row.is_superuser)"
+            :model-value="row.original.is_superuser"
+            @update:model-value="toggleMod(row.original.id, $event)"
           />
         </template>
-        <template #hashed_password-data="{ row }">
+        <template #hashed_password-cell="{ row }">
           <UBadge
-            :label="row.hashed_password ? t('common.yes') : t('common.no')"
-            :color="row.hashed_password ? 'success' : 'error'"
+            :label="
+              row.original.hashed_password ? t('common.yes') : t('common.no')
+            "
+            :color="row.original.hashed_password ? 'success' : 'error'"
             variant="subtle"
           />
         </template>
-        <template #email_validated-data="{ row }">
+        <template #email_validated-cell="{ row }">
           <UBadge
-            :label="row.email_validated ? t('common.yes') : t('common.no')"
-            :color="row.email_validated ? 'success' : 'error'"
+            :label="
+              row.original.email_validated ? t('common.yes') : t('common.no')
+            "
+            :color="row.original.email_validated ? 'success' : 'error'"
             variant="subtle"
           />
         </template>
-        <template #totp_secret-data="{ row }">
+        <template #totp_secret-cell="{ row }">
           <UBadge
-            :label="row.totp_secret ? t('common.yes') : t('common.no')"
-            :color="row.totp_secret ? 'success' : 'error'"
+            :label="row.original.totp_secret ? t('common.yes') : t('common.no')"
+            :color="row.original.totp_secret ? 'success' : 'error'"
             variant="subtle"
           />
         </template>

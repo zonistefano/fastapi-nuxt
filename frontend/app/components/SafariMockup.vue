@@ -143,6 +143,8 @@ type SafariMockupProps = {
 }
 
 withDefaults(defineProps<SafariMockupProps>(), {
+  url: "",
+  src: "",
   width: 1203,
   height: 753,
 })

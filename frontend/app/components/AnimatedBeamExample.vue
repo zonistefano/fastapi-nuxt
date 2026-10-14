@@ -98,12 +98,12 @@
 <script setup lang="ts">
 import { ref } from "vue"
 
-const containerRef = ref(null)
-const div1Ref = ref(null)
-const div2Ref = ref(null)
-const div3Ref = ref(null)
-const div4Ref = ref(null)
-const div5Ref = ref(null)
-const div6Ref = ref(null)
-const div7Ref = ref(null)
+const containerRef = ref<HTMLElement | null>(null)
+const div1Ref = ref<HTMLElement | null>(null)
+const div2Ref = ref<HTMLElement | null>(null)
+const div3Ref = ref<HTMLElement | null>(null)
+const div4Ref = ref<HTMLElement | null>(null)
+const div5Ref = ref<HTMLElement | null>(null)
+const div6Ref = ref<HTMLElement | null>(null)
+const div7Ref = ref<HTMLElement | null>(null)
 </script>

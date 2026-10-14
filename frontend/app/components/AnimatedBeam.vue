@@ -87,9 +87,9 @@ import { onBeforeUnmount, ref, watchEffect } from "vue"
 
 type AnimatedBeamProps = {
   class?: string
-  containerRef: HTMLElement
-  fromRef: HTMLElement
-  toRef: HTMLElement
+  containerRef: HTMLElement | null
+  fromRef: HTMLElement | null
+  toRef: HTMLElement | null
   curvature?: number
   reverse?: boolean
   pathColor?: string
@@ -106,6 +106,7 @@ type AnimatedBeamProps = {
 }
 
 const props = withDefaults(defineProps<AnimatedBeamProps>(), {
+  class: "",
   curvature: 0,
   reverse: false,
   duration: Math.random() * 3 + 4,
