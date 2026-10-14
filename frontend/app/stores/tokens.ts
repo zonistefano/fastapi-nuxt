@@ -1,5 +1,11 @@
-import type { ITokenResponse, IWebToken } from "~/types"
-import { apiAuth } from "@/api"
+import {
+  loginLoginWithMagicLink,
+  loginLoginWithOauth2,
+  loginLoginWithTotp,
+  loginRefreshToken,
+  loginValidateMagicLink,
+} from "~/api/generated"
+import type { Token, WebToken } from "~/api/generated"
 import {
   tokenExpired,
   tokenParser,
@@ -7,10 +13,10 @@ import {
   translate as t,
 } from "@/utilities"
 
-let refreshPromise: Promise<boolean> | null = null
+const refreshPromises = new WeakMap<object, Promise<boolean>>()
 
 export const useTokenStore = defineStore("tokens", {
-  state: (): ITokenResponse => ({
+  state: (): Token => ({
     access_token: "",
     refresh_token: "",
     token_type: "",
@@ -35,20 +41,23 @@ export const useTokenStore = defineStore("tokens", {
   actions: {
     async getTokens(payload: { username: string; password?: string }) {
       const toast = useToast()
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
-      let response
+      const client = useNuxtApp().$publicApi
       try {
-        if (payload.password !== undefined)
-          response = await apiAuth.loginWithOauth(
-            payload.username,
-            payload.password,
-          )
-        else response = await apiAuth.loginWithMagicLink(payload.username)
-        if (response) {
-          if (Object.prototype.hasOwnProperty.call(response, "claim"))
-            this.setMagicToken(response as unknown as IWebToken)
-          else this.setTokens(response as unknown as ITokenResponse)
-        } else throw "Error"
+        const response =
+          payload.password !== undefined
+            ? await loginLoginWithOauth2({
+                client,
+                body: {
+                  username: payload.username,
+                  password: payload.password,
+                },
+              })
+            : await loginLoginWithMagicLink({
+                client,
+                path: { email: payload.username },
+              })
+        if ("claim" in response) this.setMagicToken(response)
+        else this.setTokens(response)
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -72,11 +81,13 @@ export const useTokenStore = defineStore("tokens", {
           Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
           localClaim["fingerprint"] === magicClaim["fingerprint"]
         ) {
-          const response = await apiAuth.validateMagicLink(token, {
-            claim: data,
+          const response = await loginValidateMagicLink({
+            client: useNuxtApp().$publicApi,
+            body: { claim: data },
+            headers: { Authorization: `Bearer ${token}` },
           })
           if (response) {
-            this.setTokens(response as unknown as ITokenResponse)
+            this.setTokens(response)
           } else throw "Error"
         } else throw "Error"
       } catch {
@@ -91,11 +102,13 @@ export const useTokenStore = defineStore("tokens", {
     async validateTOTPClaim(data: string) {
       const toast = useToast()
       try {
-        const response = await apiAuth.loginWithTOTP(this.access_token, {
-          claim: data,
+        const response = await loginLoginWithTotp({
+          client: useNuxtApp().$publicApi,
+          body: { claim: data },
+          headers: { Authorization: `Bearer ${this.access_token}` },
         })
         if (response) {
-          this.setTokens(response as unknown as ITokenResponse)
+          this.setTokens(response)
         } else throw "Error"
       } catch {
         toast.add({
@@ -106,24 +119,27 @@ export const useTokenStore = defineStore("tokens", {
         this.deleteTokens()
       }
     },
-    setMagicToken(payload: IWebToken) {
+    setMagicToken(payload: WebToken) {
       this.access_token = payload.claim
     },
-    setTokens(payload: ITokenResponse) {
+    setTokens(payload: Token) {
       this.access_token = payload.access_token
       this.refresh_token = payload.refresh_token
       this.token_type = payload.token_type
     },
-    async refreshTokens() {
-      if (this.hasActiveAccessToken) return true
+    async refreshTokens(force = false) {
+      if (!force && this.hasActiveAccessToken) return true
       if (!this.hasUsableRefreshToken) {
         this.deleteTokens()
         return false
       }
-      if (refreshPromise) return await refreshPromise
+      const pending = refreshPromises.get(this)
+      if (pending) return await pending
 
-      refreshPromise = apiAuth
-        .getRefreshedToken(this.refresh ?? "")
+      const refreshPromise = loginRefreshToken({
+        client: useNuxtApp().$publicApi,
+        headers: { Authorization: `Bearer ${this.refresh}` },
+      })
         .then((response) => {
           this.setTokens(response)
           return true
@@ -133,9 +149,10 @@ export const useTokenStore = defineStore("tokens", {
           return false
         })
         .finally(() => {
-          refreshPromise = null
+          refreshPromises.delete(this)
         })
 
+      refreshPromises.set(this, refreshPromise)
       return await refreshPromise
     },
     // reset state using `$reset`

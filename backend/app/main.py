@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from fastapi_myauth.rate_limit import RateLimitMiddleware, rate_limit
 from starlette.middleware.cors import CORSMiddleware
 
@@ -21,6 +22,12 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             await rate_limit_redis.aclose()
 
 
+def operation_id(route: APIRoute) -> str:
+    """Keep generated SDK names independent of URL formatting."""
+    tag = route.tags[0] if route.tags else "api"
+    return f"{tag}_{route.name}"
+
+
 def create_app() -> FastAPI:
     application = FastAPI(
         title=settings.PROJECT_NAME,
@@ -28,6 +35,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.ENABLE_DOCS else None,
         redoc_url="/redoc" if settings.ENABLE_DOCS else None,
         lifespan=lifespan,
+        generate_unique_id_function=operation_id,
     )
     application.add_middleware(RateLimitMiddleware, limiter=auth.rate_limiter)
     if settings.BACKEND_CORS_ORIGINS:

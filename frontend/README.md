@@ -34,6 +34,12 @@ For a host build with the same limit, run
 Tests run with Bun's built-in test runner. Formatting uses Prettier and its
 Tailwind plugin. Markdown content retains its MDC formatting conventions.
 
+API types and calls are generated from FastAPI OpenAPI. Run `make api_generate`
+from the repository root (or `bun run api:generate` here) after changing backend
+models/routes. `make api_check` verifies the committed contract without rewriting
+files. Generation requires the installed backend environment; frontend builds
+use the committed SDK. See [API client usage](../docs/api-client.md).
+
 Container development uses Compose Watch to sync source and rebuild when
 `package.json` or `bun.lock` changes. Dependencies stay inside the Linux image;
 the host's `node_modules` is not mounted into the container.

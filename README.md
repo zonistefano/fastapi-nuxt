@@ -53,6 +53,13 @@ make pre_commit_install # optional Git hooks using the same locked Ruff
 `make format` applies source formatting and automatic lint fixes. `make help`
 lists the commands. Checks return a nonzero exit status when they fail.
 
+The backend OpenAPI schema generates the frontend TypeScript models and API SDK.
+After changing API routes or models, run `make api_generate` and commit
+`frontend/openapi.json` and `frontend/app/api/generated/` with the backend change.
+`make api_check` and CI verify that these artifacts are current. Exporting does
+not require a running backend or database. See the
+[typed API workflow](docs/api-client.md) for usage and examples.
+
 Backend tests use a unique Compose project, a generated temporary environment
 and a disposable database. They do not load the development `.env`, publish
 ports, stop development containers or delete development volumes. HTML coverage

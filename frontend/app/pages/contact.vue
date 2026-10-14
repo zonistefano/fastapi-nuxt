@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import * as z from "zod"
-import type { ISendEmail } from "~/types"
+import type { EmailContent } from "~/api/generated"
 import type { FormSubmitEvent } from "@nuxt/ui"
-import { apiService } from "@/api"
+import { servicesSendEmail } from "~/api/generated"
 
+const { $publicApi } = useNuxtApp()
 const toast = useToast()
 const { t } = useI18n()
 
@@ -23,13 +24,13 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function submit(event: FormSubmitEvent<Schema>) {
-  const data: ISendEmail = {
+  const data: EmailContent = {
     email: event.data.email,
     subject: t("contact.emailSubject", { email: event.data.email }),
     content: event.data.message,
   }
   try {
-    await apiService.postEmailContact(data)
+    await servicesSendEmail({ client: $publicApi, body: data })
     toast.add({
       title: t("contact.sentTitle"),
       description: t("contact.sentDescription"),

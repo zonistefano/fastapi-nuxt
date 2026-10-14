@@ -2,6 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "api:generate": "node scripts/generate-api.mjs",
+    "api:check": "node scripts/generate-api.mjs --check",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -15,6 +17,7 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.87.5",
     "@nuxt/eslint": "1.15.2",
     "nuxt-og-image": "^6.6.0",
     "nuxtseo-layer-devtools": "^5.3.0",

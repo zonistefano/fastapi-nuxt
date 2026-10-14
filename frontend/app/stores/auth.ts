@@ -1,14 +1,22 @@
+import {
+  loginConfirmEmail,
+  loginDisableTotpAuthentication,
+  loginEnableTotpAuthentication,
+  loginRecoverPassword,
+  loginResetPassword,
+  usersReadUserMe,
+  usersSendValidationEmail,
+  usersUpdateUserMe,
+} from "~/api/generated"
 import type {
-  IUserProfile,
-  IUserProfileUpdate,
-  IEnableTOTP,
-  IWebToken,
-} from "~/types"
-import { apiAuth } from "@/api"
+  CustomUserRead,
+  CustomUserUpdate,
+  EnableTotp,
+} from "~/api/generated"
 import { tokenParser, translate as t } from "@/utilities"
 
 export const useAuthStore = defineStore("authUser", {
-  state: (): IUserProfile => ({
+  state: () => ({
     id: "",
     email: "",
     email_validated: false,
@@ -17,6 +25,10 @@ export const useAuthStore = defineStore("authUser", {
     full_name: "",
     hashed_password: false,
     totp_secret: false,
+    created: "",
+    modified: "",
+    language: "en",
+    role: "user",
   }),
   persist: {
     storage: piniaPluginPersistedstate.cookies({
@@ -38,10 +50,11 @@ export const useAuthStore = defineStore("authUser", {
   actions: {
     // AUTHENTICATION
     async logIn(payload: { username: string; password?: string }) {
+      const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
         await this.tokenStore.getTokens(payload)
-        await this.getUserProfile()
+        await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -52,10 +65,11 @@ export const useAuthStore = defineStore("authUser", {
       }
     },
     async magicLogin(token: string) {
+      const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
         await this.tokenStore.validateMagicTokens(token)
-        await this.getUserProfile()
+        await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -66,10 +80,11 @@ export const useAuthStore = defineStore("authUser", {
       }
     },
     async totpLogin(claim: string) {
+      const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
         await this.tokenStore.validateTOTPClaim(claim)
-        await this.getUserProfile()
+        await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -82,21 +97,24 @@ export const useAuthStore = defineStore("authUser", {
     // PROFILE MANAGEMENT
     async getUserProfile() {
       try {
-        const { data: response } = await apiAuth.getProfile()
-        if (response.value) this.setUserProfile(response.value)
+        const response = await usersReadUserMe({ client: useNuxtApp().$api })
+        if (response) this.setUserProfile(response)
         else this.logOut()
       } catch {
         this.logOut()
       }
     },
-    async updateUserProfile(payload: IUserProfileUpdate) {
+    async updateUserProfile(payload: CustomUserUpdate) {
       const toast = useToast()
       if (this.loggedIn) {
         try {
           const credentialsChanged = Boolean(
             payload.password || (payload.email && payload.email !== this.email),
           )
-          const response = await apiAuth.updateProfile(payload)
+          const response = await usersUpdateUserMe({
+            client: useNuxtApp().$api,
+            body: payload,
+          })
           if (response) {
             this.setUserProfile(response)
             toast.add({
@@ -118,11 +136,14 @@ export const useAuthStore = defineStore("authUser", {
       }
     },
     // MANAGING TOTP
-    async enableTOTPAuthentication(payload: IEnableTOTP) {
+    async enableTOTPAuthentication(payload: EnableTotp) {
       const toast = useToast()
       if (this.loggedIn) {
         try {
-          const response = await apiAuth.enableTOTPAuthentication(payload)
+          const response = await loginEnableTotpAuthentication({
+            client: useNuxtApp().$api,
+            body: payload,
+          })
           if (response) {
             this.tokenStore.setTokens(response.tokens)
             this.totp_secret = true
@@ -141,11 +162,14 @@ export const useAuthStore = defineStore("authUser", {
         }
       }
     },
-    async disableTOTPAuthentication(payload: IUserProfileUpdate) {
+    async disableTOTPAuthentication(payload: CustomUserUpdate) {
       const toast = useToast()
       if (this.loggedIn) {
         try {
-          const response = await apiAuth.disableTOTPAuthentication(payload)
+          const response = await loginDisableTotpAuthentication({
+            client: useNuxtApp().$api,
+            body: payload,
+          })
           if (response) {
             this.tokenStore.setTokens(response.tokens)
             this.totp_secret = false
@@ -164,21 +188,27 @@ export const useAuthStore = defineStore("authUser", {
       }
     },
     // mutations are actions, instead of `state` as first argument use `this`
-    setUserProfile(payload: IUserProfile) {
+    setUserProfile(payload: CustomUserRead) {
       this.id = payload.id
       this.email = payload.email
-      this.email_validated = payload.email_validated
-      this.is_active = payload.is_active
-      this.is_superuser = payload.is_superuser
-      this.full_name = payload.full_name
-      this.hashed_password = payload.hashed_password
-      this.totp_secret = payload.totp ?? payload.totp_secret
+      this.email_validated = payload.email_validated ?? false
+      this.is_active = payload.is_active ?? false
+      this.is_superuser = payload.is_superuser ?? false
+      this.full_name = payload.full_name ?? ""
+      this.hashed_password = payload.hashed_password ?? false
+      this.totp_secret = payload.totp ?? false
+      this.created = payload.created
+      this.modified = payload.modified
+      this.language = payload.language
+      this.role = payload.role ?? "user"
     },
     async sendEmailValidation() {
       const toast = useToast()
       if (this.loggedIn && !this.email_validated) {
         try {
-          const response = await apiAuth.requestValidationEmail()
+          const response = await usersSendValidationEmail({
+            client: useNuxtApp().$api,
+          })
           if (response) {
             toast.add({
               title: t("notifications.validationSent"),
@@ -197,7 +227,10 @@ export const useAuthStore = defineStore("authUser", {
     async confirmEmail(validationToken: string) {
       const toast = useToast()
       try {
-        const response = await apiAuth.confirmEmail(validationToken)
+        const response = await loginConfirmEmail({
+          client: useNuxtApp().$publicApi,
+          query: { token: validationToken },
+        })
         if (response) {
           toast.add({
             title: t("common.success"),
@@ -218,10 +251,12 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       if (!this.loggedIn) {
         try {
-          const response = await apiAuth.recoverPassword(email)
+          const response = await loginRecoverPassword({
+            client: useNuxtApp().$publicApi,
+            path: { email },
+          })
           if (response) {
-            if (Object.prototype.hasOwnProperty.call(response, "claim"))
-              this.tokenStore.setMagicToken(response as unknown as IWebToken)
+            this.tokenStore.setMagicToken(response)
             toast.add({
               title: t("common.success"),
               description: t("notifications.recoveryDescription"),
@@ -252,7 +287,11 @@ export const useAuthStore = defineStore("authUser", {
             Object.prototype.hasOwnProperty.call(magicClaim, "fingerprint") &&
             localClaim["fingerprint"] === magicClaim["fingerprint"]
           ) {
-            const response = await apiAuth.resetPassword(password, claim, token)
+            const response = await loginResetPassword({
+              client: useNuxtApp().$publicApi,
+              body: { new_password: password, claim },
+              headers: { Authorization: `Bearer ${token}` },
+            })
             if (response)
               toast.add({
                 title: t("common.success"),

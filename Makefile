@@ -16,6 +16,7 @@ DOCKER_COMPOSE_DEV := $(DOCKER_COMPOSE_PROD) -f "$(PROJECT_ROOT)/docker-compose.
 .DEFAULT_GOAL := help
 .PHONY: help init setup backend_setup frontend_setup backend_upgrade frontend_upgrade \
 	check tooling_check lint lint_backend lint_frontend format_check typecheck \
+	api_generate api_check \
 	test test_backend test_frontend pre_commit_install pre_commit_check \
 	format format_backend format_frontend build build_backend build_frontend \
 	dev dev_backend dev_frontend dev_frontend_local dev_db_only dev_db_up \
@@ -44,7 +45,13 @@ backend_upgrade: ## Explicitly update Python dependencies and the lockfile.
 frontend_upgrade: ## Explicitly update frontend dependencies and the lockfile.
 	@cd "$(FRONTEND_DIR)" && $(BUN) update
 
-check: tooling_check lint format_check typecheck ## Run all checks without rewriting source files.
+check: tooling_check lint format_check typecheck api_check ## Run all checks without rewriting source files.
+
+api_generate: ## Export backend OpenAPI and generate frontend types and API calls.
+	@cd "$(FRONTEND_DIR)" && UV="$(UV)" $(BUN) run api:generate
+
+api_check: ## Verify OpenAPI and generated API files without rewriting them.
+	@cd "$(FRONTEND_DIR)" && UV="$(UV)" $(BUN) run api:check
 
 tooling_check: ## Test bootstrap, error propagation, and test-stack isolation.
 	@cd "$(PROJECT_ROOT)" && $(PYTHON) -m unittest discover -s tests -v

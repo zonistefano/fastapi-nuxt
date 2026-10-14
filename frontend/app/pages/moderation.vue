@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import * as z from "zod"
-import { apiAuth } from "@/api"
+import {
+  usersCreateUser,
+  usersReadAllUsers,
+  usersToggleState,
+  usersUpdateUserById,
+} from "~/api/generated"
 import { generateUUID } from "@/utilities"
 import type { FormSubmitEvent } from "@nuxt/ui"
 import type {
-  IUserProfile,
-  IUserProfileUpdate,
-  IUserProfileCreate,
-} from "~/types"
+  CustomUserRead,
+  CustomUserUpdate,
+  CustomUserCreate,
+} from "~/api/generated"
 
 definePageMeta({
   layout: "dashboard",
   middleware: ["moderator"],
 })
 
+const { $api } = useNuxtApp()
 const { t } = useI18n()
 
 const defaultColumns = [
@@ -61,16 +67,14 @@ const isNewUserModalOpen = ref(false)
 function openNewUserModal() {
   isNewUserModalOpen.value = true
 }
-const userProfiles = ref([] as IUserProfile[])
+const userProfiles = ref([] as CustomUserRead[])
 
 const columns = computed(() =>
   defaultColumns.filter((column) => selectedColumns.value.includes(column)),
 )
 
 async function getAllUsers() {
-  const { data: response } = await apiAuth.getAllUsers()
-  if (response.value && response.value.length)
-    userProfiles.value = response.value
+  userProfiles.value = await usersReadAllUsers({ client: $api })
 }
 
 onMounted(async () => {
@@ -81,11 +85,10 @@ async function toggleActive(email: string, is_active: boolean) {
   const user = userProfiles.value.find((user) => user.email === email)
   const previous = user?.is_active
   if (user) user.is_active = is_active
-  const data: IUserProfileUpdate = {
-    email: email,
-    is_active: is_active,
-  }
-  const response = await apiAuth.toggleUserState(data)
+  const response = await usersToggleState({
+    client: $api,
+    body: { user_email: email },
+  })
   if (!response || !response.msg) {
     toast.add({
       title: t("notifications.updateError"),
@@ -100,10 +103,14 @@ async function toggleMod(id: string, is_superuser: boolean) {
   const user = userProfiles.value.find((user) => user.id === id)
   const previous = user?.is_superuser
   if (user) user.is_superuser = is_superuser
-  const data: IUserProfileUpdate = {
+  const data: CustomUserUpdate = {
     is_superuser: is_superuser,
   }
-  const response = await apiAuth.updateUserById(id, data)
+  const response = await usersUpdateUserById({
+    client: $api,
+    path: { user_id: id },
+    body: data,
+  })
   if (!response) {
     toast.add({
       title: t("notifications.updateError"),
@@ -131,12 +138,12 @@ const modal_state = reactive<Partial<Schema>>({
 
 async function submit(event: FormSubmitEvent<Schema>) {
   if (event.data.email) {
-    const data: IUserProfileCreate = {
+    const data: CustomUserCreate = {
       email: event.data.email,
       password: generateUUID(),
       full_name: event.data.full_name ? event.data.full_name : "",
     }
-    const response = await apiAuth.createUserProfile(data)
+    const response = await usersCreateUser({ client: $api, body: data })
     if (!response) {
       toast.add({
         title: t("notifications.updateError"),
@@ -248,16 +255,8 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
         <template #totp_secret-cell="{ row }">
           <UBadge
-            :label="
-              (row.original.totp ?? row.original.totp_secret)
-                ? t('common.yes')
-                : t('common.no')
-            "
-            :color="
-              (row.original.totp ?? row.original.totp_secret)
-                ? 'success'
-                : 'error'
-            "
+            :label="row.original.totp ? t('common.yes') : t('common.no')"
+            :color="row.original.totp ? 'success' : 'error'"
             variant="subtle"
           />
         </template>

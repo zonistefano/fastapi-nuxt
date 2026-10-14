@@ -26,3 +26,14 @@ def test_rate_limited_response_includes_cors_headers(client):
         )
     assert response.status_code == 429
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_openapi_operation_ids_are_unique_and_readable():
+    schema = create_app().openapi()
+    ids = [
+        operation["operationId"]
+        for path in schema["paths"].values()
+        for operation in path.values()
+    ]
+    assert len(ids) == len(set(ids))
+    assert schema["paths"]["/users/me"]["get"]["operationId"] == "users_read_user_me"

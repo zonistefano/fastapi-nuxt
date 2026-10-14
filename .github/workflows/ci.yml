@@ -53,7 +53,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version-file: .uv-version
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: make backend_setup
       - run: make frontend_setup lint_frontend typecheck test_frontend
+      - run: make api_check
       - run: bun run --cwd frontend format:check
       - run: bun run --cwd frontend build
 
