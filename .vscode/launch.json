@@ -7,7 +7,8 @@
       "request": "launch",
       "module": "uvicorn",
       "args": ["app.main:app", "--reload"],
-      "cwd": "${workspaceFolder}/backend/app",
+      "env": {"POSTGRES_SERVER": "localhost"},
+      "cwd": "${workspaceFolder}/backend",
       "jinja": true,
       "envFile": "${workspaceFolder}/.env"
     }

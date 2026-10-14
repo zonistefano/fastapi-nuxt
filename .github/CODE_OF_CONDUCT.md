@@ -55,7 +55,8 @@ further defined and clarified by project maintainers.
 ## Enforcement
 
 Instances of abusive, harassing or otherwise unacceptable behaviour may be
-reported by contacting the project team at stefanozoni1@gmail.com. All
+reported privately to the maintainers using the contact configured by this
+project. Generated projects must configure their own private contact. All
 complaints will be reviewed and investigated and will result in a response that
 is deemed necessary and appropriate to the circumstances. The project team is
 obligated to maintain confidentiality concerning the reporter of an incident.

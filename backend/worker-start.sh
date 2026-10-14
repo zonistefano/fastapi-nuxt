@@ -1,8 +1,4 @@
-#! /usr/bin/env bash
-set -e
-
+#!/usr/bin/env bash
+set -euo pipefail
 python /app/app/celeryworker_pre_start.py
-echo "Starting celery beat"
-celery -A app.worker beat --loglevel=warning -S redbeat.RedBeatScheduler &
-echo "Starting celery worker"
-celery -A app.worker worker -l warning -Q main-queue -c 1
+exec celery -A app.worker worker --loglevel=warning -Q main-queue -c 1

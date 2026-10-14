@@ -1,0 +1,67 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: make tooling_check init
+      - run: docker compose -f docker-compose.yml -f docker-compose.override.yml --profile workers --profile tools config --quiet
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version-file: .uv-version
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: make backend_setup lint_backend
+      - run: uv run --project backend --locked ruff format --check --config backend/pyproject.toml backend scripts tests
+      - run: uv build backend --out-dir dist
+      - run: make test_backend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-html
+          path: backend/htmlcov
+          if-no-files-found: error
+
+  frontend:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      NUXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: make frontend_setup lint_frontend typecheck test_frontend
+      - run: bun run --cwd frontend format:check
+      - run: bun run --cwd frontend build
+
+  production-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: make build

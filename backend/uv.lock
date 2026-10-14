@@ -114,9 +114,9 @@ requires-dist = [
 dev = [
     { name = "coverage", specifier = ">=7.4.3,<8.0.0" },
     { name = "freezegun", specifier = ">=1.5.1" },
-    { name = "pre-commit", specifier = ">=3.6.2,<4.0.0" },
+    { name = "pre-commit", specifier = "==3.8.0" },
     { name = "pytest", specifier = ">=7.4.3,<8.0.0" },
-    { name = "ruff", specifier = ">=0.12.8" },
+    { name = "ruff", specifier = "==0.15.16" },
 ]
 
 [[package]]

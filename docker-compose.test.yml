@@ -1,0 +1,29 @@
+# Used only by scripts/test.sh with a unique project and generated environment.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Missing test configuration}
+      POSTGRES_USER: ${POSTGRES_USER:?Missing test configuration}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing test configuration}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      retries: 30
+      timeout: 5s
+    # Test data stays in a disposable container; no development volumes or ports.
+    tmpfs: [/var/lib/postgresql/data]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+      target: development
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ${TEST_ENV_FILE:?Use scripts/test.sh}
+    volumes:
+      - ${PROJECT_ROOT:?Use scripts/test.sh}/backend/htmlcov:/app/htmlcov
+    command: [bash, scripts/tests-start.sh]

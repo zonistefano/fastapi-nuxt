@@ -1,25 +1,12 @@
 docs:
-  - all:
-      - changed-files:
-          - any-glob-to-any-file:
-              - "**/*.md"
-          - all-globs-to-all-files:
-              - "!frontend/**"
-              - "!backend/**"
-              - "!.github/**"
-              - "!scripts/**"
-              - "!.gitignore"
-              - "!.pre-commit-config.yaml"
-
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md']
 internal:
-  - all:
-      - changed-files:
-          - any-glob-to-any-file:
-              - .github/**
-              - scripts/**
-              - .gitignore
-              - .pre-commit-config.yaml
-          - all-globs-to-all-files:
-              - "!./**/*.md"
-              - "!frontend/**"
-              - "!backend/**"
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', '.devcontainer/**', '.vscode/**', 'scripts/**', 'tests/**', 'Makefile', '*compose*.yml', '.pre-commit-config.yaml']
+backend:
+  - changed-files:
+      - any-glob-to-any-file: ['backend/**']
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ['frontend/**']

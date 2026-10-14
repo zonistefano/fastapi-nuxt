@@ -1,9 +1,9 @@
-import secrets
-
 from cryptography.fernet import Fernet
 from pydantic import (
     AnyHttpUrl,
     EmailStr,
+    Field,
+    field_validator,
 )
 from pydantic_settings import BaseSettings
 
@@ -11,8 +11,15 @@ from pydantic_settings import BaseSettings
 class AuthSettings(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
-    SECRET_KEY: str = secrets.token_urlsafe(32)
-    TOTP_SECRET_KEY: str = Fernet.generate_key().decode()
+    SECRET_KEY: str = Field(min_length=32)
+    TOTP_SECRET_KEY: str
+
+    @field_validator("TOTP_SECRET_KEY")
+    @classmethod
+    def validate_totp_key(cls, value: str) -> str:
+        Fernet(value.encode())
+        return value
+
     # 60 seconds * 30 minutes = 30 minutes
     ACCESS_TOKEN_EXPIRE_SECONDS: int = 60 * 30
     # 60 seconds * 60 minutes * 24 hours * 30 days = 30 days
@@ -20,7 +27,7 @@ class AuthSettings(BaseSettings):
     JWT_ALGO: str = "HS512"
     FRONTEND_HOST: str = "localhost"
     FRONTEND_URL: AnyHttpUrl = AnyHttpUrl("http://localhost:3000")
-    SERVER_BOT: str = "Symona"
+    SERVER_BOT: str = "Assistant"
     PROJECT_NAME: str = "FastAPI Auth"
 
     # GENERAL SETTINGS

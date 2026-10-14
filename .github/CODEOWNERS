@@ -1,6 +1,2 @@
-# These owners will be the default owners for everything in
-# the repo. Unless a later match takes precedence,
-# @ will be requested for
-# review when someone opens a pull request.
-# if you want to add more owners, just write it after @
-*       @
+# Configure owners in each project generated from this template.
+# Example: * @your-organization/maintainers
