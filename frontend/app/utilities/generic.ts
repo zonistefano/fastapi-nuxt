@@ -1,15 +1,7 @@
 import { Buffer } from "buffer"
 
 function generateUUID(): string {
-  // Reference: https://stackoverflow.com/a/2117523/709884
-  // And: https://stackoverflow.com/a/61011303/295606
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (s) => {
-    const c = Number.parseInt(s, 10)
-    return (
-      c ^
-      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-    ).toString(16)
-  })
+  return crypto.randomUUID()
 }
 
 function isValidHttpUrl(urlString: string) {
@@ -34,16 +26,14 @@ function getTimeInSeconds(): number {
 }
 
 function tokenExpired(token: string) {
-  // https://stackoverflow.com/a/60758392/295606
-  // https://stackoverflow.com/a/71953677/295606
-  const expiry = JSON.parse(
-    Buffer.from(token.split(".")[1], "base64").toString(),
-  ).exp
-  return getTimeInSeconds() >= expiry
+  const expiry = tokenParser(token).exp
+  return typeof expiry !== "number" || getTimeInSeconds() >= expiry
 }
 
 function tokenParser(token: string) {
-  return JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
+  const payload = token.split(".")[1]
+  if (!payload) throw new Error("Missing JWT payload")
+  return JSON.parse(Buffer.from(payload, "base64").toString())
 }
 
 function getCommonItemsByKey<T, U, K extends keyof T & keyof U>(

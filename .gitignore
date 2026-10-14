@@ -8,3 +8,9 @@ htmlcov
 .venv
 database.db
 .env
+.env.*
+!.env.example
+dist/
+.ruff_cache/
+.pytest_cache/
+coverage.xml

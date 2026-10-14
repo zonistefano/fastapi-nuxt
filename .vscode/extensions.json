@@ -3,17 +3,12 @@
     "charliermarsh.ruff",
     "ms-python.python",
     "ms-python.debugpy",
-
     "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
     "Vue.volar",
     "nuxt.mdc",
-
-    "GitHub.copilot-chat",
     "esbenp.prettier-vscode",
     "ms-azuretools.vscode-docker",
-    "eamodio.gitlens",
-    "rooveterinaryinc.roo-cline",
-    "adam-bender.commit-message-editor"
+    "eamodio.gitlens"
   ]
 }

@@ -1,16 +1,16 @@
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, select
 
 from app.core.config import settings
 
-ModelType = TypeVar("ModelType", bound=SQLModel)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
-
-class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class CRUDBase[
+    ModelType: SQLModel,
+    CreateSchemaType: BaseModel,
+    UpdateSchemaType: BaseModel,
+]:
     def __init__(self, model: type[ModelType]):
         """
         CRUD object with default methods to Create, Read, Update, Delete (CRUD).

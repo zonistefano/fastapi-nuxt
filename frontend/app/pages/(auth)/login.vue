@@ -71,9 +71,14 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
     password:
       oauth.value && "password" in event.data ? event.data.password : undefined,
   })
-  if (authStore.loggedIn) return await navigateTo(redirectAfterLogin)
-  if (tokenStore.token && tokenIsTOTP(tokenStore.token))
-    return await navigateTo(redirectTOTP)
+  if (authStore.loggedIn) {
+    await navigateTo(redirectAfterLogin)
+    return
+  }
+  if (tokenStore.token && tokenIsTOTP(tokenStore.token)) {
+    await navigateTo(redirectTOTP)
+    return
+  }
   if (
     tokenStore.token &&
     Object.prototype.hasOwnProperty.call(
@@ -81,7 +86,7 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
       "fingerprint",
     )
   )
-    return await navigateTo(redirectAfterMagic)
+    await navigateTo(redirectAfterMagic)
 }
 
 onMounted(async () => {

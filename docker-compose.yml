@@ -1,125 +1,137 @@
 services:
   db:
-    image: postgres:alpine
+    image: postgres:17-alpine
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     environment:
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-    restart: always
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: ${POSTGRES_DB:?Run make init}
+      POSTGRES_USER: ${POSTGRES_USER:?Run make init}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run make init}
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
-
-  pgadmin:
-    image: dpage/pgadmin4
-    expose:
-      - "5050"
-    depends_on:
-      - db
-    environment:
-      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT-5050}
-      - PGADMIN_DISABLE_POSTFIX=1
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL?Variable not set}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD?Variable not set}
-    restart: always
-
-  #TODO: Keep/Remove Celery
-  celeryworker:
-    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}"
-    build:
-      context: ./backend
-      dockerfile: celery.Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
-      queue:
-        condition: service_healthy
-        restart: true
-    env_file:
-      - .env
-    restart: always
-
-  queue:
-    image: "redis:alpine"
-    volumes:
-      - app-redis-data:/data
-    command: redis-server --save 60 1
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "PING"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: always
-
-  flower:
-    image: mher/flower:2.0.1
-    expose:
-      - "5555"
-    command: celery flower --basic-auth="${PGADMIN_DEFAULT_EMAIL}:${PGADMIN_DEFAULT_PASSWORD}"
-    environment:
-      - CELERY_BROKER_URL=redis://queue:6379/0
-    restart: always
-  #End
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      retries: 20
+      timeout: 5s
 
   prestart:
-    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_BACKEND}:${TAG-latest}"
+    image: ${IMAGE_PREFIX:-local}/backend:${TAG:-dev}
     build:
       context: ./backend
       dockerfile: backend.Dockerfile
+      target: production
     depends_on:
       db:
         condition: service_healthy
-        restart: true
-    command: bash prestart.sh
-    env_file:
-      - .env
+    command: [bash, prestart.sh]
+    env_file: [.env]
 
   backend:
-    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_BACKEND}:${TAG-latest}"
+    image: ${IMAGE_PREFIX:-local}/backend:${TAG:-dev}
     build:
       context: ./backend
       dockerfile: backend.Dockerfile
-    expose:
-      - "8000"
+      target: production
+    expose: ['8000']
     depends_on:
       db:
         condition: service_healthy
-        restart: true
       prestart:
         condition: service_completed_successfully
-    env_file:
-      - .env
-    restart: always
+    env_file: [.env]
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health-check/"]
+      test: [CMD, curl, -f, 'http://localhost:8000/health-check/']
       interval: 10s
       timeout: 5s
       retries: 5
 
   frontend:
-    image: "${DOCKERHUB_USERNAME}/${DOCKER_IMAGE_FRONTEND}:${TAG-latest}"
+    image: ${IMAGE_PREFIX:-local}/frontend:${TAG:-dev}
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    expose:
-      - "3000"
+      args:
+        NUXT_UMAMI_ID: ${NUXT_UMAMI_ID:-}
+        NUXT_UMAMI_HOST: ${NUXT_UMAMI_HOST:-}
+    expose: ['3000']
     environment:
-      - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME?Variable not set}
-      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL?Variable not set}
-      - NUXT_PUBLIC_API_WS=${NUXT_PUBLIC_API_WS?Variable not set}
-      - NUXT_OG_IMAGE_SECRET=${NUXT_OG_IMAGE_SECRET?Variable not set}
-    restart: always
+      NUXT_PUBLIC_APP_NAME: ${NUXT_PUBLIC_APP_NAME:-FastAPI Nuxt}
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-http://localhost:8000}
+      NUXT_PUBLIC_API_WS: ${NUXT_PUBLIC_API_WS:-ws://localhost:8000}
+      NUXT_OG_IMAGE_SECRET: ${NUXT_OG_IMAGE_SECRET:?Run make init}
+    restart: unless-stopped
+
+  queue:
+    profiles: [workers, tools]
+    image: redis:7.4-alpine
+    volumes: [app-redis-data:/data]
+    command: [redis-server, --save, '60', '1']
+    healthcheck:
+      test: [CMD, redis-cli, --raw, PING]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  celeryworker:
+    profiles: [workers]
+    image: ${IMAGE_PREFIX:-local}/backend:${TAG:-dev}
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+      target: production
+    depends_on:
+      prestart:
+        condition: service_completed_successfully
+      queue:
+        condition: service_healthy
+    command: [bash, worker-start.sh]
+    env_file: [.env]
+    restart: unless-stopped
+
+  celerybeat:
+    profiles: [workers]
+    image: ${IMAGE_PREFIX:-local}/backend:${TAG:-dev}
+    build:
+      context: ./backend
+      dockerfile: backend.Dockerfile
+      target: production
+    depends_on:
+      queue:
+        condition: service_healthy
+    command: [celery, -A, app.worker, beat, --loglevel=warning, -S, redbeat.RedBeatScheduler]
+    env_file: [.env]
+    restart: unless-stopped
+
+  pgadmin:
+    profiles: [tools]
+    image: dpage/pgadmin4:9.2
+    expose: ['5050']
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_DISABLE_POSTFIX: 1
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Run make init}
+    restart: unless-stopped
+
+  flower:
+    profiles: [tools]
+    image: mher/flower:2.0.1
+    expose: ['5555']
+    depends_on:
+      queue:
+        condition: service_healthy
+    command: [celery, flower]
+    environment:
+      CELERY_BROKER_URL: redis://queue:6379/0
+      FLOWER_BASIC_AUTH: ${FLOWER_USER:-admin}:${FLOWER_PASSWORD:?Run make init}
+    restart: unless-stopped
 
 volumes:
   app-db-data:
-  #TODO: Keep/Remove Celery
   app-redis-data:
-  #End

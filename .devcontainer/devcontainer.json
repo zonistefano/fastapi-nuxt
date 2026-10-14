@@ -1,47 +1,27 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-  "name": "FastAPI & NuxtJS",
-
-  // Base image. More info: https://github.com/devcontainers/images
+  "name": "FastAPI + Nuxt",
   "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
-
-  // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {},
-    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22.14.0"
+    },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "curl -fsSL https://bun.sh/install | bash",
-
-  // Configure tool-specific properties.
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
         "ms-python.python",
         "ms-python.debugpy",
-
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint",
         "Vue.volar",
         "nuxt.mdc",
-
-        "GitHub.copilot-chat",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
-        "eamodio.gitlens",
-        "rooveterinaryinc.roo-cline",
-        "adam-bender.commit-message-editor"
+        "eamodio.gitlens"
       ]
     }
   }
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
 }

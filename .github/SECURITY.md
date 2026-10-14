@@ -1,11 +1,12 @@
-# **Reporting Security Issues**
+# Reporting security issues
 
-The project's team and community take security issues.
+Use the repository's Security tab to report a vulnerability privately when
+private vulnerability reporting is enabled. Do not include credentials,
+personal data, or exploit details in a public issue.
 
-We appreciate your efforts to disclose your findings responsibly and will make every effort to acknowledge your contributions.
+When creating a project from this template, enable private vulnerability
+reporting and configure a private security contact for your organization before
+publishing the project. This template does not provide a shared security inbox.
 
-To report a security issue, go to the project's issues and create a new issue using the ⚠️ Security Report 'issue template'.
-
-Read the instructions of this issue template carefully, and if your report could leak data or might expose how to gain access to a restricted area or break the system, please email [stefanozoni1@gmail.com](mailto:stefanozoni1@gmail.com) and include the word "SECURITY" in the subject line.
-
-We'll endeavour to respond quickly and keep you updated throughout the process.
+If a credential has entered Git history, revoke it at its provider. Removing
+it from the latest commit or rewriting history does not revoke the credential.

@@ -1,103 +1,54 @@
-name: Continuous Delivery
-
+name: Publish container images
+# Opt in by dispatching a reviewed commit from main and providing an image tag.
 on:
   workflow_dispatch:
-#  push:
-#    branches:
-#      - main
-
+    inputs:
+      tag:
+        description: Container tag (for example 1.0.0)
+        required: true
+        type: string
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: publish-containers
+  cancel-in-progress: false
 jobs:
-  release:
+  publish:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-release-${{ github.ref_name }}
-      cancel-in-progress: false
-
-    permissions:
-      id-token: write
-      contents: write
-
     steps:
-      # Note: We checkout the repository at the branch that triggered the workflow
-      # with the entire history to ensure to match PSR's release branch detection
-      # and history evaluation.
-      # However, we forcefully reset the branch to the workflow sha because it is
-      # possible that the branch was updated while the workflow was running. This
-      # prevents accidentally releasing un-evaluated changes.
-      - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
         with:
-          ref: ${{ github.ref_name }}
-          fetch-depth: 0
-
-      - name: Setup | Force release branch to be at workflow sha
+          python-version-file: .python-version
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version-file: .uv-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Check the commit being published
+        run: make setup check test
+      - name: Validate image coordinates
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
         run: |
-          git reset --hard ${{ github.sha }}
-
-      - name: Evaluate | Verify upstream has NOT changed
-        # Last chance to abort before causing an error as another PR/push was applied to
-        # the upstream branch while this workflow was running. This is important
-        # because we are committing a version change (--commit). You may omit this step
-        # if you have 'commit: false' in your configuration.
-        #
-        # You may consider moving this to a repo script and call it from this step instead
-        # of writing it in-line.
-        shell: bash
-        run: |
-          set +o pipefail
-
-          UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | cut -d' ' -f2 | grep -E '\.{3}' | cut -d'.' -f4)"
-          printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
-
-          set -o pipefail
-
-          if [ -z "$UPSTREAM_BRANCH_NAME" ]; then
-              printf >&2 '%s\n' "::error::Unable to determine upstream branch name!"
-              exit 1
+          if [[ ! "$RELEASE_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+            echo 'Invalid container tag' >&2
+            exit 1
           fi
-
-          git fetch "${UPSTREAM_BRANCH_NAME%%/*}"
-
-          if ! UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_BRANCH_NAME")"; then
-              printf >&2 '%s\n' "::error::Unable to determine upstream branch sha!"
-              exit 1
-          fi
-
-          HEAD_SHA="$(git rev-parse HEAD)"
-
-          if [ "$HEAD_SHA" != "$UPSTREAM_SHA" ]; then
-              printf >&2 '%s\n' "[HEAD SHA] $HEAD_SHA != $UPSTREAM_SHA [UPSTREAM SHA]"
-              printf >&2 '%s\n' "::error::Upstream has changed, aborting release..."
-              exit 1
-          fi
-
-          printf '%s\n' "Verified upstream branch has not changed, continuing with release..."
-
-      - name: Action | Semantic Version Release
-        id: release
-        # Adjust tag with desired version if applicable.
-        uses: python-semantic-release/python-semantic-release@v10.3.1
+          echo "IMAGE_PREFIX=ghcr.io/${RELEASE_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          git_committer_name: "github-actions"
-          git_committer_email: "actions@users.noreply.github.com"
-
-      - name: Setup | Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-
-      - name: Build | Build Package with uv
-        if: steps.release.outputs.released == 'true'
-        run: uv build
-
-      - name: Publish | Upload to GitHub Release Assets
-        uses: python-semantic-release/publish-action@v10.3.1
-        if: steps.release.outputs.released == 'true'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.release.outputs.tag }}
-
-      - name: Publish | Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        if: steps.release.outputs.released == 'true'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: make build
+      - name: Publish verified images
+        run: docker compose -f docker-compose.yml push backend frontend

@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     preset: "bun",
     prerender: {
       routes: ["/", "/it"],
-      failOnError: false,
+      failOnError: true,
     },
   },
 
@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     // apiSecret: 'my-secret-key',
     // Public keys that are exposed to the client
     public: {
-      appName: "App_Name",
+      appName: "FastAPI Nuxt",
       apiWS: "ws://localhost:8000",
       apiUrl: "http://localhost:8000",
     },
@@ -74,8 +74,9 @@ export default defineNuxtConfig({
   },
 
   umami: {
-    id: "c8c7274a-e3c7-45ea-845e-c31631df96c7", //TODO: Change this to your own site ID
-    host: "https://umami.zoni.ovh",
+    enabled: Boolean(process.env.NUXT_UMAMI_ID && process.env.NUXT_UMAMI_HOST),
+    id: process.env.NUXT_UMAMI_ID || "",
+    host: process.env.NUXT_UMAMI_HOST || "",
   },
 
   content: {

@@ -1,5 +1,5 @@
 Write comprehensive tests for the following FastApi route. It uses Fastapi, SqlModel and pytest.  
- 
+
 Segment the tests by api route using.
 
 ```

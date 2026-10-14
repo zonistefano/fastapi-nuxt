@@ -1,7 +1,7 @@
 """Initial Commit
 
 Revision ID: 66160a9ae8d8
-Revises: 
+Revises:
 Create Date: 2026-06-08 00:09:02.101127
 
 """
