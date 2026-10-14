@@ -23,7 +23,7 @@ export const useTokenStore = defineStore("tokens", {
       return Boolean(state.access_token) && !tokenExpired(state.access_token)
     },
     hasUsableRefreshToken: (state) => {
-      return Boolean(state.refresh_token) && !tokenExpired(state.refresh_token)
+      return !!state.refresh_token && !tokenExpired(state.refresh_token)
     },
     hasValidToken(): boolean {
       return (
@@ -123,7 +123,7 @@ export const useTokenStore = defineStore("tokens", {
       if (refreshPromise) return await refreshPromise
 
       refreshPromise = apiAuth
-        .getRefreshedToken(this.refresh)
+        .getRefreshedToken(this.refresh ?? "")
         .then((response) => {
           this.setTokens(response)
           return true

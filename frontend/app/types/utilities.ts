@@ -1,6 +1,6 @@
 export interface ITokenResponse {
   access_token: string
-  refresh_token: string
+  refresh_token: string | null
   token_type: string
 }
 
@@ -28,6 +28,14 @@ export interface ISendEmail {
 
 export interface IMsg {
   msg: string
+}
+
+export interface ISecurityChange extends IMsg {
+  tokens: ITokenResponse
+}
+
+export interface ITOTPRecovery extends ISecurityChange {
+  recovery_codes: string[]
 }
 
 export interface INotification {

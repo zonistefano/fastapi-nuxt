@@ -4,6 +4,10 @@ A starting point for new projects with FastAPI, SQLModel, PostgreSQL, Nuxt and
 Bun. The default stack runs the API, frontend and database. Background workers
 and administration tools are optional.
 
+Authentication is pinned to `fastapi-myauth` 1.6.0. The backend chat, editor and
+BPMN modules are extension points for application features. See the
+[backend review](docs/backend-review.md) for verified behavior and showcase limits.
+
 ## Create a project
 
 Use GitHub's **Use this template** button or copy the source into a new

@@ -10,6 +10,8 @@ const { t } = useI18n()
 const totpModal = ref(false)
 const totpNew = ref({} as INewTOTP)
 const totpClaim = ref({} as IEnableTOTP)
+const recoveryCodes = ref<string[]>([])
+const recoveryModal = ref(false)
 const qrSize = 200
 
 const schema = z
@@ -62,6 +64,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
     if (event.data.password && event.data.password !== event.data.original) {
       profile.password = event.data.password
       await authStore.updateUserProfile(profile)
+      return
     }
     if (event.data.totp !== authStore.profile.totp_secret && event.data.totp) {
       const response = await apiAuth.requestNewTOTP()
@@ -81,8 +84,12 @@ async function submit(event: FormSubmitEvent<Schema>) {
 
 async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
   totpClaim.value.claim = event.data.claim
-  await authStore.enableTOTPAuthentication(totpClaim.value)
-  totpModal.value = false
+  const codes = await authStore.enableTOTPAuthentication(totpClaim.value)
+  if (codes) {
+    totpModal.value = false
+    recoveryCodes.value = codes
+    recoveryModal.value = true
+  }
 }
 </script>
 
@@ -145,7 +152,7 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
     </UPageCard>
 
     <UModal
-      v-model="totpModal"
+      v-model:open="totpModal"
       :title="t('settings.security.enableTitle')"
       icon="i-heroicons-qr-code"
       :ui="{ title: 'font-bold text-xl lg:text-2xl' }"
@@ -184,6 +191,18 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
             <UButton type="submit" :label="t('settings.security.enable')" />
           </div>
         </UForm>
+      </template>
+    </UModal>
+    <UModal
+      v-model:open="recoveryModal"
+      :title="t('settings.security.recoveryTitle')"
+      :description="t('settings.security.recoveryDescription')"
+      @after:leave="recoveryCodes = []"
+    >
+      <template #body>
+        <ul class="space-y-2 font-mono">
+          <li v-for="code in recoveryCodes" :key="code">{{ code }}</li>
+        </ul>
       </template>
     </UModal>
   </div>

@@ -1,15 +1,4 @@
-from collections.abc import Generator
-from typing import Annotated
+from app.src.auth.service import auth
 
-from fastapi import Depends
-from sqlmodel import Session
-
-from app.core.db import engine
-
-
-def get_db() -> Generator[Session]:
-    with Session(engine) as session:
-        yield session
-
-
-SessionDep = Annotated[Session, Depends(get_db)]
+# Share the authentication unit of work with protected application routes.
+SessionDep = auth.deps.SessionDep

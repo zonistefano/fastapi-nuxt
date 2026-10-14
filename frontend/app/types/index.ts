@@ -12,6 +12,8 @@ import type {
   IEnableTOTP,
   ISendEmail,
   IMsg,
+  ISecurityChange,
+  ITOTPRecovery,
   INotification,
 } from "./utilities"
 
@@ -26,5 +28,7 @@ export type {
   IEnableTOTP,
   ISendEmail,
   IMsg,
+  ISecurityChange,
+  ITOTPRecovery,
   INotification,
 }

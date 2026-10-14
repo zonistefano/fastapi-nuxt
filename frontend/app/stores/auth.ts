@@ -93,6 +93,9 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       if (this.loggedIn) {
         try {
+          const credentialsChanged = Boolean(
+            payload.password || (payload.email && payload.email !== this.email),
+          )
           const response = await apiAuth.updateProfile(payload)
           if (response) {
             this.setUserProfile(response)
@@ -100,6 +103,10 @@ export const useAuthStore = defineStore("authUser", {
               title: t("notifications.profileUpdated"),
               description: t("notifications.profileUpdatedDescription"),
             })
+            if (credentialsChanged) {
+              this.logOut()
+              await navigateTo("/login")
+            }
           } else throw "Error"
         } catch {
           toast.add({
@@ -117,11 +124,13 @@ export const useAuthStore = defineStore("authUser", {
         try {
           const response = await apiAuth.enableTOTPAuthentication(payload)
           if (response) {
+            this.tokenStore.setTokens(response.tokens)
             this.totp_secret = true
             toast.add({
               title: t("notifications.twoFactor"),
               description: response.msg,
             })
+            return response.recovery_codes
           } else throw "Error"
         } catch {
           toast.add({
@@ -138,6 +147,7 @@ export const useAuthStore = defineStore("authUser", {
         try {
           const response = await apiAuth.disableTOTPAuthentication(payload)
           if (response) {
+            this.tokenStore.setTokens(response.tokens)
             this.totp_secret = false
             toast.add({
               title: t("notifications.twoFactor"),
@@ -162,7 +172,7 @@ export const useAuthStore = defineStore("authUser", {
       this.is_superuser = payload.is_superuser
       this.full_name = payload.full_name
       this.hashed_password = payload.hashed_password
-      this.totp_secret = payload.totp_secret
+      this.totp_secret = payload.totp ?? payload.totp_secret
     },
     async sendEmailValidation() {
       const toast = useToast()

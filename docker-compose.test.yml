@@ -24,6 +24,8 @@ services:
         condition: service_healthy
     env_file:
       - ${TEST_ENV_FILE:?Use scripts/test.sh}
+    environment:
+      TEMPLATE_TEST_POSTGRES: '1'
     volumes:
       - ${PROJECT_ROOT:?Use scripts/test.sh}/backend/htmlcov:/app/htmlcov
     command: [bash, scripts/tests-start.sh]

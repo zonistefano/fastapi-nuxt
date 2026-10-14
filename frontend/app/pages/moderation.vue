@@ -248,8 +248,16 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
         <template #totp_secret-cell="{ row }">
           <UBadge
-            :label="row.original.totp_secret ? t('common.yes') : t('common.no')"
-            :color="row.original.totp_secret ? 'success' : 'error'"
+            :label="
+              (row.original.totp ?? row.original.totp_secret)
+                ? t('common.yes')
+                : t('common.no')
+            "
+            :color="
+              (row.original.totp ?? row.original.totp_secret)
+                ? 'success'
+                : 'error'
+            "
             variant="subtle"
           />
         </template>

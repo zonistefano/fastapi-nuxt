@@ -5,7 +5,7 @@ from ..src.auth.crud import crud_user
 from ..src.auth.models import auth_components
 from .config import settings
 
-engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True)
 
 
 # make sure all SQLModel models are imported (app.models) before initializing DB

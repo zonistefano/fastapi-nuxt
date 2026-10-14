@@ -8,6 +8,8 @@ import type {
   INewTOTP,
   IEnableTOTP,
   IMsg,
+  ISecurityChange,
+  ITOTPRecovery,
 } from "~/types"
 import { apiCore } from "./core"
 
@@ -56,13 +58,13 @@ export const apiAuth = {
     })
   },
   async enableTOTPAuthentication(data: IEnableTOTP) {
-    return await apiCore.request<IMsg>("/login/totp", {
+    return await apiCore.request<ITOTPRecovery>("/login/totp", {
       method: "PUT",
       body: data,
     })
   },
   async disableTOTPAuthentication(data: IUserProfileUpdate) {
-    return await apiCore.request<IMsg>("/login/totp", {
+    return await apiCore.request<ISecurityChange>("/login/totp", {
       method: "DELETE",
       body: data,
     })
@@ -75,8 +77,9 @@ export const apiAuth = {
     })
   },
   async revokeRefreshedToken() {
-    return await apiCore.request<IMsg>("/login/revoke", {
+    return await $fetch<IMsg>(`${apiCore.url()}/login/revoke`, {
       method: "POST",
+      headers: apiCore.headers(useTokenStore().refresh ?? ""),
     })
   },
   // USER PROFILE MANAGEMENT

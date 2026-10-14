@@ -40,8 +40,7 @@ class LogFilter(logging.Filter):
         filters: set[str] | None = None,
     ) -> None:
         """Initialize a filter."""
-        self.name = name
-        self.nlen = len(name)
+        super().__init__(name)
         self.filters = filters
 
     def filter(self, record: logging.LogRecord) -> bool:

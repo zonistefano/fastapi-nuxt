@@ -1,11 +1,9 @@
-import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from app import models  # noqa: F401
 from app.core.config import settings
+from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
 # this is the Alembic Config object, which provides
@@ -62,6 +60,15 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    connection = config.attributes.get("connection")
+    if connection is not None:
+        context.configure(
+            connection=connection, target_metadata=target_metadata, compare_type=True
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     configuration = config.get_section(config.config_ini_section)
     if configuration is None:
         raise ValueError("No config section")

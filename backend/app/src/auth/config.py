@@ -1,54 +1,16 @@
-from cryptography.fernet import Fernet
-from pydantic import (
-    AnyHttpUrl,
-    EmailStr,
-    Field,
-    field_validator,
-)
+from fastapi_myauth.config import Settings as BaseAuthSettings
+from pydantic import EmailStr, Field
 from pydantic_settings import BaseSettings
 
 
-class AuthSettings(BaseSettings):
+class AuthSettings(BaseAuthSettings, BaseSettings):
+    """Load the library's settings from the environment with persistent keys."""
+
     FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
+    FIRST_SUPERUSER_PASSWORD: str = Field(min_length=8, max_length=64)
     SECRET_KEY: str = Field(min_length=32)
     TOTP_SECRET_KEY: str
-
-    @field_validator("TOTP_SECRET_KEY")
-    @classmethod
-    def validate_totp_key(cls, value: str) -> str:
-        Fernet(value.encode())
-        return value
-
-    # 60 seconds * 30 minutes = 30 minutes
-    ACCESS_TOKEN_EXPIRE_SECONDS: int = 60 * 30
-    # 60 seconds * 60 minutes * 24 hours * 30 days = 30 days
-    REFRESH_TOKEN_EXPIRE_SECONDS: int = 60 * 60 * 24 * 30
-    JWT_ALGO: str = "HS512"
-    FRONTEND_HOST: str = "localhost"
-    FRONTEND_URL: AnyHttpUrl = AnyHttpUrl("http://localhost:3000")
     SERVER_BOT: str = "Assistant"
-    PROJECT_NAME: str = "FastAPI Auth"
-
-    # GENERAL SETTINGS
-
-    MULTI_MAX: int = (
-        20  # Maximum number of items returned in a page for CRUD operations
-    )
-
-    SMTP_TLS: bool = True
-    SMTP_PORT: int | None = None
-    SMTP_HOST: str | None = None
-    SMTP_USER: str | None = None
-    SMTP_PASSWORD: str | None = None
-    EMAILS_FROM_EMAIL: EmailStr | None = None
-    EMAILS_FROM_NAME: str | None = None
-    EMAILS_TO_EMAIL: EmailStr = "a@a.com"
-
-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
-    EMAIL_VALIDATION_TOKEN_EXPIRE_HOURS: int = 48
-    EMAIL_TEMPLATES_DIR: str = "/app/app/email-templates/build"
-    REQUIRE_EMAIL_VALIDATION: bool = True
 
 
-auth_settings = AuthSettings()  # type: ignore
+auth_settings = AuthSettings()  # type: ignore[call-arg]

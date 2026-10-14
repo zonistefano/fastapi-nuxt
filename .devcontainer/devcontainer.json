@@ -20,7 +20,9 @@
         "nuxt.mdc",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "openai.chatgpt",
+        "anthropic.claude-code"
       ]
     }
   }

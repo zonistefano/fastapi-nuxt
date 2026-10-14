@@ -27,4 +27,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 RUN useradd --create-home app && chown -R app:app /app
 USER app
-CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+CMD ["fastapi", "run", "--workers", "1", "app/main.py"]

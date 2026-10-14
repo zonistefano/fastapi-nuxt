@@ -150,6 +150,9 @@ export default {
       newPassword: "Nuova password",
       repeatNewPassword: "Ripeti la nuova password",
       enableTitle: "Attiva 2FA",
+      recoveryTitle: "Salva i codici di recupero",
+      recoveryDescription:
+        "Conserva questi codici in un luogo sicuro. Ogni codice può essere usato una volta se perdi l'app di autenticazione. Vengono mostrati solo una volta.",
       enableStepDownload:
         "Scarica sul dispositivo mobile un'app di autenticazione che supporti le password monouso temporanee (TOTP).",
       enableStepScan:

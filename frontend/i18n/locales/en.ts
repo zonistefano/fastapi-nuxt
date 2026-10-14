@@ -149,6 +149,9 @@ export default {
       newPassword: "New password",
       repeatNewPassword: "Repeat new password",
       enableTitle: "Enable 2FA",
+      recoveryTitle: "Save your recovery codes",
+      recoveryDescription:
+        "Store these codes somewhere safe. Each code can be used once if you lose your authenticator. They are shown only once.",
       enableStepDownload:
         "Download an authenticator app that supports Time-based One-Time Password (TOTP) on your mobile device.",
       enableStepScan:

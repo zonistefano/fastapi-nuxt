@@ -7,6 +7,7 @@ export interface IUserProfile {
   full_name: string
   hashed_password: boolean
   totp_secret: boolean
+  totp?: boolean
 }
 
 export interface IUserProfileUpdate {

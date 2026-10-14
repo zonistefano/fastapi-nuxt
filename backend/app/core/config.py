@@ -1,54 +1,58 @@
-from pydantic import (
-    PostgresDsn,
-    field_validator,
-)
-from pydantic_core.core_schema import FieldValidationInfo
-from pydantic_settings import BaseSettings
+import json
+from typing import Annotated, Self
+
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode
+from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
-    BACKEND_CORS_ORIGINS: list[str]
+    BACKEND_CORS_ORIGINS: Annotated[list[str], NoDecode] = []
     ENABLE_DOCS: bool = True
+    PROJECT_NAME: str
+    MULTI_MAX: int = Field(default=20, gt=0)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REDIS_URL: str | None = None
+    CELERY_BROKER_URL: str = "redis://queue:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://queue:6379/1"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, list | str):
-            return v
-        raise ValueError(v)
-
-    PROJECT_NAME: str
-
-    # GENERAL SETTINGS
-
-    MULTI_MAX: int = (
-        20  # Maximum number of items returned in a page for CRUD operations
-    )
-
-    # DB SETTINGS
+    def assemble_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            value = (
+                json.loads(value)
+                if value.lstrip().startswith("[")
+                else value.split(",")
+            )
+        if not isinstance(value, list) or any(
+            not isinstance(origin, str) for origin in value
+        ):
+            raise ValueError("CORS origins must be a list of strings.")
+        origins = [origin.strip().rstrip("/") for origin in value if origin.strip()]
+        if "*" in origins:
+            raise ValueError("Credentialed CORS requires explicit origins.")
+        return origins
 
     POSTGRES_SERVER: str
+    POSTGRES_PORT: int = Field(default=5432, ge=1, le=65535)
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     SQLALCHEMY_DATABASE_URI: str | None = None
 
-    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
-    @classmethod
-    def assemble_db_connection(cls, v: str | None, values: FieldValidationInfo) -> str:
-        if isinstance(v, str):
-            return v
-        return str(
-            PostgresDsn.build(  # pyright: ignore
-                scheme="postgresql+psycopg",
-                username=values.data.get("POSTGRES_USER"),
-                password=values.data.get("POSTGRES_PASSWORD"),
-                host=values.data.get("POSTGRES_SERVER"),
-                path=f"{values.data.get('POSTGRES_DB') or ''}",
-            )
-        )
+    @model_validator(mode="after")
+    def assemble_db_connection(self) -> Self:
+        if not self.SQLALCHEMY_DATABASE_URI:
+            self.SQLALCHEMY_DATABASE_URI = URL.create(
+                "postgresql+psycopg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_SERVER,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            ).render_as_string(hide_password=False)
+        return self
 
 
-settings = Settings()  # pyright: ignore
+settings = Settings()  # type: ignore[call-arg]
