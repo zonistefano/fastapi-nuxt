@@ -2,11 +2,6 @@
 
 https://openfeature.dev/docs/tutorials/getting-started/python
 
-Frontend SEO, head and so on
-https://i18n.nuxtjs.org/docs/guide/seo
-useSEOMeta
-useHead
-
 ADD TO BACKEND AND FRONTEND WORKING AI CHAT WITH BACKEND AS PROXY FOR LLM copying chat template
 
 ADD TO FRONTEND WORKING TEXT EDITOR WITH COLLABORATION AND SAVING IN BACKEND POSTGRES copying editor template

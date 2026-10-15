@@ -1,50 +1,27 @@
-# Nuxt frontend
+# Frontend
 
-Use Bun from `../.bun-version` and Node from `../.node-version`. The committed
-`bun.lock` is the source of dependency versions.
+Applicazione Nuxt 4 del template. Bun da `../.bun-version`, Node da
+`../.node-version`; le versioni delle dipendenze sono in `bun.lock`.
 
-From the repository root:
+Dalla root:
 
 ```sh
-make frontend_setup
-make dev_frontend_local
+make dev_frontend_local   # oppure make dev per l'intero stack in container
 make lint_frontend
 make typecheck
 make test_frontend
+make api_generate         # dopo modifiche alle API del backend
 ```
 
-Or from this directory:
+Da questa directory: `bun install --frozen-lockfile`, `bun run dev --dotenv ../.env`,
+`bun run lint`, `bun run format:check`, `bun run typecheck`, `bun run test`,
+`bun run build`, `bun run preview`.
 
-```sh
-bun install --frozen-lockfile
-bun run dev --dotenv ../.env
-bun run lint
-bun run format:check
-bun run typecheck
-bun run test
-bun run build
-bun run preview
-```
+Non modificare `app/api/generated/` né `openapi.json` a mano: sono generati dal
+backend.
 
-The production container and CI allocate up to 4 GiB to Node's build heap.
-For a host build with the same limit, run
-`NODE_OPTIONS=--max-old-space-size=4096 bun run build`.
+Documentazione:
 
-`postinstall` prepares Nuxt's generated ESLint and TypeScript configuration.
-Tests run with Bun's built-in test runner. Formatting uses Prettier and its
-Tailwind plugin. Markdown content retains its MDC formatting conventions.
-
-API types and calls are generated from FastAPI OpenAPI. Run `make api_generate`
-from the repository root (or `bun run api:generate` here) after changing backend
-models/routes. `make api_check` verifies the committed contract without rewriting
-files. Generation requires the installed backend environment; frontend builds
-use the committed SDK. See [API client usage](../docs/api-client.md).
-
-Container development uses Compose Watch to sync source and rebuild when
-`package.json` or `bun.lock` changes. Dependencies stay inside the Linux image;
-the host's `node_modules` is not mounted into the container.
-
-The API URL, websocket URL and application name use `NUXT_PUBLIC_*` settings
-from the root `.env`. Analytics is disabled until both `NUXT_UMAMI_ID` and
-`NUXT_UMAMI_HOST` are configured at build time. See
-[deployment](../docs/deployment.md) for production hosting.
+- [Frontend](../docs/frontend.md) — pagine, layout, store, i18n, contenuti, tema
+- [Client API tipizzato](../docs/api-client.md)
+- [Autenticazione → Client frontend](../docs/authentication.md#client-frontend)

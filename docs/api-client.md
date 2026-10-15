@@ -1,69 +1,116 @@
-# OpenAPI → TypeScript API client
+# Client API tipizzato (OpenAPI → TypeScript)
 
-FastAPI routes and Pydantic/SQLModel schemas are the source of truth for API
-paths, request bodies, path/query parameters and response types. The pinned
-[`@hey-api/openapi-ts`](https://heyapi.dev/docs/openapi/typescript/get-started)
-generator produces a Fetch SDK and TypeScript models for every OpenAPI operation.
-Version 0.87.5 supports the project's pinned Node 22.14 runtime.
+Le rotte FastAPI e i modelli Pydantic/SQLModel sono la **fonte di verità** del
+contratto API. Il generatore fissato [`@hey-api/openapi-ts`](https://heyapi.dev/)
+0.87.5 produce dallo schema OpenAPI un SDK basato su Fetch e i tipi TypeScript di
+ogni operazione.
 
-## Update the contract
-
-Install both stacks with `make setup`, then run from the repository root:
-
-```sh
-make api_generate
-make typecheck
-make api_check
+```mermaid
+flowchart LR
+    A[Rotte e modelli FastAPI] -->|backend/scripts/export_openapi.py| B[frontend/openapi.json]
+    B -->|openapi-ts + Prettier| C[frontend/app/api/generated/]
+    C --> D[Pagine e store Nuxt]
 ```
 
-Or from `frontend/`: `bun run api:generate` and `bun run api:check`.
-Both commands export the current backend contract using the locked Python
-environment. No HTTP server, PostgreSQL, Redis or SMTP connection is required.
-The exporter supplies public placeholder configuration in its own process; it
-does not read the project `.env` or change persistent secrets.
+## Aggiornare il contratto
 
-Commit the schema in `frontend/openapi.json` and all files in
-`frontend/app/api/generated/` alongside the backend change. Generation formats
-the output with the project's Prettier configuration. Do not edit these files
-manually. `make api_check` regenerates in a temporary directory and compares the
-schema and all SDK files, including removed/added files, without rewriting them.
-It is included in `make check` and frontend CI. Frontend builds use the committed
-SDK and do not need Python or a running API.
+Dopo ogni modifica a rotte, parametri o modelli del backend:
 
-Declare request and response models on new backend endpoints so their OpenAPI
-types are specific. Operations use `{first_tag}_{function_name}` IDs, such as
-`users_read_user_me`, which become `usersReadUserMe` in TypeScript. Keep function
-names unique within a tag; changing a tag or function name changes the generated
-SDK export name. The backend test checks uniqueness.
+```sh
+make api_generate   # esporta lo schema e rigenera SDK e tipi
+make typecheck      # verifica che il frontend compili con il nuovo contratto
+make api_check      # verifica senza riscrivere (lo fa anche la CI)
+```
 
-## Call an endpoint in Nuxt
+Da `frontend/`: `bun run api:generate` e `bun run api:check`.
 
-The Nuxt plugin creates `$api` and `$publicApi` for each application instance.
-Use `$api` for the signed-in user's endpoints. Its transport reads the current
-access token, retries once after a 401 with a refreshed token, logs out when
-renewal fails, and displays permission errors for a 403. Refresh requests are
-shared within the token store; separate SSR users have separate stores/clients.
-The base URL comes from `NUXT_PUBLIC_API_URL` at runtime.
+- L'export usa l'ambiente Python bloccato (`uv run --locked`) e **non richiede**
+  backend, PostgreSQL, Redis o SMTP in esecuzione: lo script imposta, solo nel
+  proprio processo, una configurazione fittizia e un database SQLite e non legge
+  il tuo `.env`.
+- L'output viene formattato con la configurazione Prettier del progetto e
+  pubblicato solo se export e generazione riescono entrambi.
+- `api_check` rigenera in una directory temporanea e confronta schema e tutti i
+  file (inclusi file aggiunti o rimossi). È incluso in `make check` e nella CI.
+
+Committa `frontend/openapi.json` e `frontend/app/api/generated/` **insieme** alla
+modifica del backend. Non modificare a mano i file generati. Il build del
+frontend usa l'SDK committato e non ha bisogno di Python.
+
+La configurazione del generatore è in `frontend/openapi-ts.config.mjs`
+(plugin `@hey-api/typescript`, `@hey-api/client-fetch` con `throwOnError`,
+`@hey-api/sdk` con `responseStyle: "data"`).
+
+## Nomi delle funzioni
+
+FastAPI genera gli `operationId` come `{primo_tag}_{nome_funzione}` (vedi
+`operation_id` in `backend/app/main.py`); il generatore li converte in camelCase:
+
+| Backend | SDK |
+| --- | --- |
+| tag `users`, funzione `read_user_me` | `usersReadUserMe` |
+| tag `login`, funzione `login_with_oauth2` | `loginLoginWithOauth2` |
+| tag `documents`, funzione `create_document` | `documentsCreateDocument` |
+
+Quindi:
+
+- dai a ogni router un tag (`include_router(..., tags=["documents"])`);
+- mantieni i nomi delle funzioni unici all'interno di un tag (un test backend
+  verifica l'unicità degli `operationId`);
+- rinominare un tag o una funzione cambia il nome esportato nell'SDK.
+
+Dichiara sempre i modelli di request e response (tipo di ritorno o
+`response_model`): senza, i tipi generati sono generici (`unknown`).
+
+## Uso in Nuxt
+
+Il plugin `app/plugins/api.ts` fornisce due client per ogni istanza dell'app:
+
+| Client | Quando usarlo |
+| --- | --- |
+| `$api` | Rotte dell'utente autenticato. Aggiunge il Bearer, rinnova il token una volta dopo un `401`, esegue il logout se il rinnovo fallisce, mostra un toast per i `403`. I rinnovi concorrenti sono deduplicati. |
+| `$publicApi` | Login, signup, refresh, recupero password, contatti. Nessun token automatico: passa gli header espliciti se servono. |
+
+La base URL è `NUXT_PUBLIC_API_URL`, letta a runtime.
+
+### Lettura
 
 ```vue
 <script setup lang="ts">
-import { usersReadUserMe, usersUpdateUserMe } from "~/api/generated"
-import type { CustomUserUpdate } from "~/api/generated"
+import { usersReadUserMe } from "~/api/generated"
 
 const { $api } = useNuxtApp()
 const { data: profile, error } = await useAsyncData("my-profile", () =>
   usersReadUserMe({ client: $api }),
 )
-
-async function changeLanguage(language: string) {
-  const body: CustomUserUpdate = { language }
-  profile.value = await usersUpdateUserMe({ client: $api, body })
-}
 </script>
 ```
 
-The response type is inferred. Path and query parameters use the generated
-`path` and `query` options. OAuth login uses form serialization from the schema:
+Il tipo della risposta è inferito dalla funzione.
+
+### Scrittura con body tipizzato
+
+```ts
+import { usersUpdateUserMe } from "~/api/generated"
+import type { CustomUserUpdate } from "~/api/generated"
+
+const { $api } = useNuxtApp()
+
+async function changeLanguage(language: string, original: string) {
+  const body: CustomUserUpdate = { language, original }
+  return await usersUpdateUserMe({ client: $api, body })
+}
+```
+
+### Parametri di path e query
+
+```ts
+await usersReadUserById({ client: $api, path: { user_id: id } })
+```
+
+### Form e header espliciti
+
+Il login OAuth usa la serializzazione form definita nello schema:
 
 ```ts
 import { loginLoginWithOauth2 } from "~/api/generated"
@@ -75,27 +122,19 @@ const tokens = await loginLoginWithOauth2({
 })
 ```
 
-Use `$publicApi` for login, signup, refresh, recovery and contact requests. Pass
-an explicit ``headers: { Authorization: `Bearer ${token}` }`` for refresh or
-challenge tokens. It does not renew tokens automatically. SDK calls return parsed
-data and reject on HTTP errors. TypeScript types describe the contract; they do
-not validate arbitrary response data at runtime.
+Per refresh o challenge passa l'header: `headers: { Authorization: \`Bearer ${token}\` }`.
 
-Pages and stores import SDK functions and API types directly from
-`~/api/generated`. Adding an endpoint requires regenerating the contract and
-calling its generated function where needed; no hand-written endpoint wrapper
-or type alias is required. Response types are inferred from the SDK function.
-Use generated model types when declaring a request body or a typed UI ref.
+### Errori
 
-The hand-written Nuxt plugin and transport configure shared behavior such as
-the API URL, authentication and token renewal once for all endpoints. Stores
-contain application behavior such as updating session state and displaying
-notifications. Local UI state normalizes optional/null profile values without
-changing the generated API types; types specific to the UI are independent of
-the backend contract.
+Con `throwOnError` le funzioni restituiscono i dati già parsati e **rigettano** in
+caso di errore HTTP: usa `try/catch` o l'`error` di `useAsyncData`. I tipi
+descrivono il contratto ma non validano a runtime le risposte.
 
-The integration also aligns contact with `/services/contact` and user-state
-changes with `{ user_email }`. The authenticated
-`POST /users/send-validation-email` extension supplies the existing profile
-screen with a confirmation challenge compatible with `/login/confirm-email`.
-It requires configured email delivery and has a per-user request limit.
+## Linee guida
+
+- Importa funzioni e tipi direttamente da `~/api/generated`: non servono wrapper
+  scritti a mano per ogni endpoint.
+- Comportamenti trasversali (URL, autenticazione, rinnovo) stanno nel plugin e nel
+  transport; comportamenti applicativi (stato di sessione, notifiche) negli store.
+- I tipi specifici della UI restano separati da quelli del contratto; normalizza
+  nella UI i valori opzionali o `null` senza modificare i tipi generati.

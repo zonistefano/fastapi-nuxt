@@ -1,104 +1,108 @@
-# FastAPI + Nuxt template
+# FastAPI + Nuxt — template full-stack
 
-A starting point for new projects with FastAPI, SQLModel, PostgreSQL, Nuxt and
-Bun. The default stack runs the API, frontend and database. Background workers
-and administration tools are optional.
+Template e showcase per avviare nuovi progetti web con un backend **FastAPI** e un
+frontend **Nuxt 4**. Fornisce un'applicazione già funzionante — autenticazione
+completa, area utente, pannello di moderazione, sito marketing multilingua, blog,
+documentazione, editor BPMN dimostrativo — e tutta l'infrastruttura di sviluppo:
+Docker Compose, migrazioni, client API tipizzato generato da OpenAPI, test isolati,
+CI e pubblicazione delle immagini.
 
-Authentication is pinned to `fastapi-myauth` 1.6.0. The backend chat, editor and
-BPMN modules are extension points for application features. See the
-[backend review](docs/backend-review.md) for verified behavior and showcase limits.
+L'obiettivo è che un nuovo progetto parta da qui, rinomini, rimuova ciò che non
+serve e aggiunga il proprio dominio applicativo nei punti di estensione previsti.
 
-## Create a project
+## Stack
 
-Use GitHub's **Use this template** button or copy the source into a new
-repository. Set the project name, public URLs and email addresses in your local
-`.env` after initialization. Configure your own security contact and CODEOWNERS
-before publishing.
+| Livello | Tecnologie |
+| --- | --- |
+| Backend | Python 3.13, FastAPI 0.143, SQLModel 0.0.48, Alembic, Pydantic Settings, [`fastapi-myauth`](https://github.com/zonistefano/fastapi_auth) 1.6.0 |
+| Database | PostgreSQL 17 (SQLite in memoria per i test rapidi) |
+| Job in background | Celery + Redis, scheduler RedBeat (profilo opzionale) |
+| Frontend | Nuxt 4, Vue 3, Nuxt UI 4, Tailwind CSS 4, Pinia, Nuxt Content 3, Nuxt i18n, Vue Flow |
+| Client API | `@hey-api/openapi-ts`: tipi e SDK generati dallo schema OpenAPI |
+| Tooling | uv, Bun, Ruff, ESLint, Prettier, vue-tsc, pytest, `bun test`, pre-commit |
+| Infrastruttura | Docker Compose (sviluppo, test, produzione), GitHub Actions, GHCR, Dev Container |
 
-Required for container development: Python 3, GNU Make, Bash, Docker and Docker
-Compose 2.32 or newer. Container dependencies are installed in the images; no
-host `node_modules` or Python environment is required.
+## Avvio rapido
 
-```sh
-make init
-make dev
-```
-
-Open the frontend at http://localhost:3000 and API documentation at
-http://localhost:8000/docs. The database is available on localhost:5432.
-`make init` generates a separate password and persistent signing/encryption keys
-for each project. It fills missing settings and leaves existing values intact.
-Get the initial administrator credentials from your local `.env`.
-
-`.env` and other local environment files are ignored by Git. `.env.example`
-contains configuration names and empty secret fields. Never put registry tokens
-in an environment file committed to the repository. If a token was previously
-committed, revoke it at its provider; deleting it does not revoke it.
-
-## Local tools and checks
-
-For host development, install the versions in `.python-version`, `.node-version`,
-`.uv-version` and `.bun-version`. uv can download the pinned Python interpreter.
-The devcontainer installs the same uv and Bun versions.
+Requisiti: Python 3, GNU Make, Bash, Docker e Docker Compose ≥ 2.32. Non servono
+Node, Bun o un ambiente Python sull'host: le dipendenze vivono nelle immagini.
 
 ```sh
-make setup             # initialize and install locked dependencies
-make check             # tooling tests, lint, formatting checks and Vue types
-make test              # isolated backend tests and Bun frontend tests
-make build             # production backend and frontend images
-make pre_commit_install # optional Git hooks using the same locked Ruff
+make init   # crea .env con segreti generati (non sovrascrive valori esistenti)
+make dev    # avvia db, migrazioni, backend e frontend con hot reload
 ```
 
-`make dev_frontend_local` runs Nuxt on the host and loads the root `.env`.
-`make format` applies source formatting and automatic lint fixes. `make help`
-lists the commands. Checks return a nonzero exit status when they fail.
+| Servizio | URL |
+| --- | --- |
+| Frontend | http://localhost:3000 |
+| API + Swagger UI | http://localhost:8000/docs |
+| PostgreSQL | localhost:5432 |
 
-The backend OpenAPI schema generates the frontend TypeScript models and API SDK.
-After changing API routes or models, run `make api_generate` and commit
-`frontend/openapi.json` and `frontend/app/api/generated/` with the backend change.
-`make api_check` and CI verify that these artifacts are current. Exporting does
-not require a running backend or database. See the
-[typed API workflow](docs/api-client.md) for usage and examples.
+Le credenziali dell'amministratore iniziale sono `FIRST_SUPERUSER` e
+`FIRST_SUPERUSER_PASSWORD` nel file `.env` generato.
 
-Backend tests use a unique Compose project, a generated temporary environment
-and a disposable database. They do not load the development `.env`, publish
-ports, stop development containers or delete development volumes. HTML coverage
-is written to `backend/htmlcov`; CI uploads it as an artifact.
+`make help` elenca tutti i comandi disponibili.
 
-## Optional services
+## Cosa include
+
+**Backend**
+- Autenticazione via `fastapi-myauth`: registrazione, login con password, magic
+  link, TOTP con codici di recupero, refresh token con rotazione e revoca,
+  conferma email, recupero password, ruoli e superuser, ri-autenticazione recente.
+- Modello utente estendibile (`CustomUser`, campo di esempio `language`).
+- `CRUDBase` generico, unità di lavoro transazionale condivisa con l'auth.
+- Rate limiting (in memoria o Redis), CORS, logging configurabile, health check.
+- Migrazioni Alembic con test automatico di coerenza modelli/schema.
+- Worker Celery con task periodico di pulizia dei record auth scaduti.
+- Moduli `chat`, `editor`, `bpmn`: scheletri pronti per il dominio applicativo.
+
+**Frontend**
+- Pagine auth complete (login, signup, magic link, TOTP, recupero e reset password).
+- Area impostazioni (profilo, sicurezza/2FA) e pagina di moderazione utenti.
+- Landing, pricing, blog, changelog, docs e pagine legali da Nuxt Content, in
+  inglese e italiano.
+- Client API tipizzato con rinnovo automatico del token.
+- Editor BPMN dimostrativo (solo frontend), OG image, `llms.txt`, analytics Umami
+  opzionale.
+
+> I moduli backend `chat`, `editor` e `bpmn` sono **punti di estensione vuoti**:
+> non espongono API né persistenza. L'editor BPMN del frontend è una demo
+> client-side. Vedi [Architettura](docs/architecture.md#stato-dei-moduli).
+
+## Documentazione
+
+| Guida | Contenuto |
+| --- | --- |
+| [Creare un nuovo progetto](docs/getting-started.md) | Dal template al primo avvio, checklist di personalizzazione |
+| [Architettura](docs/architecture.md) | Struttura della repo, servizi, flusso delle richieste, stato dei moduli |
+| [Configurazione](docs/configuration.md) | Tutte le variabili d'ambiente e i segreti |
+| [Backend](docs/backend.md) | Moduli, modelli, CRUD, transazioni, migrazioni, worker, logging |
+| [Autenticazione](docs/authentication.md) | Flussi auth, endpoint, permessi, sessioni, email |
+| [Frontend](docs/frontend.md) | Pagine, layout, store, middleware, i18n, contenuti, tema |
+| [Client API tipizzato](docs/api-client.md) | Workflow OpenAPI → TypeScript e uso in Nuxt |
+| [Tutorial: nuova funzionalità](docs/tutorial-feature.md) | Esempio end-to-end, dal modello alla pagina |
+| [Qualità, test e CI](docs/quality.md) | Check, test, pre-commit, GitHub Actions, dipendenze |
+| [Deployment](docs/deployment.md) | Immagini di produzione, pubblicazione su GHCR, hosting |
+
+Le istruzioni per gli agenti di codice sono in [AGENTS.md](AGENTS.md) (Codex e
+altri) e [CLAUDE.md](CLAUDE.md) (Claude Code, che importa `AGENTS.md`).
+
+## Comandi principali
 
 ```sh
-make dev_workers       # core stack plus Redis, Celery worker and scheduler
-make dev_tools         # core stack plus Redis, pgAdmin, Flower and mailcatcher
+make dev            # stack core con hot reload
+make dev_workers    # + Redis, worker Celery e scheduler
+make dev_tools      # + Redis, pgAdmin, Flower, mailcatcher
+make setup          # installa le dipendenze locali (uv + Bun) per IDE e check
+make check          # lint, formattazione, tipi, verifica client API
+make test           # test backend (PostgreSQL usa e getta) + test frontend
+make api_generate   # rigenera openapi.json, tipi e SDK del frontend
+make backend_makemigrations MESSAGE="descrizione"
+make build          # immagini di produzione
+make dev_down       # ferma lo stack, conserva i dati
+make dev_clean      # ferma lo stack ed ELIMINA i volumi del database
 ```
 
-Use both profiles together with:
+## Licenza
 
-```sh
-docker compose --profile workers --profile tools up --build --watch
-```
-
-pgAdmin runs on localhost:5050, Flower on localhost:5555 and mailcatcher on
-localhost:1080. To use mailcatcher for API emails, set `SMTP_HOST=mailcatcher`,
-`SMTP_PORT=1025` and `SMTP_TLS=false` in `.env`, then start the tools profile.
-Analytics is disabled by default. Set both `NUXT_UMAMI_ID` and `NUXT_UMAMI_HOST`
-and rebuild the frontend to enable your own instance.
-
-`make dev_down` preserves database data. **`make dev_clean` deletes development
-database volumes.** PostgreSQL is pinned to major version 17; upgrade existing
-volumes using PostgreSQL's migration procedure before changing the major version.
-
-## CI and deployment
-
-The CI workflow checks tooling, Python lint/formatting, backend packaging and
-tests, frontend lint/formatting/types/tests/build, and production Docker images.
-No deployment account or coverage service is needed for these checks.
-
-Publishing is opt-in: dispatch **Publish container images** from `main` with an
-image tag. It checks the selected commit and publishes backend/frontend images
-to GHCR with `GITHUB_TOKEN`. The worker uses the same backend image. No Docker Hub
-credential, automatic PyPI publication or automatic deployment is configured.
-
-See [backend development](docs/README_backend.md),
-[frontend development](frontend/README.md),
-[dependency updates](docs/package.json.md) and [deployment](docs/deployment.md).
+[MIT](LICENSE). Aggiorna il titolare del copyright nei progetti derivati.
