@@ -3,7 +3,7 @@ import type { RouteLocationNormalized } from "vue-router"
 import anonymous from "~/middleware/anonymous"
 import authenticated from "~/middleware/authenticated"
 import moderator from "~/middleware/moderator"
-import { navigations, resetNuxt, sessionTokens, toasts } from "./nuxt"
+import { navigations, resetNuxt, sessionTokens, toasts } from "./fakes"
 
 type Middleware = (
   to: RouteLocationNormalized,

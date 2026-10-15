@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { readableDate } from "@/utilities"
-
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const collection: `blog_${typeof locale.value}` = `blog_${locale.value}`
@@ -39,7 +37,7 @@ useSeoMeta({
           :title="post.title"
           :description="post.description"
           :image="post.image"
-          :date="readableDate(post.date, true, locale)"
+          :date="post.date"
           :authors="post.authors"
           :badge="post.badge"
           :orientation="index === 0 ? 'horizontal' : 'vertical'"

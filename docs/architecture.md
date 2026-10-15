@@ -58,7 +58,7 @@ flowchart LR
 │   ├── content/{en,it}/       # contenuti Nuxt Content
 │   ├── i18n/locales/          # traduzioni UI
 │   ├── public/                # asset statici
-│   ├── tests/                 # bun test
+│   ├── tests/                 # bun test (logica); tests/nuxt/ Vitest (UI)
 │   ├── openapi.json           # schema API committato
 │   ├── nuxt.config.ts, content.config.ts, openapi-ts.config.mjs
 │   └── Dockerfile, Dockerfile.dev, package.json, bun.lock

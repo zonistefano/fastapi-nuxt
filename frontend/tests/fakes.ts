@@ -1,6 +1,8 @@
 import { createPinia, defineStore, setActivePinia } from "pinia"
 import { createClient } from "~/api/generated/client"
 
+export { jwt, sessionTokens } from "./tokens"
+
 export const API_URL = "https://api.example.com"
 
 type Handler = (request: Request) => Response | Promise<Response>
@@ -57,19 +59,6 @@ export function resetNuxt({ locale = "en" } = {}) {
     fetch: fakeFetch,
     throwOnError: true,
   })
-}
-
-export function jwt(payload: Record<string, unknown>) {
-  return `header.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.signature`
-}
-
-export function sessionTokens(sub = "user-1") {
-  const exp = Math.floor(Date.now() / 1000) + 3600
-  return {
-    access_token: jwt({ sub, exp }),
-    refresh_token: jwt({ sub, exp, refresh: true }),
-    token_type: "bearer",
-  }
 }
 
 export function installNuxtGlobals() {

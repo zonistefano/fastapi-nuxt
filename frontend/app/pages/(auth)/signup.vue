@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import * as z from "zod"
+import { loginCreateUserProfile } from "~/api/generated"
 import { tokenParser, tokenIsTOTP } from "@/utilities"
 import type { FormSubmitEvent } from "@nuxt/ui"
 
@@ -11,6 +12,8 @@ definePageMeta({
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const route = useRoute()
+const toast = useToast()
+const { $publicApi } = useNuxtApp()
 const { t } = useI18n()
 const redirectAfterLogin = "/"
 const redirectAfterMagic = "/magic"
@@ -66,11 +69,30 @@ const providers = [
 ]
 
 async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
-  await authStore.logIn({
-    username: event.data.email,
-    password:
-      oauth.value && "password" in event.data ? event.data.password : undefined,
-  })
+  const password =
+    oauth.value && "password" in event.data ? event.data.password : undefined
+  // A magic link creates the account; a password needs an explicit signup
+  if (password !== undefined) {
+    try {
+      const response = await loginCreateUserProfile({
+        client: $publicApi,
+        body: { email: event.data.email, password },
+      })
+      if ("msg" in response) {
+        toast.add({ title: t("auth.signup.title"), description: response.msg })
+        await navigateTo("/login")
+        return
+      }
+    } catch {
+      toast.add({
+        title: t("notifications.signupError"),
+        description: t("notifications.submissionErrorDescription"),
+        icon: "i-heroicons-exclamation-circle",
+      })
+      return
+    }
+  }
+  await authStore.logIn({ username: event.data.email, password })
   if (authStore.loggedIn) {
     await navigateTo(redirectAfterLogin)
     return
@@ -97,7 +119,7 @@ onMounted(async () => {
 
 <template>
   <UAuthForm
-    :title="t('auth.login.title')"
+    :title="t('auth.signup.title')"
     icon="i-lucide-lock"
     :fields="oauth ? fields_oauth : fields"
     :schema="oauth ? schema_oauth : schema"
@@ -126,9 +148,10 @@ onMounted(async () => {
       </div>
     </template>
     <template #footer>
-      By signing in, you agree to our
-      <NuxtLinkLocale to="/" class="text-primary font-medium"
-        >Terms of Service</NuxtLinkLocale
+      {{ t("auth.terms") }}
+      <NuxtLinkLocale to="/" class="text-primary font-medium">{{
+        t("auth.termsLink")
+      }}</NuxtLinkLocale
       >.
     </template>
   </UAuthForm>

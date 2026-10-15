@@ -12,14 +12,20 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "format": "prettier --write .",
-    "test": "bun test --tsconfig-override ./tests/tsconfig.json ./tests",
+    "test": "bun run test:unit && bun run test:nuxt",
+    "test:unit": "bun test --tsconfig-override ./tests/tsconfig.json ./tests",
+    "test:nuxt": "vitest run",
     "typecheck": "nuxt typecheck",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.87.5",
     "@nuxt/eslint": "1.15.2",
+    "@nuxt/test-utils": "4.3.2",
+    "@vitest/coverage-v8": "5.0.3",
+    "@vue/test-utils": "2.5.1",
     "eslint": "10.4.0",
+    "jsdom": "29.1.1",
     "nuxt-og-image": "^6.6.0",
     "nuxtseo-layer-devtools": "^5.3.0",
     "pinia": "3.0.4",
@@ -27,7 +33,9 @@
     "prettier-plugin-tailwindcss": "^0.8.0",
     "sharp": "^0.33.5",
     "typescript": "5.9.3",
-    "vue-tsc": "3.3.13"
+    "vitest": "5.0.3",
+    "vue-tsc": "3.3.13",
+    "yaml": "2.9.0"
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.3",

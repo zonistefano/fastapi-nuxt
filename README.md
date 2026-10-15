@@ -19,7 +19,7 @@ serve e aggiunga il proprio dominio applicativo nei punti di estensione previsti
 | Job in background | Celery + Redis, scheduler RedBeat (profilo opzionale) |
 | Frontend | Nuxt 4, Vue 3, Nuxt UI 4, Tailwind CSS 4, Pinia, Nuxt Content 3, Nuxt i18n, Vue Flow |
 | Client API | `@hey-api/openapi-ts`: tipi e SDK generati dallo schema OpenAPI |
-| Tooling | uv, Bun, Ruff, ESLint, Prettier, vue-tsc, pytest, `bun test`, pre-commit |
+| Tooling | uv, Bun, Ruff, ESLint, Prettier, vue-tsc, pytest, `bun test`, Vitest + `@nuxt/test-utils`, pre-commit |
 | Infrastruttura | Docker Compose (sviluppo, test, produzione), GitHub Actions, GHCR, Dev Container |
 
 ## Avvio rapido

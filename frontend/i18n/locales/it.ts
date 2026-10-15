@@ -42,6 +42,8 @@ export default {
     codeLength: "Deve contenere {count} cifre",
   },
   auth: {
+    terms: "Accedendo accetti i nostri",
+    termsLink: "Termini di servizio",
     login: {
       title: "Accedi",
       description: "Non hai un account?",
@@ -190,6 +192,7 @@ export default {
     endEvent: "Evento finale",
     task: "Attività",
     taskNumber: "Attività {number}",
+    diagramNumber: "Diagramma {number}",
     userTask: "Attività utente",
     decision: "Decisione?",
     gateway: "Gateway",
@@ -204,7 +207,14 @@ export default {
     zoomOut: "Riduci",
     fitView: "Adatta alla vista",
   },
+  pricing: {
+    monthly: "Mensile",
+    yearly: "Annuale",
+    perMonth: "/mese",
+    perYear: "/anno",
+  },
   notifications: {
+    signupError: "Errore di registrazione",
     loginError: "Errore di accesso",
     loginErrorDescription:
       "Controlla i dati o la connessione internet e riprova.",

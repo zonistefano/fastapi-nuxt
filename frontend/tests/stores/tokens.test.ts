@@ -6,7 +6,7 @@ import {
   resetNuxt,
   sessionTokens,
   toasts,
-} from "../nuxt"
+} from "../fakes"
 
 const now = () => Math.floor(Date.now() / 1000)
 const magicClaim = (fingerprint = "fp-1") =>

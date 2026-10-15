@@ -14,7 +14,7 @@ make dev_frontend         # dev server containerizzato
 make dev_frontend_local   # dev server sull'host con ../.env
 make lint_frontend        # ESLint, zero warning ammessi
 make typecheck            # nuxt typecheck (vue-tsc)
-make test_frontend        # bun run test (bun test + copertura)
+make test_frontend        # bun run test: test:unit (Bun) + test:nuxt (Vitest)
 make format_frontend      # eslint --fix + prettier --write
 make build_frontend       # immagine di produzione
 ```
@@ -230,14 +230,25 @@ private (fuori da `public`) sono disponibili solo sul server Nitro. Vedi
 
 ## Test
 
-`frontend/tests/` usa il runner integrato di Bun (`bun:test`) e copre la logica
-non-UI: utility, transport, store, middleware e plugin. Componenti e pagine non
-sono testati (servirebbero `@nuxt/test-utils` e Vitest).
+`bun run test` (e `make test_frontend`) esegue due suite, ciascuna con la sua
+soglia di copertura:
+
+| Suite | Comando | Ambito | Copertura |
+| --- | --- | --- | --- |
+| logica | `bun run test:unit` (Bun, `bun:test`) | file `.ts`: utility, transport, store, middleware, plugin | `bunfig.toml`: 95% righe e funzioni |
+| UI | `bun run test:nuxt` (Vitest + `@nuxt/test-utils`, jsdom) | file `.vue`: pagine, layout, componenti, `app.vue`, `error.vue` | `vitest.config.ts`: 95% righe, 90% funzioni, 80% branch |
+
+I test di logica sono rapidi (meno di un secondo); quelli UI avviano una vera
+app Nuxt (circa 20 secondi). Per iterare usa `bunx vitest tests/nuxt/pages/auth.test.ts`
+in watch mode.
+
+### Logica (`tests/*.test.ts`)
 
 | File | Contenuto |
 | --- | --- |
 | `setup.ts` | precaricato da `bunfig.toml`: installa i finti auto-import Nuxt e registra gli store |
-| `nuxt.ts` | doppioni di test e helper: `resetNuxt()`, `mockApi()`, `toasts`, `navigations`, `requests`, `jwt()`, `sessionTokens()` |
+| `fakes.ts` | doppioni di test e helper: `resetNuxt()`, `mockApi()`, `toasts`, `navigations`, `requests` |
+| `tokens.ts` | `jwt()` e `sessionTokens()`, condivisi con i test UI |
 | `tsconfig.json` | estende `.nuxt/tsconfig.app.json` per risolvere gli alias `~` e `@` (passato con `--tsconfig-override`) |
 | `api-client.test.ts` | serializzazione dell'SDK generato e transport (retry dopo 401, logout, 403) |
 | `stores/*.test.ts` | `useTokenStore()` e `useAuthStore()`: login, magic link, TOTP, refresh, profilo, recupero password |
@@ -246,16 +257,16 @@ sono testati (servirebbero `@nuxt/test-utils` e Vitest).
 | `i18n.test.ts` | stesse chiavi in `en.ts` e `it.ts`, nessun testo vuoto, stessi file in `content/en` e `content/it` |
 | `coverage.test.ts` | importa ogni modulo di `api/`, `composables/`, `middleware/`, `plugins/`, `stores/`, `utilities/` |
 
-Nei test gli auto-import (`useNuxtApp`, `useToast`, `navigateTo`, `defineStore`,
-…) sono sostituiti da `tests/nuxt.ts`; `$api` e `$publicApi` sono client
-generati veri con un `fetch` finto che risponde alle rotte registrate con
+Gli auto-import (`useNuxtApp`, `useToast`, `navigateTo`, `defineStore`, …) sono
+sostituiti da `tests/fakes.ts`; `$api` e `$publicApi` sono client generati veri
+con un `fetch` finto che risponde alle rotte registrate con
 `mockApi("METHOD /percorso", corpo | handler)` (404 altrimenti). Chiama
 `resetNuxt()` in `beforeEach` per ripartire con Pinia, mock e registri vuoti.
 Se il codice usa un nuovo auto-import Nuxt, aggiungilo a `installNuxtGlobals()`.
 
 ```ts
 import { beforeEach, expect, test } from "bun:test"
-import { mockApi, requests, resetNuxt, sessionTokens } from "../nuxt"
+import { mockApi, requests, resetNuxt, sessionTokens } from "../fakes"
 
 beforeEach(() => resetNuxt())
 
@@ -267,11 +278,63 @@ test("loads the profile", async () => {
 })
 ```
 
-La copertura è sempre attiva: `bunfig.toml` impone almeno il 95% di righe e
-funzioni (il codice generato è escluso) e `bun run test` fallisce sotto soglia.
 Bun misura solo i file importati, per questo `coverage.test.ts` carica tutti i
 moduli di logica: un nuovo store, composable o utility senza test abbassa la
-copertura invece di restare invisibile. Aggiungi i test insieme al codice.
+copertura invece di restare invisibile.
+
+### UI (`tests/nuxt/`)
+
+| File | Contenuto |
+| --- | --- |
+| `setup.ts` | setup di Vitest: finti `queryCollection*`, `ResizeObserver` per jsdom, `clearNuxtData()` prima di ogni test |
+| `content.ts` | Nuxt Content in memoria: `index_*` e `pricing_*` leggono i veri YAML di `content/`, le collezioni Markdown usano fixture |
+| `helpers.ts` | `resetApp()`, `mockApi()`, `apiError()`, `requests`, `apiPaths()`, `signIn()`, `user`, `submitForm()`, `toastTitles()` |
+| `pages/*.test.ts` | autenticazione, impostazioni, moderazione e contatti, pagine di contenuto |
+| `components/*.test.ts`, `layouts.test.ts` | componenti, editor BPMN, layout, `app.vue`, `error.vue` |
+
+I componenti si montano con `mountSuspended(Component, { route, props, slots })`
+dentro un'app Nuxt vera: store, i18n, router e Nuxt UI sono quelli reali. Le
+chiamate API passano da `globalThis.fetch`, intercettato da `resetApp()` e
+servito da `mockApi()` come nei test di logica. Per controllare le navigazioni
+simula `navigateTo` in ogni file:
+
+```ts
+import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime"
+import { beforeEach, expect, test, vi } from "vitest"
+import Contact from "~/pages/contact.vue"
+import { mockApi, requests, resetApp, submitForm } from "../helpers"
+
+const { navigateTo } = vi.hoisted(() => ({ navigateTo: vi.fn() }))
+mockNuxtImport("navigateTo", () => navigateTo)
+
+beforeEach(() => resetApp())
+
+test("sends the message", async () => {
+  mockApi("POST /services/contact", { msg: "ok" })
+  const wrapper = await mountSuspended(Contact, { route: "/contact" })
+  await submitForm(wrapper, { email: "a@example.com", message: "Hello there!" })
+  expect(requests).toHaveLength(1)
+  expect(navigateTo).toHaveBeenCalledWith("/")
+})
+```
+
+Note pratiche:
+
+- `submitForm()` imposta gli input per `name` o `id` e invia il form; la
+  validazione di Nuxt UI è asincrona, quindi il helper attende qualche ciclo.
+- Modali, slideover e menu sono teletrasportati in `document.body`: cercali con
+  `new DOMWrapper(document.body)`. I menu di Reka UI non si aprono con eventi
+  sintetici in jsdom: verifica gli `items` passati a `UDropdownMenu` e chiama il
+  loro `onSelect`.
+- La lingua segue la rotta (`prefix_and_default`): per l'italiano monta su
+  `/it/...` oltre a chiamare `useNuxtApp().$i18n.setLocale("it")`.
+- Le pagine che lanciano un 404 `fatal` sostituirebbero l'app di test con la
+  pagina d'errore: simula `createError` come in `pages/content.test.ts`.
+- L'ambiente è jsdom e non happy-dom: con happy-dom 20 il `Request` perde gli
+  header passati come istanza di `Headers`, quindi `Authorization` non arriva.
+
+Aggiungi i test insieme al codice: le soglie sono pensate per restare alte in
+ogni progetto derivato dal template.
 
 ## Container
 

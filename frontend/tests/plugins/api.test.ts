@@ -10,7 +10,7 @@ import {
   resetNuxt,
   sessionTokens,
   toasts,
-} from "../nuxt"
+} from "../fakes"
 
 type Provided = { provide: { api: Client; publicApi: Client } }
 

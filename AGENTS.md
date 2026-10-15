@@ -40,7 +40,7 @@ Usa sempre i target `make` dalla root e gli strumenti fissati (uv, Bun). Mai `pi
 make setup            # installa le dipendenze bloccate (uv sync --locked, bun install --frozen-lockfile)
 make format           # applica Ruff, ESLint --fix, Prettier
 make check            # tooling, lint, formattazione, typecheck, api_check (non modifica file)
-make test             # test backend su PostgreSQL usa e getta (Docker) + bun test
+make test             # test backend su PostgreSQL usa e getta (Docker) + test frontend (Bun + Vitest)
 make api_generate     # rigenera openapi.json, tipi e SDK frontend
 make backend_makemigrations MESSAGE="descrizione"   # richiede Docker
 ```
@@ -133,9 +133,11 @@ cd frontend && bun run test && bun run typecheck && bun run lint
   `translate` da `@/utilities`.
 - `app/utilities/` non è auto-importata: `import { … } from "@/utilities"`.
 - Test: per ogni logica nuova (utility, store, composable, middleware, plugin)
-  aggiungi test in `frontend/tests/` con gli helper di `tests/nuxt.ts`
-  (`resetNuxt()`, `mockApi()`); la soglia di copertura è in `bunfig.toml`, non
-  abbassarla per far passare i test (vedi `docs/frontend.md#test`).
+  aggiungi test in `frontend/tests/` con gli helper di `tests/fakes.ts`; per
+  pagine, layout e componenti aggiungi test Vitest in `frontend/tests/nuxt/`
+  con `mountSuspended` e gli helper di `tests/nuxt/helpers.ts`. Le soglie di
+  copertura sono in `bunfig.toml` e `vitest.config.ts`: non abbassarle per far
+  passare i test (vedi `docs/frontend.md#test`).
 - Contenuti Nuxt Content: mantieni le versioni `en` e `it` allineate e rispetta
   gli schemi in `content.config.ts` / `content/types.ts`.
 - Navigazione: sidebar in `app/layouts/dashboard.vue`, header pubblico in

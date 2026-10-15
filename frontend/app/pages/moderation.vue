@@ -73,8 +73,20 @@ const columns = computed(() =>
   defaultColumns.filter((column) => selectedColumns.value.includes(column)),
 )
 
+function notifyError() {
+  toast.add({
+    title: t("notifications.updateError"),
+    description: t("notifications.invalidRequest"),
+    icon: "i-heroicons-exclamation-circle",
+  })
+}
+
 async function getAllUsers() {
-  userProfiles.value = await usersReadAllUsers({ client: $api })
+  try {
+    userProfiles.value = await usersReadAllUsers({ client: $api })
+  } catch {
+    notifyError()
+  }
 }
 
 onMounted(async () => {
@@ -85,16 +97,10 @@ async function toggleActive(email: string, is_active: boolean) {
   const user = userProfiles.value.find((user) => user.email === email)
   const previous = user?.is_active
   if (user) user.is_active = is_active
-  const response = await usersToggleState({
-    client: $api,
-    body: { user_email: email },
-  })
-  if (!response || !response.msg) {
-    toast.add({
-      title: t("notifications.updateError"),
-      description: response ? response.msg : t("notifications.invalidRequest"),
-      icon: "i-heroicons-exclamation-circle",
-    })
+  try {
+    await usersToggleState({ client: $api, body: { user_email: email } })
+  } catch {
+    notifyError()
     if (user && previous !== undefined) user.is_active = previous
   }
 }
@@ -106,17 +112,14 @@ async function toggleMod(id: string, is_superuser: boolean) {
   const data: CustomUserUpdate = {
     is_superuser: is_superuser,
   }
-  const response = await usersUpdateUserById({
-    client: $api,
-    path: { user_id: id },
-    body: data,
-  })
-  if (!response) {
-    toast.add({
-      title: t("notifications.updateError"),
-      description: t("notifications.invalidRequest"),
-      icon: "i-heroicons-exclamation-circle",
+  try {
+    await usersUpdateUserById({
+      client: $api,
+      path: { user_id: id },
+      body: data,
     })
+  } catch {
+    notifyError()
     if (user && previous !== undefined) user.is_superuser = previous
   }
 }
@@ -143,19 +146,20 @@ async function submit(event: FormSubmitEvent<Schema>) {
       password: generateUUID(),
       full_name: event.data.full_name ? event.data.full_name : "",
     }
-    const response = await usersCreateUser({ client: $api, body: data })
-    if (!response) {
-      toast.add({
-        title: t("notifications.updateError"),
-        description: t("notifications.invalidRequest"),
-        icon: "i-heroicons-exclamation-circle",
-      })
-    } else {
-      toast.add({
-        title: t("moderation.userCreated"),
-        description: t("moderation.userCreatedDescription"),
-      })
+    try {
+      await usersCreateUser({ client: $api, body: data })
+    } catch {
+      notifyError()
+      return
     }
+    toast.add({
+      title: t("moderation.userCreated"),
+      description: t("moderation.userCreatedDescription"),
+    })
+    isNewUserModalOpen.value = false
+    modal_state.full_name = undefined
+    modal_state.email = undefined
+    await getAllUsers()
   }
 }
 </script>
@@ -173,15 +177,23 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
 
         <template #right>
-          <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
+          <UButton
+            icon="i-lucide-plus"
+            size="md"
+            class="rounded-full"
+            :aria-label="t('moderation.newUser')"
+            @click="openNewUserModal"
+          />
         </template>
       </UDashboardNavbar>
 
       <UDashboardToolbar>
         <template #right>
           <USelectMenu
+            v-model="selectedColumns"
             icon="i-heroicons-adjustments-horizontal-solid"
-            :items="['Backlog', 'Todo', 'In Progress', 'Done']"
+            :items="defaultColumns"
+            label-key="header"
             multiple
             class="hidden lg:block"
           >

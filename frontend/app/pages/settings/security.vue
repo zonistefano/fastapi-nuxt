@@ -11,6 +11,7 @@ import type { FormSubmitEvent } from "@nuxt/ui"
 
 const { $api } = useNuxtApp()
 const authStore = useAuthStore()
+const toast = useToast()
 const { t } = useI18n()
 const totpModal = ref(false)
 const totpNew = ref<NewTotpResponse>({ key: "", uri: "" })
@@ -72,13 +73,19 @@ async function submit(event: FormSubmitEvent<Schema>) {
       return
     }
     if (event.data.totp !== authStore.profile.totp_secret && event.data.totp) {
-      const response = await loginRequestNewTotp({ client: $api })
-      if (response) {
+      try {
+        const response = await loginRequestNewTotp({ client: $api })
         totpNew.value.key = response.key
         totpNew.value.uri = response.uri
         totpClaim.value.uri = response.uri
         totpClaim.value.password = event.data.original
         totpModal.value = true
+      } catch {
+        toast.add({
+          title: t("notifications.enableTwoFactorError"),
+          description: t("notifications.submissionErrorDescription"),
+          icon: "i-heroicons-exclamation-circle",
+        })
       }
     }
     if (event.data.totp !== authStore.profile.totp_secret && !event.data.totp) {

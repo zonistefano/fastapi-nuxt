@@ -8,7 +8,7 @@ import {
   resetNuxt,
   sessionTokens,
   toasts,
-} from "../nuxt"
+} from "../fakes"
 
 const user: CustomUserRead = {
   id: "user-1",

@@ -8,7 +8,7 @@ type AuthHooks = {
 /** A transport per Nuxt app, with a single retry and a replayable request body. */
 export function createAuthenticatedFetch(
   hooks: AuthHooks,
-  fetcher: typeof fetch = globalThis.fetch,
+  fetcher?: typeof fetch,
 ): typeof fetch {
   return async (input, init) => {
     const original = new Request(input, init)
@@ -17,7 +17,7 @@ export function createAuthenticatedFetch(
       const token = hooks.getToken()
       if (token) request.headers.set("Authorization", `Bearer ${token}`)
       request.headers.set("Cache-Control", "no-cache")
-      return fetcher(request)
+      return (fetcher ?? globalThis.fetch)(request)
     }
 
     let response = await send()

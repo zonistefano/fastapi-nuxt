@@ -59,6 +59,11 @@ salva i token restituiti.
 - Con `REQUIRE_EMAIL_VALIDATION=true` gli account non confermati non possono
   accedere.
 
+Nella pagina `/signup` del frontend, con la password attiva viene chiamato
+`POST /login/signup` e poi il login; se il backend risponde con un messaggio
+(conferma email richiesta) l'utente viene rimandato a `/login`. Senza password
+la registrazione passa dal magic link, che crea l'account se non esiste.
+
 ### Recupero password
 
 `POST /login/recover/{email}` invia il link; `POST /login/reset` imposta la nuova

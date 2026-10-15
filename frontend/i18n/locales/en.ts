@@ -42,6 +42,8 @@ export default {
     codeLength: "Must be {count} digits long",
   },
   auth: {
+    terms: "By signing in, you agree to our",
+    termsLink: "Terms of Service",
     login: {
       title: "Login",
       description: "Don't have an account?",
@@ -188,6 +190,7 @@ export default {
     endEvent: "End Event",
     task: "Task",
     taskNumber: "Task {number}",
+    diagramNumber: "Diagram {number}",
     userTask: "User Task",
     decision: "Decision?",
     gateway: "Gateway",
@@ -202,7 +205,14 @@ export default {
     zoomOut: "Zoom Out",
     fitView: "Fit View",
   },
+  pricing: {
+    monthly: "Monthly",
+    yearly: "Yearly",
+    perMonth: "/month",
+    perYear: "/year",
+  },
   notifications: {
+    signupError: "Sign up error",
     loginError: "Login error",
     loginErrorDescription:
       "Please check your details or internet connection, and try again.",

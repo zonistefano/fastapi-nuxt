@@ -83,7 +83,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, ref, watchEffect } from "vue"
+import { onBeforeUnmount, ref, watch } from "vue"
 
 type AnimatedBeamProps = {
   class?: string
@@ -151,18 +151,18 @@ const svgDimensions = ref<{ width: number; height: number }>({
 
 let resizeObserver: ResizeObserver | undefined = undefined
 
-const { stop: stopEffect } = watchEffect(effect)
-
-function effect() {
-  if (resizeObserver == undefined && props.containerRef != null) {
+watch(
+  () => props.containerRef,
+  (container) => {
+    resizeObserver?.disconnect()
+    if (!container) return
     resizeObserver = new ResizeObserver(() => {
       updatePath()
     })
-    resizeObserver.observe(props.containerRef)
-
-    stopEffect()
-  }
-}
+    resizeObserver.observe(container)
+  },
+  { immediate: true },
+)
 
 // Function to update the path based on the positions of the elements
 function updatePath() {

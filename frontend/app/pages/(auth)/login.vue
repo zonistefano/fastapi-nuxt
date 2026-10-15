@@ -126,9 +126,10 @@ onMounted(async () => {
       </div>
     </template>
     <template #footer>
-      By signing in, you agree to our
-      <NuxtLinkLocale to="/" class="text-primary font-medium"
-        >Terms of Service</NuxtLinkLocale
+      {{ t("auth.terms") }}
+      <NuxtLinkLocale to="/" class="text-primary font-medium">{{
+        t("auth.termsLink")
+      }}</NuxtLinkLocale
       >.
     </template>
   </UAuthForm>

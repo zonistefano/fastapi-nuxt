@@ -71,12 +71,12 @@ format_check: ## Check formatting without changing files.
 typecheck: ## Check Nuxt and Vue types.
 	@cd "$(FRONTEND_DIR)" && $(BUN) run typecheck
 
-test: test_backend test_frontend ## Run isolated backend tests and frontend unit tests.
+test: test_backend test_frontend ## Run isolated backend tests and frontend tests.
 
 test_backend: ## Run backend tests in a disposable Compose project.
 	@cd "$(PROJECT_ROOT)" && bash scripts/test.sh
 
-test_frontend: ## Run frontend unit tests with Bun.
+test_frontend: ## Run frontend logic (Bun) and UI (Vitest) tests.
 	@cd "$(FRONTEND_DIR)" && $(FRONTEND_TEST_CMD)
 
 pre_commit_install: ## Install optional Git hooks after setup.

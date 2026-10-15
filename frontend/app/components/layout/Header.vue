@@ -53,10 +53,10 @@ const navigation = computed(() => [
       <USeparator class="my-6" />
 
       <UButton
-        label="Sign in"
+        :label="t('nav.login')"
         color="neutral"
         variant="subtle"
-        to="/login"
+        :to="localePath('/login')"
         block
         class="mb-3"
       />

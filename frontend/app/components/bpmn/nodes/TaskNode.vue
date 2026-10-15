@@ -10,7 +10,7 @@ const props = defineProps<
 const { t } = useI18n()
 
 const nodeLabel = computed(() => {
-  if (typeof props.data.label === "string") return props.label
+  if (typeof props.label === "string" && props.label) return props.label
   return t("bpmn.task")
 })
 const nodeIcon = computed(() => props.data.icon || "i-heroicons-cog-6-tooth")

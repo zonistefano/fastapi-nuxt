@@ -136,16 +136,20 @@ function fitView() {
   vueFlowFitView()
 }
 
-const idCounter = computed(() => {
-  return nodes.value.length + edges.value.length + 1
-})
+let lastId = nodes.value.length + edges.value.length
+function nextNodeId() {
+  // Ids must stay unique after deletions, so never reuse a counter value
+  do lastId++
+  while (findNode(lastId.toString()))
+  return lastId.toString()
+}
 function addNode(
   nodeType: string,
   position: { x: number; y: number },
   label?: string,
   data: Record<string, unknown> = {},
 ) {
-  const newNodeId = idCounter.value.toString()
+  const newNodeId = nextNodeId()
   const newNode: Node = {
     id: newNodeId,
     type: nodeType,

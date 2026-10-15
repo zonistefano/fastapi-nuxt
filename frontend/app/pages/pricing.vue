@@ -25,15 +25,9 @@ useSeoMeta({
 
 const isYearly = ref("0")
 
-const items = ref([
-  {
-    label: "Monthly",
-    value: "0",
-  },
-  {
-    label: "Yearly",
-    value: "1",
-  },
+const items = computed(() => [
+  { label: t("pricing.monthly"), value: "0" },
+  { label: t("pricing.yearly"), value: "1" },
 ])
 </script>
 
@@ -63,7 +57,9 @@ const items = ref([
           :key="index"
           v-bind="plan"
           :price="isYearly === '1' ? plan.price.year : plan.price.month"
-          :billing-cycle="isYearly === '1' ? '/year' : '/month'"
+          :billing-cycle="
+            isYearly === '1' ? t('pricing.perYear') : t('pricing.perMonth')
+          "
         />
       </UPricingPlans>
     </UContainer>

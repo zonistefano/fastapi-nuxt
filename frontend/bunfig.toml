@@ -1,5 +1,6 @@
 [test]
 preload = ["./tests/setup.ts"]
+pathIgnorePatterns = ["tests/nuxt/**"]
 coverage = true
 coverageSkipTestFiles = true
 coveragePathIgnorePatterns = ["app/api/generated/**", "tests/**", "i18n/**"]

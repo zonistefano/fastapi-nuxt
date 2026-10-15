@@ -14,7 +14,7 @@ import {
   tokenParser,
   translate,
 } from "@/utilities"
-import { jwt, resetNuxt } from "./nuxt"
+import { jwt, resetNuxt } from "./fakes"
 
 beforeEach(() => resetNuxt())
 

@@ -14,7 +14,8 @@ make api_generate         # dopo modifiche alle API del backend
 ```
 
 Da questa directory: `bun install --frozen-lockfile`, `bun run dev --dotenv ../.env`,
-`bun run lint`, `bun run format:check`, `bun run typecheck`, `bun run test`,
+`bun run lint`, `bun run format:check`, `bun run typecheck`, `bun run test`
+(`test:unit` con Bun, `test:nuxt` con Vitest),
 `bun run build`, `bun run preview`.
 
 Non modificare `app/api/generated/` né `openapi.json` a mano: sono generati dal

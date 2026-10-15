@@ -107,9 +107,8 @@ async function validate() {
       :title="t('settings.profile.validateEmailTitle')"
       :description="t('settings.profile.validateEmailDescription')"
     >
-      <template #links>
+      <template #footer>
         <UButton
-          type="submit"
           :label="t('settings.profile.sendEmail')"
           color="neutral"
           @click="validate"

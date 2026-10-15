@@ -42,8 +42,10 @@ I test non usano mai il database di sviluppo né il tuo `.env`.
 
 ## Test frontend
 
-`make test_frontend` esegue `bun run test` (`bun test` con copertura e soglia
-minima del 95% su righe e funzioni). Vedi [Frontend → Test](frontend.md#test).
+`make test_frontend` esegue `bun run test`: i test di logica con `bun test`
+(soglia 95% su righe e funzioni) e i test di pagine e componenti con Vitest e
+`@nuxt/test-utils` (soglia 95% righe, 90% funzioni, 80% branch). Vedi
+[Frontend → Test](frontend.md#test).
 
 ## Stile del codice
 

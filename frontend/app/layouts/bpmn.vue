@@ -1,19 +1,20 @@
 <script setup lang="ts">
-const links = [
+const config = useRuntimeConfig()
+const localePath = useLocalePath()
+const { t } = useI18n()
+const links = computed(() => [
   {
     id: "diagram-1",
-    label: "Diagram 1",
-    to: "/bpmn-editor",
+    label: t("bpmn.diagramNumber", { number: 1 }),
+    to: localePath("/bpmn-editor"),
   },
-]
+])
 </script>
 
 <template>
   <UDashboardGroup unit="rem" storage="local">
     <UDashboardSidebar id="dashboard" collapsible resizable>
-      <template #header="{ collapsed }">
-        <ChatTeamsMenu :collapsed="collapsed" />
-      </template>
+      <template #header>{{ config.public.appName }}</template>
 
       <template #default="{ collapsed }">
         <UNavigationMenu
@@ -24,9 +25,6 @@ const links = [
         />
 
         <USeparator />
-      </template>
-      <template #footer="{ collapsed }">
-        <ChatUserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
 
