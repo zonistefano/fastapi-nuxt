@@ -394,6 +394,28 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LoginMethods": {
+        "properties": {
+          "passkeys": {
+            "title": "Passkeys",
+            "type": "boolean"
+          },
+          "registration": {
+            "title": "Registration",
+            "type": "boolean"
+          },
+          "social_providers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Social Providers",
+            "type": "array"
+          }
+        },
+        "required": ["social_providers", "passkeys", "registration"],
+        "title": "LoginMethods",
+        "type": "object"
+      },
       "Msg": {
         "properties": {
           "msg": {
@@ -418,6 +440,130 @@
         },
         "required": ["key", "uri"],
         "title": "NewTOTPResponse",
+        "type": "object"
+      },
+      "PasskeyAuthenticationVerify": {
+        "properties": {
+          "ceremony_id": {
+            "format": "uuid",
+            "title": "Ceremony Id",
+            "type": "string"
+          },
+          "credential": {
+            "additionalProperties": true,
+            "title": "Credential",
+            "type": "object"
+          }
+        },
+        "required": ["ceremony_id", "credential"],
+        "title": "PasskeyAuthenticationVerify",
+        "type": "object"
+      },
+      "PasskeyOptions": {
+        "properties": {
+          "ceremony_id": {
+            "format": "uuid",
+            "title": "Ceremony Id",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          }
+        },
+        "required": ["ceremony_id", "options"],
+        "title": "PasskeyOptions",
+        "type": "object"
+      },
+      "PasskeyRead": {
+        "properties": {
+          "backed_up": {
+            "title": "Backed Up",
+            "type": "boolean"
+          },
+          "created": {
+            "format": "date-time",
+            "title": "Created",
+            "type": "string"
+          },
+          "credential_id": {
+            "title": "Credential Id",
+            "type": "string"
+          },
+          "device_type": {
+            "title": "Device Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "modified": {
+            "format": "date-time",
+            "title": "Modified",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "transports": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Transports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "credential_id",
+          "name",
+          "device_type",
+          "backed_up",
+          "transports",
+          "created",
+          "modified"
+        ],
+        "title": "PasskeyRead",
+        "type": "object"
+      },
+      "PasskeyRegistrationVerify": {
+        "properties": {
+          "ceremony_id": {
+            "format": "uuid",
+            "title": "Ceremony Id",
+            "type": "string"
+          },
+          "credential": {
+            "additionalProperties": true,
+            "title": "Credential",
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": ["ceremony_id", "name", "credential"],
+        "title": "PasskeyRegistrationVerify",
+        "type": "object"
+      },
+      "PasskeyUpdate": {
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": ["name"],
+        "title": "PasskeyUpdate",
         "type": "object"
       },
       "Reauthentication": {
@@ -462,6 +608,17 @@
         },
         "required": ["msg", "tokens"],
         "title": "SecurityChangeResponse",
+        "type": "object"
+      },
+      "SocialAuthorizationURL": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": ["url"],
+        "title": "SocialAuthorizationURL",
         "type": "object"
       },
       "TOTPRecoveryRequest": {
@@ -763,6 +920,25 @@
         "tags": ["login"]
       }
     },
+    "/login/methods": {
+      "get": {
+        "operationId": "login_login_methods",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginMethods"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Login Methods",
+        "tags": ["login"]
+      }
+    },
     "/login/new-totp": {
       "post": {
         "description": "Request new keys to enable TOTP on the user account.",
@@ -825,6 +1001,260 @@
           }
         },
         "summary": "Login With Oauth2",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/": {
+      "get": {
+        "operationId": "login_list_passkeys",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PasskeyRead"
+                  },
+                  "title": "Response Login List Passkeys",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Passkeys",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/authenticate/options": {
+      "post": {
+        "operationId": "login_authentication_options",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyOptions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Authentication Options",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/authenticate/verify": {
+      "post": {
+        "operationId": "login_authentication_verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyAuthenticationVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Authentication Verify",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/register/options": {
+      "post": {
+        "operationId": "login_registration_options",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyOptions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Registration Options",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/register/verify": {
+      "post": {
+        "operationId": "login_registration_verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegistrationVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Registration Verify",
+        "tags": ["login"]
+      }
+    },
+    "/login/passkeys/{passkey_id}": {
+      "delete": {
+        "operationId": "login_delete_passkey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "passkey_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Passkey Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Msg"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Passkey",
+        "tags": ["login"]
+      },
+      "patch": {
+        "operationId": "login_rename_passkey",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "passkey_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Passkey Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rename Passkey",
         "tags": ["login"]
       }
     },
@@ -1054,6 +1484,174 @@
           }
         },
         "summary": "Create User Profile",
+        "tags": ["login"]
+      }
+    },
+    "/login/social/{provider}": {
+      "delete": {
+        "operationId": "login_unlink_social_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Msg"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Unlink Social Account",
+        "tags": ["login"]
+      },
+      "get": {
+        "operationId": "login_fastapi_myauth_social_login",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAuthorizationURL"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fastapi Myauth Social Login",
+        "tags": ["login"]
+      }
+    },
+    "/login/social/{provider}/callback": {
+      "get": {
+        "operationId": "login_fastapi_myauth_social_callback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fastapi Myauth Social Callback",
+        "tags": ["login"]
+      }
+    },
+    "/login/social/{provider}/link": {
+      "post": {
+        "operationId": "login_fastapi_myauth_social_link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAuthorizationURL"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Fastapi Myauth Social Link",
         "tags": ["login"]
       }
     },

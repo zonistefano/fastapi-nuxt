@@ -87,3 +87,41 @@ describe("api plugin", () => {
     expect(toasts[0]!.title).toBe("notifications.permissionDenied")
   })
 })
+
+test("opens reauthentication on a recent-auth failure without logging out", async () => {
+  useTokenStore().setTokens(sessionTokens())
+  fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(
+    Response.json(
+      { detail: "Recent authentication required." },
+      { status: 403 },
+    ),
+  )
+  await expect(usersReadUserMe({ client: setup().api })).rejects.toBeDefined()
+  expect(useAuthStore().reauthenticationRequired).toBe(true)
+  expect(useTokenStore().hasValidToken).toBe(true)
+  expect(navigations).toHaveLength(0)
+})
+
+test("handles a forbidden response with a non-JSON body", async () => {
+  fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response("Forbidden", { status: 403 }),
+  )
+  await expect(usersReadUserMe({ client: setup().api })).rejects.toBeDefined()
+  expect(toasts[0]!.title).toBe("notifications.permissionDenied")
+})
+
+test("SSR uses the internal API URL while browser clients keep the public URL", async () => {
+  respond(200, 200, 200)
+  useRuntimeConfig().apiInternalUrl = "http://backend:8000"
+  Object.assign(useNuxtApp(), { ssrContext: {} })
+  const server = setup()
+  await usersReadUserMe({ client: server.api })
+  await usersReadUserMe({ client: server.publicApi })
+  Object.assign(useNuxtApp(), { ssrContext: undefined })
+  await usersReadUserMe({ client: setup().publicApi })
+  expect(sent.map((request) => request.url)).toEqual([
+    "http://backend:8000/users/me",
+    "http://backend:8000/users/me",
+    `${API_URL}/users/me`,
+  ])
+})

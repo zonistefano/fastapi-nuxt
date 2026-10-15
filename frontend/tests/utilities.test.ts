@@ -43,8 +43,16 @@ describe("authentication token helpers", () => {
   })
 
   test("rejects a token without a payload", () => {
-    expect(() => tokenParser("invalid-token")).toThrow("Missing JWT payload")
-    expect(() => tokenParser("")).toThrow("Missing JWT payload")
+    for (const token of [
+      "invalid-token",
+      "",
+      "a.invalid.b",
+      jwt(null as never),
+      jwt([] as never),
+    ]) {
+      expect(tokenParser(token)).toEqual({})
+      expect(tokenExpired(token)).toBe(true)
+    }
   })
 
   test("recognizes the second-factor challenge", () => {

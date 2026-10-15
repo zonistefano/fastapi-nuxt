@@ -83,7 +83,7 @@ describe("profile state", () => {
 
   test("logOut clears profile and tokens", () => {
     const auth = signIn()
-    auth.logOut()
+    auth.clearSession()
     expect(auth.id).toBe("")
     expect(useTokenStore().access_token).toBe("")
   })
@@ -378,5 +378,92 @@ describe("password recovery", () => {
     await auth.recoverPassword(user.email)
     await auth.resetPassword("x", jwt({ fingerprint: "fp-1" }))
     expect(requests).toHaveLength(0)
+  })
+})
+
+describe("session security", () => {
+  test("keeps pending email challenges when asked for an anonymous profile", async () => {
+    const tokens = useTokenStore()
+    tokens.setMagicToken({ claim: jwt({ fingerprint: "pending" }) })
+    await useAuthStore().getUserProfile()
+    expect(tokens.token).not.toBe("")
+    expect(requests).toHaveLength(0)
+  })
+  test("revokes the refresh token on logout even though local state clears immediately", async () => {
+    const auth = signIn()
+    const refresh = useTokenStore().refresh
+    mockApi("POST /login/revoke", { msg: "Revoked" })
+    const pending = auth.logOut()
+    expect(auth.loggedIn).toBe(false)
+    expect(await pending).toBe(true)
+    expect(requests[0]!.headers.get("Authorization")).toBe(`Bearer ${refresh}`)
+  })
+  test("reports logout revocation failure while clearing the local session", async () => {
+    const auth = signIn()
+    expect(await auth.logOut()).toBe(true)
+    expect(auth.loggedIn).toBe(false)
+    expect(toasts[0]!.title).toBe("auth.session.revokeError")
+  })
+  test("anonymous logout makes no requests", async () => {
+    await useAuthStore().logOut()
+    expect(requests).toHaveLength(0)
+  })
+  test("logout-all clears only after successful revocation", async () => {
+    const auth = signIn()
+    mockApi("POST /login/logout-all", error(500))
+    expect(await auth.logOut(true)).toBe(false)
+    expect(auth.loggedIn).toBe(true)
+    mockApi("POST /login/logout-all", { msg: "Revoked" })
+    expect(await auth.logOut(true)).toBe(true)
+    expect(auth.loggedIn).toBe(false)
+  })
+  test("reauthentication stores a new session and failure keeps the dialog open", async () => {
+    const auth = signIn()
+    auth.reauthenticationRequired = true
+    mockApi("POST /login/reauth", error(400))
+    expect(await auth.reauthenticate({ password: "wrong" })).toBe(false)
+    expect(auth.reauthenticationRequired).toBe(true)
+    mockApi("POST /login/reauth", sessionTokens())
+    expect(
+      await auth.reauthenticate({ password: "secret", claim: "123456" }),
+    ).toBe(true)
+    expect(auth.reauthenticationRequired).toBe(false)
+  })
+  test("recovery-code regeneration rotates the session", async () => {
+    const auth = signIn({ totp: true })
+    expect(await auth.regenerateRecoveryCodes()).toBeUndefined()
+    mockApi("POST /login/totp/recovery-codes", {
+      msg: "Replaced",
+      tokens: sessionTokens(),
+      recovery_codes: ["replacement"],
+    })
+    expect(await auth.regenerateRecoveryCodes()).toEqual(["replacement"])
+  })
+  test("deletes the account and clears the session only after success", async () => {
+    const auth = signIn()
+    await auth.deleteAccount()
+    expect(auth.loggedIn).toBe(true)
+    mockApi("DELETE /users/me", { msg: "Deleted" })
+    await auth.deleteAccount()
+    expect(auth.loggedIn).toBe(false)
+    expect(navigations).toEqual(["/"])
+  })
+  test("a role admin must have an active authenticated session", () => {
+    const auth = signIn({ role: "admin" })
+    expect(auth.isAdmin).toBe(true)
+    useTokenStore().deleteTokens()
+    expect(auth.isAdmin).toBe(false)
+  })
+  test("recovery-code login uses its dedicated endpoint", async () => {
+    useTokenStore().setTokens({
+      access_token: totpChallenge(),
+      refresh_token: null,
+      token_type: "bearer",
+    })
+    mockApi("POST /login/totp/recover", sessionTokens())
+    mockApi("GET /users/me", user)
+    await useAuthStore().totpLogin("backup-code", true)
+    expect(requests[0]!.url).toEndWith("/login/totp/recover")
+    expect(useAuthStore().loggedIn).toBe(true)
   })
 })

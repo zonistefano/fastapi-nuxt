@@ -8,6 +8,7 @@ definePageMeta({
 
 const tokenStore = useTokenStore()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const redirectRoute = "/login"
 
 onMounted(async () => {
@@ -18,7 +19,7 @@ onMounted(async () => {
       "fingerprint",
     )
   ) {
-    return await navigateTo(redirectRoute)
+    return await navigateTo(localePath(redirectRoute))
   }
 })
 </script>

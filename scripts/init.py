@@ -9,6 +9,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SECRET_NAMES = {
+    "SOCIAL_PROVIDERS",
+    "SOCIAL_SESSION_SECRET_KEY",
     "FIRST_SUPERUSER_PASSWORD",
     "SECRET_KEY",
     "TOTP_SECRET_KEY",
@@ -39,7 +41,7 @@ def initialize(destination: Path) -> bool:
         if name in values and (name not in SECRET_NAMES or values[name].strip("\"'")):
             continue
         value = default
-        if name in SECRET_NAMES:
+        if name in SECRET_NAMES and name != "SOCIAL_PROVIDERS":
             value = (
                 base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()
                 if name == "TOTP_SECRET_KEY"

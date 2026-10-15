@@ -3,6 +3,7 @@ import { tokenIsTOTP } from "@/utilities"
 import AnimatedBeamExample from "~/components/AnimatedBeamExample.vue"
 
 const { locale, t } = useI18n()
+const localePath = useLocalePath()
 
 const collection: `index_${typeof locale.value}` = `index_${locale.value}`
 const { data: page } = await useAsyncData(useRoute().path, () =>
@@ -23,6 +24,11 @@ const redirectTOTP = "/totp"
 const redirectAfterLogin = "/"
 
 onMounted(async () => {
+  if (typeof route.query.token === "string") {
+    await authStore.confirmEmail(route.query.token)
+    await navigateTo(localePath("/login"))
+    return
+  }
   // Check if email is being validated
   if (route.query && route.query.magic) {
     await new Promise((resolve) => {
@@ -33,8 +39,8 @@ onMounted(async () => {
     if (!authStore.loggedIn)
       await authStore.magicLogin(route.query.magic as string)
     if (tokenStore.token && tokenIsTOTP(tokenStore.token))
-      await navigateTo(redirectTOTP)
-    else await navigateTo(redirectAfterLogin)
+      await navigateTo(localePath(redirectTOTP))
+    else await navigateTo(localePath(redirectAfterLogin))
   }
 })
 

@@ -2,6 +2,8 @@ import {
   loginLoginWithMagicLink,
   loginLoginWithOauth2,
   loginLoginWithTotp,
+  loginRecoverTotp,
+  loginRevokeRefreshToken,
   loginRefreshToken,
   loginValidateMagicLink,
 } from "~/api/generated"
@@ -35,9 +37,13 @@ export const useTokenStore = defineStore("tokens", {
       if (!this.token) return false
       if (!this.hasActiveAccessToken && !this.hasUsableRefreshToken)
         return false
+      const payload = tokenParser(this.token)
       // TOTP challenges and magic-link claims are not session tokens
       return (
-        !tokenIsTOTP(this.token) && !("fingerprint" in tokenParser(this.token))
+        !tokenIsTOTP(this.token) &&
+        !("fingerprint" in payload) &&
+        !payload.refresh &&
+        (!payload.purpose || payload.purpose === "access")
       )
     },
   },
@@ -102,10 +108,12 @@ export const useTokenStore = defineStore("tokens", {
         this.deleteTokens()
       }
     },
-    async validateTOTPClaim(data: string) {
+    async validateTOTPClaim(data: string, recovery = false) {
       const toast = useToast()
       try {
-        const response = await loginLoginWithTotp({
+        const response = await (
+          recovery ? loginRecoverTotp : loginLoginWithTotp
+        )({
           client: useNuxtApp().$publicApi,
           body: { claim: data },
           headers: { Authorization: `Bearer ${this.access_token}` },
@@ -119,10 +127,10 @@ export const useTokenStore = defineStore("tokens", {
           description: t("notifications.twoFactorErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
-        this.deleteTokens()
       }
     },
     setMagicToken(payload: WebToken) {
+      this.$reset()
       this.access_token = payload.claim
     },
     setTokens(payload: Token) {
@@ -139,16 +147,33 @@ export const useTokenStore = defineStore("tokens", {
       const pending = refreshPromises.get(this)
       if (pending) return await pending
 
+      const client = useNuxtApp().$publicApi
+      const originalRefresh = this.refresh
       const refreshPromise = loginRefreshToken({
-        client: useNuxtApp().$publicApi,
+        client,
         headers: { Authorization: `Bearer ${this.refresh}` },
       })
-        .then((response) => {
+        .then(async (response) => {
+          if (this.refresh !== originalRefresh) {
+            if (response.refresh_token) {
+              try {
+                await loginRevokeRefreshToken({
+                  client,
+                  headers: {
+                    Authorization: `Bearer ${response.refresh_token}`,
+                  },
+                })
+              } catch {
+                /* The discarded session may already be revoked. */
+              }
+            }
+            return false
+          }
           this.setTokens(response)
           return true
         })
         .catch(() => {
-          this.deleteTokens()
+          if (this.refresh === originalRefresh) this.deleteTokens()
           return false
         })
         .finally(() => {

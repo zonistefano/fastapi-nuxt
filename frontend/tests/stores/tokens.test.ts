@@ -140,14 +140,14 @@ describe("validateTOTPClaim", () => {
     expect(tokens.hasValidToken).toBe(true)
   })
 
-  test("clears the challenge on a wrong code", async () => {
+  test("preserves the challenge so a wrong code can be retried", async () => {
     mockApi("POST /login/totp", () =>
       Response.json({ detail: "Invalid" }, { status: 400 }),
     )
     const tokens = useTokenStore()
     tokens.setMagicToken({ claim: jwt({ totp: true }) })
     await tokens.validateTOTPClaim("000000")
-    expect(tokens.access_token).toBe("")
+    expect(tokens.access_token).not.toBe("")
     expect(toasts[0]!.title).toBe("notifications.twoFactorError")
   })
 })
@@ -206,4 +206,60 @@ describe("refreshTokens", () => {
     expect(await tokens.refreshTokens(true)).toBe(false)
     expect(tokens.access_token).toBe("")
   })
+})
+
+test("a completed refresh cannot restore a session cleared during logout", async () => {
+  let finish!: (response: Response) => void
+  mockApi(
+    "POST /login/refresh",
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve
+      }),
+  )
+  mockApi("POST /login/revoke", { msg: "Revoked" })
+  const tokens = useTokenStore()
+  tokens.setTokens(sessionTokens())
+  const refreshing = tokens.refreshTokens(true)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  tokens.deleteTokens()
+  finish(Response.json(sessionTokens("new-session")))
+  expect(await refreshing).toBe(false)
+  expect(tokens.token).toBe("")
+  expect(requests.at(-1)!.url).toEndWith("/login/revoke")
+})
+
+test("a failed refresh cannot clear a newer session", async () => {
+  let finish!: (response: Response) => void
+  mockApi(
+    "POST /login/refresh",
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve
+      }),
+  )
+  const tokens = useTokenStore()
+  tokens.setTokens(sessionTokens())
+  const refreshing = tokens.refreshTokens(true)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const newer = sessionTokens("other-user")
+  tokens.setTokens(newer)
+  finish(Response.json({ detail: "Revoked" }, { status: 401 }))
+  expect(await refreshing).toBe(false)
+  expect(tokens.token).toBe(newer.access_token)
+})
+
+test("refresh and email-purpose tokens cannot become access sessions", () => {
+  for (const payload of [
+    { refresh: true },
+    { purpose: "refresh" },
+    { purpose: "password_reset" },
+  ]) {
+    const tokens = useTokenStore()
+    tokens.setTokens({
+      ...sessionTokens(),
+      access_token: jwt({ exp: 9999999999, ...payload }),
+    })
+    expect(tokens.hasValidToken).toBe(false)
+  }
 })

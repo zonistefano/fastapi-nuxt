@@ -60,7 +60,7 @@ export function resetApp() {
       ? await handler(request.clone())
       : Response.json({ detail: "Not Found" }, { status: 404 })
   })
-  useAuthStore().logOut()
+  useAuthStore().clearSession()
   useToast().clear()
 }
 

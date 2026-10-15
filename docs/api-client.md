@@ -33,6 +33,13 @@ Da `frontend/`: `bun run api:generate` e `bun run api:check`.
 - `api_check` rigenera in una directory temporanea e confronta schema e tutti i
   file (inclusi file aggiunti o rimossi). È incluso in `make check` e nella CI.
 
+L'autenticazione usa le API pubbliche di `fastapi-myauth` 1.7.0:
+`get_router(include_disabled_methods=True)` mantiene nel contratto le operazioni
+opzionali senza abilitarle, mentre `SocialPopupConfig` seleziona risposte JSON
+per l'avvio OAuth e HTML per il callback. L'SDK espone `loginLoginMethods`,
+`SocialAuthorizationUrl` e `LoginMethods` direttamente dallo schema della
+libreria, senza modelli o riscritture delle rotte nel template.
+
 Committa `frontend/openapi.json` e `frontend/app/api/generated/` **insieme** alla
 modifica del backend. Non modificare a mano i file generati. Il build del
 frontend usa l'SDK committato e non ha bisogno di Python.
@@ -68,10 +75,13 @@ Il plugin `app/plugins/api.ts` fornisce due client per ogni istanza dell'app:
 
 | Client | Quando usarlo |
 | --- | --- |
-| `$api` | Rotte dell'utente autenticato. Aggiunge il Bearer, rinnova il token una volta dopo un `401`, esegue il logout se il rinnovo fallisce, mostra un toast per i `403`. I rinnovi concorrenti sono deduplicati. |
+| `$api` | Rotte dell'utente autenticato. Aggiunge il Bearer, rinnova il token una volta dopo un `401`, esegue il logout se il rinnovo fallisce, mostra un toast per i `403`. I rinnovi concorrenti sono deduplicati. Un 403 di autenticazione recente apre il dialogo dedicato; l’utente ripete la richiesta dopo la conferma. |
 | `$publicApi` | Login, signup, refresh, recupero password, contatti. Nessun token automatico: passa gli header espliciti se servono. |
 
-La base URL è `NUXT_PUBLIC_API_URL`, letta a runtime.
+Il browser usa `NUXT_PUBLIC_API_URL`. Durante SSR il client usa
+`NUXT_API_INTERNAL_URL` se configurata, altrimenti l’URL pubblico. Compose imposta
+il collegamento interno `http://backend:8000`, raggiungibile dal container Nitro;
+`localhost` nell’URL pubblico continua a riferirsi al browser dell’utente.
 
 ### Lettura
 

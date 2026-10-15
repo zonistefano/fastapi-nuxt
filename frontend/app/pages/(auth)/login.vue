@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthenticationMethods } from "~/composables/useAuthenticationMethods"
 import * as z from "zod"
 import { tokenParser, tokenIsTOTP } from "@/utilities"
 import type { FormSubmitEvent } from "@nuxt/ui"
@@ -8,15 +9,18 @@ definePageMeta({
   middleware: ["anonymous"],
 })
 
+const { data: methods } = await useAuthenticationMethods()
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const route = useRoute()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const redirectAfterLogin = "/"
 const redirectAfterMagic = "/magic"
 const redirectTOTP = "/totp"
 
 const oauth = ref(false)
+const passkeyOptions = useTemplateRef("passkeyOptions")
 
 const fields = [
   {
@@ -25,6 +29,7 @@ const fields = [
     type: "text" as const,
     placeholder: t("auth.login.emailPlaceholder"),
     required: true,
+    autocomplete: "username webauthn",
   },
 ]
 
@@ -34,6 +39,7 @@ const fields_oauth = [
     name: "password",
     label: t("common.password"),
     type: "password" as const,
+    autocomplete: "current-password",
     placeholder: t("auth.login.passwordPlaceholder"),
   },
 ]
@@ -52,31 +58,19 @@ const schema_oauth = z.object({
 type Schema = z.output<typeof schema>
 type SchemaOauth = z.output<typeof schema_oauth>
 
-const providers = [
-  {
-    label: "Google",
-    icon: "i-simple-icons-google",
-    onClick: () => {},
-  },
-  {
-    label: "GitHub",
-    icon: "i-simple-icons-github",
-    onClick: () => {},
-  },
-]
-
 async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
+  passkeyOptions.value?.cancel()
   await authStore.logIn({
     username: event.data.email,
     password:
       oauth.value && "password" in event.data ? event.data.password : undefined,
   })
   if (authStore.loggedIn) {
-    await navigateTo(redirectAfterLogin)
+    await navigateTo(localePath(redirectAfterLogin))
     return
   }
   if (tokenStore.token && tokenIsTOTP(tokenStore.token)) {
-    await navigateTo(redirectTOTP)
+    await navigateTo(localePath(redirectTOTP))
     return
   }
   if (
@@ -86,7 +80,7 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
       "fingerprint",
     )
   )
-    await navigateTo(redirectAfterMagic)
+    await navigateTo(localePath(redirectAfterMagic))
 }
 
 onMounted(async () => {
@@ -101,14 +95,15 @@ onMounted(async () => {
     icon="i-lucide-lock"
     :fields="oauth ? fields_oauth : fields"
     :schema="oauth ? schema_oauth : schema"
-    :providers="providers"
     @submit="submit"
   >
     <template #description>
       {{ t("auth.login.description") }}
-      <NuxtLinkLocale to="/signup" class="text-primary font-medium">{{
-        t("auth.signup.title")
-      }}</NuxtLinkLocale
+      <NuxtLinkLocale
+        v-if="methods?.registration !== false"
+        to="/signup"
+        class="text-primary font-medium"
+        >{{ t("auth.signup.title") }}</NuxtLinkLocale
       >.
     </template>
     <template #password-hint>
@@ -126,6 +121,7 @@ onMounted(async () => {
       </div>
     </template>
     <template #footer>
+      <AuthenticationOptions ref="passkeyOptions" conditional />
       {{ t("auth.terms") }}
       <NuxtLinkLocale to="/" class="text-primary font-medium">{{
         t("auth.termsLink")

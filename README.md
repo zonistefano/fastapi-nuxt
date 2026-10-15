@@ -14,7 +14,7 @@ serve e aggiunga il proprio dominio applicativo nei punti di estensione previsti
 
 | Livello | Tecnologie |
 | --- | --- |
-| Backend | Python 3.13, FastAPI 0.143, SQLModel 0.0.48, Alembic, Pydantic Settings, [`fastapi-myauth`](https://github.com/zonistefano/fastapi_auth) 1.6.0 |
+| Backend | Python 3.13, FastAPI 0.143, SQLModel 0.0.48, Alembic, Pydantic Settings, [`fastapi-myauth`](https://github.com/zonistefano/fastapi_auth) 1.7.0 |
 | Database | PostgreSQL 17 (SQLite in memoria per i test rapidi) |
 | Job in background | Celery + Redis, scheduler RedBeat (profilo opzionale) |
 | Frontend | Nuxt 4, Vue 3, Nuxt UI 4, Tailwind CSS 4, Pinia, Nuxt Content 3, Nuxt i18n, Vue Flow |

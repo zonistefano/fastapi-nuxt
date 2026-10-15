@@ -176,3 +176,12 @@ describe("generic content pages", () => {
     ).rejects.toMatchObject({ statusCode: 404 })
   })
 })
+
+test("the homepage consumes the email confirmation link and removes the token", async () => {
+  mockApi("GET /login/confirm-email", { msg: "Confirmed" })
+  await mountSuspended(Index, { route: "/?token=email-confirmation-token" })
+  await vi.waitFor(() => expect(navigateTo).toHaveBeenCalledWith("/login"))
+  expect(useToast().toasts.value.map((toast) => toast.description)).toContain(
+    "Confirmed",
+  )
+})

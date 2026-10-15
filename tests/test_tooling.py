@@ -27,10 +27,11 @@ class BootstrapTests(unittest.TestCase):
             bootstrap.initialize(second)
             one = bootstrap.read_values(first.read_text())
             two = bootstrap.read_values(second.read_text())
-            for key in bootstrap.SECRET_NAMES:
+            for key in bootstrap.SECRET_NAMES - {"SOCIAL_PROVIDERS"}:
                 self.assertNotEqual(one[key], two[key])
                 self.assertTrue(one[key])
             self.assertEqual(len(base64.urlsafe_b64decode(one["TOTP_SECRET_KEY"])), 32)
+            self.assertEqual(one["SOCIAL_PROVIDERS"], "[]")
             if os.name == "posix":
                 self.assertEqual(first.stat().st_mode & 0o777, 0o600)
 
@@ -46,6 +47,17 @@ class BootstrapTests(unittest.TestCase):
             self.assertEqual(values["SECRET_KEY"], "existing-key")
             self.assertTrue(values["TOTP_SECRET_KEY"])
             self.assertTrue(values["POSTGRES_PASSWORD"])
+
+    def test_external_provider_credentials_are_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "provider.env"
+            configuration = '[{"name":"test","client_secret":"fake-provider-secret"}]'
+            destination.write_text(f"SOCIAL_PROVIDERS={configuration}\n")
+            bootstrap.initialize(destination)
+            self.assertEqual(
+                bootstrap.read_values(destination.read_text())["SOCIAL_PROVIDERS"],
+                configuration,
+            )
 
 
 class CommandTests(unittest.TestCase):

@@ -1,9 +1,18 @@
 import {
   loginConfirmEmail,
+  loginAuthenticationOptions,
+  loginAuthenticationVerify,
+  loginFastapiMyauthSocialLogin,
+  loginFastapiMyauthSocialLink,
   loginDisableTotpAuthentication,
   loginEnableTotpAuthentication,
   loginRecoverPassword,
   loginResetPassword,
+  loginReauthenticate,
+  loginRegenerateRecoveryCodes,
+  loginLogoutAll,
+  loginRevokeRefreshToken,
+  usersDeleteUserMe,
   usersReadUserMe,
   usersSendValidationEmail,
   usersUpdateUserMe,
@@ -12,11 +21,19 @@ import type {
   CustomUserRead,
   CustomUserUpdate,
   EnableTotp,
+  Reauthentication,
 } from "~/api/generated"
 import { tokenParser, translate as t } from "@/utilities"
+import { socialPopup } from "~/utilities/social"
+import { passkeyCancelled } from "~/utilities/passkeys"
+import { startAuthentication } from "@simplewebauthn/browser"
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser"
 
 export const useAuthStore = defineStore("authUser", {
   state: () => ({
+    passkeyEnrollmentPending: false,
+    passkeyTotpChallenge: false,
+    reauthenticationRequired: false,
     id: "",
     email: "",
     email_validated: false,
@@ -31,13 +48,18 @@ export const useAuthStore = defineStore("authUser", {
     role: "user",
   }),
   persist: {
+    omit: ["reauthenticationRequired", "passkeyEnrollmentPending"],
     storage: piniaPluginPersistedstate.cookies({
       maxAge: 60 * 60 * 24 * 90,
     }),
   },
   getters: {
-    isAdmin: (state) => {
-      return state.id && state.is_superuser && state.is_active
+    isAdmin(): boolean {
+      return (
+        this.loggedIn &&
+        this.is_active &&
+        (this.is_superuser || this.role === "admin")
+      )
     },
     profile: (state) => state,
     loggedIn(): boolean {
@@ -53,62 +75,143 @@ export const useAuthStore = defineStore("authUser", {
       const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
+        this.passkeyTotpChallenge = false
         await this.tokenStore.getTokens(payload)
         if (this.tokenStore.hasValidToken)
           await nuxtApp.runWithContext(() => this.getUserProfile())
+        this.passkeyEnrollmentPending = this.loggedIn
       } catch {
         toast.add({
           title: t("notifications.loginError"),
           description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
-        this.logOut()
+        this.clearSession()
       }
     },
     async magicLogin(token: string) {
       const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
+        this.passkeyTotpChallenge = false
         await this.tokenStore.validateMagicTokens(token)
         if (this.tokenStore.hasValidToken)
           await nuxtApp.runWithContext(() => this.getUserProfile())
+        this.passkeyEnrollmentPending = this.loggedIn
       } catch {
         toast.add({
           title: t("notifications.loginError"),
           description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
-        this.logOut()
+        this.clearSession()
       }
     },
-    async totpLogin(claim: string) {
+    async totpLogin(claim: string, recovery = false) {
       const nuxtApp = useNuxtApp()
       const toast = useToast()
       try {
-        await this.tokenStore.validateTOTPClaim(claim)
+        await this.tokenStore.validateTOTPClaim(claim, recovery)
         if (this.tokenStore.hasValidToken)
           await nuxtApp.runWithContext(() => this.getUserProfile())
+        this.passkeyEnrollmentPending =
+          this.loggedIn && !this.passkeyTotpChallenge
+        if (this.loggedIn) this.passkeyTotpChallenge = false
       } catch {
         toast.add({
           title: t("notifications.loginError"),
           description: t("notifications.loginErrorDescription"),
           icon: "i-heroicons-exclamation-circle",
         })
-        this.logOut()
+        this.clearSession()
+      }
+    },
+    async passkeyLogin({
+      autofill = false,
+      signal,
+    }: { autofill?: boolean; signal?: AbortSignal } = {}) {
+      const nuxtApp = useNuxtApp()
+      const toast = useToast()
+      try {
+        const client = nuxtApp.$publicApi
+        const challenge = await loginAuthenticationOptions({ client, signal })
+        if (signal?.aborted) return false
+        const credential = await startAuthentication({
+          optionsJSON:
+            challenge.options as unknown as PublicKeyCredentialRequestOptionsJSON,
+          useBrowserAutofill: autofill,
+        })
+        if (signal?.aborted) return false
+        const tokens = await loginAuthenticationVerify({
+          client,
+          signal,
+          body: {
+            ceremony_id: challenge.ceremony_id,
+            credential: { ...credential },
+          },
+        })
+        if (signal?.aborted) return false
+        this.passkeyEnrollmentPending = false
+        this.passkeyTotpChallenge = true
+        this.tokenStore.setTokens(tokens)
+        if (this.tokenStore.hasValidToken)
+          await nuxtApp.runWithContext(() => this.getUserProfile())
+        if (this.loggedIn) this.passkeyTotpChallenge = false
+        return true
+      } catch (error) {
+        if (!signal?.aborted && !autofill && !passkeyCancelled(error))
+          toast.add({ title: t("notifications.loginError"), color: "error" })
+        return false
+      }
+    },
+    async socialLogin(provider: string, link = false) {
+      const nuxtApp = useNuxtApp()
+      const toast = useToast()
+      const apiOrigin = new URL(useRuntimeConfig().public.apiUrl).origin
+      try {
+        const tokens = await socialPopup(
+          () =>
+            link
+              ? loginFastapiMyauthSocialLink({
+                  client: nuxtApp.$api,
+                  path: { provider },
+                  credentials: "include",
+                })
+              : loginFastapiMyauthSocialLogin({
+                  client: nuxtApp.$publicApi,
+                  path: { provider },
+                  credentials: "include",
+                }),
+          apiOrigin,
+        )
+        this.tokenStore.setTokens(tokens)
+        if (this.tokenStore.hasValidToken)
+          await nuxtApp.runWithContext(() => this.getUserProfile())
+        if (!link) {
+          this.passkeyTotpChallenge = false
+          this.passkeyEnrollmentPending = this.loggedIn
+        }
+      } catch {
+        toast.add({ title: t("notifications.loginError"), color: "error" })
       }
     },
     // PROFILE MANAGEMENT
     async getUserProfile() {
+      if (!this.tokenStore.hasValidToken) {
+        this.$reset()
+        return
+      }
       try {
         const response = await usersReadUserMe({ client: useNuxtApp().$api })
         if (response) this.setUserProfile(response)
-        else this.logOut()
+        else this.clearSession()
       } catch {
-        this.logOut()
+        this.clearSession()
       }
     },
     async updateUserProfile(payload: CustomUserUpdate) {
       const toast = useToast()
+      const localePath = useLocalePath()
       if (this.loggedIn) {
         try {
           const credentialsChanged = Boolean(
@@ -125,8 +228,8 @@ export const useAuthStore = defineStore("authUser", {
               description: t("notifications.profileUpdatedDescription"),
             })
             if (credentialsChanged) {
-              this.logOut()
-              await navigateTo("/login")
+              this.clearSession()
+              await navigateTo(localePath("/login"))
             }
           } else throw "Error"
         } catch {
@@ -295,12 +398,14 @@ export const useAuthStore = defineStore("authUser", {
               body: { new_password: password, claim },
               headers: { Authorization: `Bearer ${token}` },
             })
-            if (response)
+            if (response) {
+              this.tokenStore.deleteTokens()
               toast.add({
                 title: t("common.success"),
                 description: response.msg,
               })
-            else throw "Error"
+              return true
+            } else throw "Error"
           } else throw "Error"
         } catch {
           toast.add({
@@ -312,8 +417,82 @@ export const useAuthStore = defineStore("authUser", {
         }
       }
     },
-    // reset state using `$reset`
-    logOut() {
+    async reauthenticate(payload: Reauthentication) {
+      const toast = useToast()
+      try {
+        const response = await loginReauthenticate({
+          client: useNuxtApp().$api,
+          body: payload,
+        })
+        this.tokenStore.setTokens(response)
+        this.reauthenticationRequired = false
+        return true
+      } catch {
+        toast.add({ title: t("auth.reauth.error"), color: "error" })
+        return false
+      }
+    },
+    async regenerateRecoveryCodes() {
+      const toast = useToast()
+      try {
+        const response = await loginRegenerateRecoveryCodes({
+          client: useNuxtApp().$api,
+        })
+        this.tokenStore.setTokens(response.tokens)
+        return response.recovery_codes
+      } catch {
+        toast.add({
+          title: t("notifications.updateError"),
+          color: "error",
+        })
+      }
+    },
+    async logOut(all = false) {
+      const toast = useToast()
+      const client = useNuxtApp().$publicApi
+      const token = all ? this.tokenStore.token : this.tokenStore.refresh
+      if (all) {
+        try {
+          await loginLogoutAll({ client: useNuxtApp().$api })
+        } catch {
+          toast.add({
+            title: t("notifications.updateError"),
+            color: "error",
+          })
+          return false
+        }
+      }
+      this.clearSession()
+      if (!all && token) {
+        try {
+          await loginRevokeRefreshToken({
+            client,
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        } catch {
+          toast.add({
+            title: t("auth.session.revokeError"),
+            color: "error",
+          })
+        }
+      }
+      return true
+    },
+    async deleteAccount() {
+      const toast = useToast()
+      const localePath = useLocalePath()
+      try {
+        await usersDeleteUserMe({ client: useNuxtApp().$api })
+        this.clearSession()
+        await navigateTo(localePath("/"))
+      } catch {
+        toast.add({
+          title: t("notifications.updateError"),
+          color: "error",
+        })
+      }
+    },
+    clearSession() {
       this.tokenStore.deleteTokens()
       this.$reset()
     },

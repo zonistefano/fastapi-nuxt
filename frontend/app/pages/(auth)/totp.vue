@@ -11,6 +11,9 @@ definePageMeta({
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const { t } = useI18n()
+const localePath = useLocalePath()
+const recovery = ref(false)
+const recoveryCode = ref("")
 const redirectRoute = "/"
 
 const schema = z.object({
@@ -29,14 +32,20 @@ async function submit(event: FormSubmitEvent<Schema>) {
   const code = event.data.claim.join("")
   await authStore.totpLogin(code)
   if (authStore.loggedIn) {
-    await navigateTo(redirectRoute)
+    await navigateTo(localePath(redirectRoute))
   }
+}
+
+async function recover() {
+  if (!recoveryCode.value.trim()) return
+  await authStore.totpLogin(recoveryCode.value.trim(), true)
+  if (authStore.loggedIn) await navigateTo(localePath(redirectRoute))
 }
 
 onMounted(async () => {
   // Check if token exists
   if (!tokenStore.token || !tokenIsTOTP(tokenStore.token))
-    return await navigateTo("/")
+    return await navigateTo(localePath("/"))
 })
 </script>
 
@@ -49,6 +58,7 @@ onMounted(async () => {
       {{ t("auth.totp.description") }}
     </p>
     <UForm
+      v-if="!recovery"
       class="mt-6 space-y-4"
       :schema="schema"
       :state="state"
@@ -63,5 +73,26 @@ onMounted(async () => {
       </UFormField>
       <UButton type="submit" :label="t('common.submit')" />
     </UForm>
+    <UForm
+      v-else
+      :state="{ recoveryCode }"
+      class="mt-6 space-y-4"
+      @submit="recover"
+    >
+      <UFormField :label="t('auth.totp.recoveryCode')" name="recoveryCode">
+        <UInput v-model="recoveryCode" name="recoveryCode" required />
+      </UFormField>
+      <UButton type="submit" :label="t('common.submit')" />
+    </UForm>
+    <UButton
+      class="mt-4"
+      variant="link"
+      :label="t(recovery ? 'auth.totp.useCode' : 'auth.totp.useRecovery')"
+      @click="
+        () => {
+          recovery = !recovery
+        }
+      "
+    />
   </UContainer>
 </template>

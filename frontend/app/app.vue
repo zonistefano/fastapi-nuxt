@@ -13,7 +13,7 @@ const themeColor = computed(() =>
 const config = useRuntimeConfig()
 const authStore = useAuthStore()
 
-await authStore.getUserProfile()
+if (useTokenStore().hasValidToken) await authStore.getUserProfile()
 
 useHead({
   htmlAttrs: {
@@ -40,6 +40,8 @@ defineOgImage("DefaultOgImage", {
 
 <template>
   <UApp :locale="locales[locale]">
+    <AuthenticationReauthenticate />
+    <AuthenticationPasskeyEnrollment />
     <NuxtLoadingIndicator />
     <NuxtLayout>
       <NuxtPage />

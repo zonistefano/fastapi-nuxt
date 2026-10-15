@@ -229,3 +229,30 @@ describe("authenticated transport", () => {
     expect(forbidden).toBe(2)
   })
 })
+
+test("a late 401 retries the token already rotated by a concurrent request", async () => {
+  let token = "old"
+  let refreshes = 0
+  let attempts = 0
+  const transport = createAuthenticatedFetch(
+    {
+      getToken: () => token,
+      refresh: async () => {
+        refreshes++
+        return true
+      },
+      onUnauthorized: async () => {},
+      onForbidden: () => {},
+    },
+    async () => {
+      attempts++
+      if (attempts === 1) {
+        token = "renewed-elsewhere"
+        return new Response(null, { status: 401 })
+      }
+      return new Response(null, { status: 200 })
+    },
+  )
+  expect((await transport("https://api.example.com/users/me")).status).toBe(200)
+  expect(refreshes).toBe(0)
+})

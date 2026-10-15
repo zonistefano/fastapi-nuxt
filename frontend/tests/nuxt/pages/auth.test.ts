@@ -1,4 +1,8 @@
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime"
+import {
+  mockComponent,
+  mockNuxtImport,
+  mountSuspended,
+} from "@nuxt/test-utils/runtime"
 import type { DOMWrapper } from "@vue/test-utils"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import Login from "~/pages/(auth)/login.vue"
@@ -9,10 +13,10 @@ import Signup from "~/pages/(auth)/signup.vue"
 import Totp from "~/pages/(auth)/totp.vue"
 import {
   apiError,
-  apiPaths,
+  apiPaths as allApiPaths,
   jwt,
   mockApi,
-  requests,
+  requests as recordedRequests,
   resetApp,
   sessionTokens,
   submitForm,
@@ -20,7 +24,24 @@ import {
   user,
 } from "../helpers"
 
-const { navigateTo } = vi.hoisted(() => ({ navigateTo: vi.fn() }))
+mockComponent("AuthenticationOptions", {
+  template: "<div />",
+  methods: {
+    cancel() {
+      cancelPasskey()
+    },
+  },
+})
+
+const authRequests = () =>
+  recordedRequests.filter((request) => !request.url.endsWith("/login/methods"))
+const apiPaths = () =>
+  allApiPaths().filter((path) => path !== "GET /login/methods")
+
+const { navigateTo, cancelPasskey } = vi.hoisted(() => ({
+  navigateTo: vi.fn(),
+  cancelPasskey: vi.fn(),
+}))
 mockNuxtImport("navigateTo", () => navigateTo)
 
 const totpChallenge = () =>
@@ -37,7 +58,13 @@ const pinInputs = (wrapper: {
 
 beforeEach(() => {
   resetApp()
+  mockApi("GET /login/methods", {
+    social_providers: [],
+    passkeys: false,
+    registration: true,
+  })
   navigateTo.mockReset()
+  cancelPasskey.mockReset()
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -50,6 +77,10 @@ describe.each([
   test("asks only for the email by default", async () => {
     const wrapper = await mountSuspended(Page, { route: `/${name}` })
     expect(wrapper.find('[name="email"]').exists()).toBe(true)
+    if (name === "login")
+      expect(wrapper.find('[name="email"]').attributes("autocomplete")).toBe(
+        "username webauthn",
+      )
     expect(wrapper.find('[name="password"]').exists()).toBe(false)
     expect(wrapper.text()).toContain("Terms of Service")
   })
@@ -62,6 +93,7 @@ describe.each([
     await submitForm(wrapper, { email: user.email })
     expect(apiPaths()).toEqual(["POST /login/magic/a%40example.com"])
     expect(navigateTo).toHaveBeenCalledWith("/magic")
+    if (name === "login") expect(cancelPasskey).toHaveBeenCalledOnce()
   })
 
   test("moves to the TOTP page when a second factor is required", async () => {
@@ -75,7 +107,7 @@ describe.each([
   test("does not submit an invalid email", async () => {
     const wrapper = await mountSuspended(Page, { route: `/${name}` })
     await submitForm(wrapper, { email: "not-an-email" })
-    expect(requests).toHaveLength(0)
+    expect(authRequests()).toHaveLength(0)
     expect(wrapper.text()).toContain("Invalid email")
   })
 
@@ -102,7 +134,7 @@ describe("login page", () => {
   test("requires a password of at least 8 characters", async () => {
     const wrapper = await mountSuspended(Login, { route: "/login?oauth=true" })
     await submitForm(wrapper, { email: user.email, password: "short" })
-    expect(requests).toHaveLength(0)
+    expect(authRequests()).toHaveLength(0)
   })
 })
 
@@ -118,7 +150,7 @@ describe("signup page", () => {
       "POST /login/oauth",
       "GET /users/me",
     ])
-    expect(await requests[0]!.json()).toEqual({
+    expect(await authRequests()[0]!.json()).toEqual({
       email: user.email,
       password: "password123",
     })
@@ -160,7 +192,7 @@ describe("totp page", () => {
     for (const [index, input] of inputs.entries())
       await input.setValue(String(index + 1))
     await submitForm(wrapper)
-    expect(await requests[0]!.json()).toEqual({ claim: "123456" })
+    expect(await authRequests()[0]!.json()).toEqual({ claim: "123456" })
     expect(navigateTo).toHaveBeenCalledWith("/")
   })
 
@@ -228,7 +260,9 @@ describe("reset password page", () => {
       password: "new-password",
       confirmation: "new-password",
     })
-    expect(requests[0]!.headers.get("Authorization")).toBe(`Bearer ${emailed}`)
+    expect(authRequests()[0]!.headers.get("Authorization")).toBe(
+      `Bearer ${emailed}`,
+    )
     await vi.advanceTimersByTimeAsync(2000)
     expect(navigateTo).toHaveBeenCalledWith("/login")
   })
@@ -241,6 +275,42 @@ describe("reset password page", () => {
       password: "new-password",
       confirmation: "other-password",
     })
-    expect(requests).toHaveLength(0)
+    expect(authRequests()).toHaveLength(0)
   })
+})
+
+test("TOTP recovery mode exchanges a recovery code", async () => {
+  useTokenStore().setTokens(challengeTokens())
+  mockApi("POST /login/totp/recover", sessionTokens())
+  mockApi("GET /users/me", user)
+  const wrapper = await mountSuspended(Totp, { route: "/totp" })
+  await wrapper
+    .findAll("button")
+    .find((b) => b.text() === "Use a recovery code")!
+    .trigger("click")
+  await submitForm(wrapper, { recoveryCode: "backup-code" })
+  expect(await authRequests()[0]!.json()).toEqual({ claim: "backup-code" })
+  expect(navigateTo).toHaveBeenCalledWith("/")
+})
+test("a failed password reset stays on the form", async () => {
+  useTokenStore().setMagicToken({ claim: jwt({ fingerprint: "fp-1" }) })
+  const wrapper = await mountSuspended(ResetPassword, {
+    route: `/reset-password?token=${jwt({ fingerprint: "fp-2" })}`,
+  })
+  await submitForm(wrapper, {
+    password: "new-password",
+    confirmation: "new-password",
+  })
+  expect(navigateTo).not.toHaveBeenCalled()
+})
+
+test("closed registration hides signup and keeps the login available", async () => {
+  mockApi("GET /login/methods", {
+    social_providers: [],
+    passkeys: false,
+    registration: false,
+  })
+  const wrapper = await mountSuspended(Signup, { route: "/signup" })
+  expect(wrapper.text()).toContain("Registration is closed")
+  expect(wrapper.find("form").exists()).toBe(false)
 })

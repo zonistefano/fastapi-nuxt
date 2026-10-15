@@ -2,7 +2,7 @@ type AuthHooks = {
   getToken: () => string
   refresh: () => Promise<boolean>
   onUnauthorized: () => Promise<void>
-  onForbidden: () => void
+  onForbidden: (response: Response) => void | Promise<void>
 }
 
 /** A transport per Nuxt app, with a single retry and a replayable request body. */
@@ -12,6 +12,7 @@ export function createAuthenticatedFetch(
 ): typeof fetch {
   return async (input, init) => {
     const original = new Request(input, init)
+    const initialToken = hooks.getToken()
     const send = () => {
       const request = original.clone()
       const token = hooks.getToken()
@@ -22,10 +23,14 @@ export function createAuthenticatedFetch(
 
     let response = await send()
     if (response.status === 401) {
-      if (await hooks.refresh()) response = await send()
+      if (
+        (hooks.getToken() && hooks.getToken() !== initialToken) ||
+        (await hooks.refresh())
+      )
+        response = await send()
       if (response.status === 401) await hooks.onUnauthorized()
     }
-    if (response.status === 403) hooks.onForbidden()
+    if (response.status === 403) await hooks.onForbidden(response.clone())
     return response
   }
 }

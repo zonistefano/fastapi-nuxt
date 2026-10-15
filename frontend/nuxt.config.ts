@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
+    apiInternalUrl: "",
     // https://nuxt.com/docs/4.x/api/composables/use-runtime-config#using-the-env-file
     // Private keys are only available on the server
     // apiSecret: 'my-secret-key',

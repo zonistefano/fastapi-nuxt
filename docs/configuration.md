@@ -9,7 +9,8 @@ deployment Compose provengono dal file `.env` nella root, creato da `make init`
   `make init` la propagherà nei `.env` esistenti senza toccare gli altri valori.
 - `.env` non va mai committato. Se un segreto è finito nella storia Git, revocalo
   presso il provider: cancellarlo dal commit non basta.
-- Le variabili marcate **segreto** vengono generate da `make init` se vuote.
+- Le chiavi e password marcate **segreto** vengono generate da `make init` se
+  vuote; le credenziali dei provider OIDC vanno fornite dall'esterno.
 
 ## Dove viene letta ogni variabile
 
@@ -64,6 +65,10 @@ deployment Compose provengono dal file `.env` nella root, creato da `make init`
 | `JWT_ALGO` | `HS512` | Algoritmo JWT. |
 | `EMAIL_RESET_TOKEN_EXPIRE_HOURS` | `48` | Validità del link di reset password. |
 | `EMAIL_VALIDATION_TOKEN_EXPIRE_HOURS` | `48` | Validità del link di conferma email. |
+| `SOCIAL_PROVIDERS` | `[]` | Lista JSON di provider OIDC con credenziali esterne; contiene segreti, non viene esposta al frontend. Vedi [Autenticazione](authentication.md#oauthoidc). |
+| `PASSKEY_CONFIG` | `null` | Oggetto JSON con `rp_id`, `origins` ed eventualmente nome/timeout; `null` disabilita WebAuthn. |
+| `SOCIAL_SESSION_SECRET_KEY` | **segreto**, min. 32 caratteri | Chiave separata e persistente per lo stato OAuth firmato; generata da `make init`, obbligatoria se ci sono provider social. Identica su tutte le repliche. |
+| `SOCIAL_SESSION_HTTPS_ONLY` | `true` | Imposta Secure sul cookie OAuth; `false` solo per sviluppo locale con backend HTTP. Non dipende da `FRONTEND_URL`. |
 | `SERVER_BOT` | `Assistant` | Nome mittente "bot" usato dalla libreria. |
 
 Le variabili senza riga in `.env.example` assumono il default della libreria;
@@ -114,6 +119,7 @@ tutti valorizzati.
 | Variabile | Quando | Descrizione |
 | --- | --- | --- |
 | `NUXT_PUBLIC_APP_NAME` | runtime | Nome dell'app mostrato nella UI. |
+| `NUXT_API_INTERNAL_URL` | runtime, solo server | URL backend usato da Nitro per SSR (Compose: `http://backend:8000`). Vuoto fuori da Compose = fallback all’URL pubblico. Non viene esposto al browser. |
 | `NUXT_PUBLIC_API_URL` | runtime | URL pubblico del backend, raggiungibile **dal browser**. |
 | `NUXT_PUBLIC_API_WS` | runtime | URL WebSocket del backend (predisposto per funzioni realtime). |
 | `NUXT_OG_IMAGE_SECRET` | runtime, **segreto** | Firma delle URL di `nuxt-og-image`. |

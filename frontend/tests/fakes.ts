@@ -9,11 +9,13 @@ type Handler = (request: Request) => Response | Promise<Response>
 
 const handlers = new Map<string, Handler>()
 const nuxtApp = {
+  ssrContext: undefined as object | undefined,
   $api: createClient(),
   $publicApi: createClient(),
   $i18n: { t: (key: string) => key, locale: { value: "en" } },
   runWithContext: <T>(fn: () => T) => fn(),
 }
+const runtimeConfig = { apiInternalUrl: "", public: { apiUrl: API_URL } }
 
 /** Toasts, navigations and requests recorded since the last `resetNuxt()`. */
 export const toasts: Record<string, unknown>[] = []
@@ -49,6 +51,8 @@ export function resetNuxt({ locale = "en" } = {}) {
   navigations.length = 0
   requests.length = 0
   nuxtApp.$i18n.locale.value = locale
+  nuxtApp.ssrContext = undefined
+  runtimeConfig.apiInternalUrl = ""
   nuxtApp.$api = createClient({
     baseUrl: API_URL,
     fetch: fakeFetch,
@@ -66,10 +70,13 @@ export function installNuxtGlobals() {
     defineStore,
     piniaPluginPersistedstate: { cookies: () => ({}) },
     useNuxtApp: () => nuxtApp,
+    useAsyncData: async (_key: string, handler: () => Promise<unknown>) => ({
+      data: { value: await handler() },
+    }),
     useToast: () => ({
       add: (toast: Record<string, unknown>) => toasts.push(toast),
     }),
-    useRuntimeConfig: () => ({ public: { apiUrl: API_URL } }),
+    useRuntimeConfig: () => runtimeConfig,
     useLocalePath: () => (path: string) =>
       nuxtApp.$i18n.locale.value === "en"
         ? path

@@ -42,6 +42,47 @@ export default {
     codeLength: "Deve contenere {count} cifre",
   },
   auth: {
+    methods: {
+      passkeysTitle: "Passkey",
+      unsupported:
+        "Questo browser non supporta le passkey. Usa un altro metodo di accesso.",
+      sessionWarning:
+        "Aggiungere o rimuovere una passkey disconnette tutti i dispositivi. Dovrai accedere nuovamente.",
+      sessionChanged: "Metodi di accesso aggiornati. Accedi nuovamente.",
+      title: "Metodi di accesso",
+      social: "Continua con {provider}",
+      passkey: "Accedi con una passkey",
+      register: "Aggiungi una passkey",
+      name: "Nome della passkey",
+      remove: "Rimuovi",
+      link: "Collega {provider}",
+      unlink: "Scollega {provider}",
+    },
+    passkeyEnrollment: {
+      title: "Vuoi accedere più velocemente la prossima volta?",
+      description:
+        "Crea una passkey nelle impostazioni di sicurezza per accedere usando il blocco schermo del tuo dispositivo.",
+      create: "Crea passkey",
+      later: "Non ora",
+    },
+    session: {
+      title: "Account e sessioni",
+      logoutAll: "Esci da tutti i dispositivi",
+      deleteAccount: "Elimina il mio account",
+      deleteDescription:
+        "Questa azione elimina definitivamente il tuo account e i suoi dati. Conferma per proseguire.",
+      revokeError:
+        "Disconnesso localmente; il server non ha confermato la revoca della sessione.",
+    },
+    reauth: {
+      title: "Conferma la tua identità",
+      description:
+        "Conferma le credenziali per proseguire con le operazioni sensibili.",
+      error: "Autenticazione non riuscita",
+      success: "Identità confermata",
+      retry: "Ora puoi ripetere l’operazione.",
+      signInAgain: "Accedi nuovamente",
+    },
     terms: "Accedendo accetti i nostri",
     termsLink: "Termini di servizio",
     login: {
@@ -67,6 +108,7 @@ export default {
       repeatPassword: "Ripeti la password",
     },
     signup: {
+      closed: "Le registrazioni sono chiuse",
       title: "Registrati",
       description: "Hai già un account?",
       namePlaceholder: "Inserisci il tuo nome",
@@ -74,6 +116,11 @@ export default {
       passwordPlaceholder: "Crea una password",
     },
     totp: {
+      recoveryCode: "Codice di recupero",
+      useCode: "Usa un codice dell’app",
+      useRecovery: "Usa un codice di recupero",
+      regenerate: "Sostituisci i codici di recupero",
+
       title: "Autenticazione a due fattori",
       description:
         "Inserisci il codice di verifica a 6 cifre generato dall'app.",
@@ -168,6 +215,14 @@ export default {
     },
   },
   moderation: {
+    refresh: "Aggiorna elenco utenti",
+    edit: "Modifica utente",
+    delete: "Elimina utente",
+    deleteDescription: "Eliminare definitivamente questo utente?",
+    role: "Ruolo",
+    previous: "Pagina precedente",
+    next: "Pagina successiva",
+
     users: "Utenti",
     name: "Nome",
     status: "Stato",

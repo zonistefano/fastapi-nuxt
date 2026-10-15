@@ -16,7 +16,7 @@ pertinente prima di cambiare un'area: `docs/backend.md`, `docs/frontend.md`,
 | `backend/app/main.py` | `create_app()`: middleware, router, `operationId`, health check |
 | `backend/app/router.py`, `backend/app/models.py` | Registrazione di router e modelli di ogni modulo |
 | `backend/app/src/<modulo>/` | Moduli di dominio: `api/`, `models/`, `crud/`, `config.py`, `service.py` |
-| `backend/app/src/auth/` | Integrazione `fastapi-myauth` 1.6.0, `CustomUser` |
+| `backend/app/src/auth/` | Integrazione `fastapi-myauth` 1.7.0, `CustomUser` |
 | `backend/app/crud.py`, `backend/app/deps.py` | `CRUDBase`, `SessionDep` |
 | `backend/alembic/versions/` | Migrazioni |
 | `backend/tests/` | pytest (`conftest.py`: fixture `db`, `client`) |
@@ -70,7 +70,7 @@ cd frontend && bun run test && bun run typecheck && bun run lint
    generazione di `SECRET_KEY`/`TOTP_SECRET_KEY` in `scripts/init.py`.
 4. **Comandi distruttivi**: non eseguire `make dev_clean`, `docker compose down
    --volumes`, `make clean` o reset di Git senza richiesta esplicita.
-5. **Versioni fissate**: non aggiornare `fastapi-myauth` (`==1.6.0`), FastAPI,
+5. **Versioni fissate**: non aggiornare `fastapi-myauth` (`==1.7.0`), FastAPI,
    SQLModel, i file `.*-version` o le immagini base senza richiesta. Aggiungi
    dipendenze con `uv add --project backend …` / `bun add --cwd frontend …` e
    committa i lockfile.

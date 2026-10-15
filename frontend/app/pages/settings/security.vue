@@ -18,6 +18,8 @@ const totpNew = ref<NewTotpResponse>({ key: "", uri: "" })
 const totpClaim = ref<EnableTotp>({ claim: "", uri: "" })
 const recoveryCodes = ref<string[]>([])
 const recoveryModal = ref(false)
+const deleteModal = ref(false)
+const localePath = useLocalePath()
 const qrSize = 200
 
 const schema = z
@@ -103,6 +105,17 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
     recoveryModal.value = true
   }
 }
+async function regenerate() {
+  const codes = await authStore.regenerateRecoveryCodes()
+  if (codes) {
+    recoveryCodes.value = codes
+    recoveryModal.value = true
+  }
+}
+
+async function logoutAll() {
+  if (await authStore.logOut(true)) await navigateTo(localePath("/login"))
+}
 </script>
 
 <template>
@@ -163,6 +176,44 @@ async function enableTOTP(event: FormSubmitEvent<modal_Schema>) {
       </UForm>
     </UPageCard>
 
+    <UPageCard :title="t('auth.session.title')">
+      <UButton
+        :label="t('auth.reauth.title')"
+        @click="
+          () => {
+            authStore.reauthenticationRequired = true
+          }
+        "
+      />
+      <UButton
+        v-if="authStore.totp_secret"
+        :label="t('auth.totp.regenerate')"
+        @click="regenerate"
+      />
+      <UButton :label="t('auth.session.logoutAll')" @click="logoutAll" />
+      <UButton
+        color="error"
+        :label="t('auth.session.deleteAccount')"
+        @click="
+          () => {
+            deleteModal = true
+          }
+        "
+      />
+    </UPageCard>
+    <AuthenticationMethods />
+    <UModal
+      v-model:open="deleteModal"
+      :title="t('auth.session.deleteAccount')"
+      :description="t('auth.session.deleteDescription')"
+    >
+      <template #body
+        ><UButton
+          color="error"
+          :label="t('auth.session.deleteAccount')"
+          @click="authStore.deleteAccount()"
+      /></template>
+    </UModal>
     <UModal
       v-model:open="totpModal"
       :title="t('settings.security.enableTitle')"

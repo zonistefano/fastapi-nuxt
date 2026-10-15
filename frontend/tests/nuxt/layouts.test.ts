@@ -120,3 +120,12 @@ describe("error page", () => {
     expect(hrefs(wrapper)).toContain("/")
   })
 })
+
+test("app startup preserves a pending magic-link claim", async () => {
+  const { jwt } = await import("./helpers")
+  const claim = jwt({ fingerprint: "pending" })
+  useTokenStore().setMagicToken({ claim })
+  await mountSuspended(App, { route: "/contact" })
+  expect(useTokenStore().token).toBe(claim)
+  expect(apiPaths()).not.toContain("GET /users/me")
+})

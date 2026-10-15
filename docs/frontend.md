@@ -223,6 +223,19 @@ proprietà. È solo client-side: il diagramma non viene salvato. Il modulo backe
 
 ## Configurazione runtime
 
+Social login e passkey sono selezionati tramite `GET /login/methods`, senza credenziali o flag duplicati nel frontend. I flussi e la configurazione sono descritti in [Autenticazione](authentication.md).
+
+La pagina login offre Conditional UI nei browser compatibili, senza bloccare
+gli altri metodi. `app.config.ts` espone `auth.passkeyEnrollment.enabled`
+(default `false`) e `cooldownDays` (default `30`) per l'invito facoltativo dopo
+un login completo senza passkey. È una preferenza di presentazione del progetto;
+la disponibilità del metodo resta decisa dal backend. Il rinvio è locale al
+browser e separato per account. Vedi [Invito alla creazione](authentication.md#invito-facoltativo-alla-creazione).
+
+`runtimeConfig.apiInternalUrl` (`NUXT_API_INTERNAL_URL`) permette al server Nitro
+di raggiungere il backend durante SSR; Compose lo imposta a `http://backend:8000`.
+Il browser continua a usare l’URL pubblico.
+
 `runtimeConfig.public` (`appName`, `apiUrl`, `apiWS`) viene sovrascritto a runtime
 da `NUXT_PUBLIC_APP_NAME`, `NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_API_WS`. Le chiavi
 private (fuori da `public`) sono disponibili solo sul server Nitro. Vedi

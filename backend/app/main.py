@@ -5,9 +5,11 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi_myauth.rate_limit import RateLimitMiddleware, rate_limit
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
 from app.logging_conf import configure_logging
+from app.src.auth.config import auth_settings
 from app.src.auth.service import auth, rate_limit_redis
 
 from .router import api_router
@@ -37,6 +39,15 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         generate_unique_id_function=operation_id,
     )
+    if auth.social_providers:
+        application.add_middleware(
+            SessionMiddleware,
+            secret_key=auth_settings.SOCIAL_SESSION_SECRET_KEY.get_secret_value(),
+            session_cookie="auth_oauth_state",
+            same_site="lax",
+            https_only=auth_settings.SOCIAL_SESSION_HTTPS_ONLY,
+            max_age=300,
+        )
     application.add_middleware(RateLimitMiddleware, limiter=auth.rate_limiter)
     if settings.BACKEND_CORS_ORIGINS:
         application.add_middleware(

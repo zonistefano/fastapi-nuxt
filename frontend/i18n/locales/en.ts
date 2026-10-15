@@ -42,6 +42,47 @@ export default {
     codeLength: "Must be {count} digits long",
   },
   auth: {
+    methods: {
+      passkeysTitle: "Passkeys",
+      unsupported:
+        "This browser does not support passkeys. Use another sign-in method.",
+      sessionWarning:
+        "Adding or removing a passkey signs you out on all devices. You will need to sign in again.",
+      sessionChanged: "Sign-in methods updated. Sign in again.",
+      title: "Sign-in methods",
+      social: "Continue with {provider}",
+      passkey: "Sign in with a passkey",
+      register: "Add a passkey",
+      name: "Passkey name",
+      remove: "Remove",
+      link: "Link {provider}",
+      unlink: "Unlink {provider}",
+    },
+    passkeyEnrollment: {
+      title: "Want to sign in faster next time?",
+      description:
+        "Create a passkey in your security settings to use your device's screen lock when signing in.",
+      create: "Create a passkey",
+      later: "Not now",
+    },
+    session: {
+      title: "Account and sessions",
+      logoutAll: "Sign out on all devices",
+      deleteAccount: "Delete my account",
+      deleteDescription:
+        "This permanently deletes your account and its data. Confirm to continue.",
+      revokeError:
+        "Signed out locally; the server could not confirm session revocation.",
+    },
+    reauth: {
+      title: "Confirm your identity",
+      description:
+        "Confirm your credentials to continue with sensitive operations.",
+      error: "Authentication failed",
+      success: "Identity confirmed",
+      retry: "You can now repeat the operation.",
+      signInAgain: "Sign in again",
+    },
     terms: "By signing in, you agree to our",
     termsLink: "Terms of Service",
     login: {
@@ -67,6 +108,7 @@ export default {
       repeatPassword: "Repeat Password",
     },
     signup: {
+      closed: "Registration is closed",
       title: "Sign Up",
       description: "Already have an account?",
       namePlaceholder: "Enter your name",
@@ -74,6 +116,11 @@ export default {
       passwordPlaceholder: "Create a password",
     },
     totp: {
+      recoveryCode: "Recovery code",
+      useCode: "Use an authenticator code",
+      useRecovery: "Use a recovery code",
+      regenerate: "Replace recovery codes",
+
       title: "Two-factor authentication",
       description: "Enter the 6-digit verification code from your app.",
       verificationCode: "Verification code",
@@ -166,6 +213,14 @@ export default {
     },
   },
   moderation: {
+    refresh: "Refresh users",
+    edit: "Edit user",
+    delete: "Delete user",
+    deleteDescription: "Permanently delete this user?",
+    role: "Role",
+    previous: "Previous page",
+    next: "Next page",
+
     users: "Users",
     name: "Name",
     status: "Status",

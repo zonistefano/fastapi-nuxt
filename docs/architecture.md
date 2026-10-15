@@ -154,7 +154,7 @@ in [Client API](api-client.md).
 | `chat`, `editor`, `bpmn` (backend) | Scheletri vuoti: nessuna rotta, nessun modello, nessuna logica |
 | Editor BPMN (frontend) | Demo client-side con Vue Flow; nessun salvataggio |
 | Landing, blog, docs, changelog, pricing | Contenuti demo statici da Nuxt Content |
-| Social login, passkey | Supportati da `fastapi-myauth` ma non configurati né esposti nella UI |
+| Social login, passkey | Integrati nel backend e nella UI; disabilitati per default, attivabili tramite configurazione |
 | Ri-autenticazione, login con recovery code, rigenerazione recovery code | Endpoint disponibili, UI non ancora presente |
 
 Non presentare le pagine demo come prova di funzionalità backend che non esistono.

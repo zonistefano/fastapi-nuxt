@@ -4,6 +4,7 @@ node_modules
 .nuxt
 .nitro
 .cache
+coverage
 .output
 dist
 sw.*

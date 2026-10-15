@@ -2,6 +2,8 @@
 import * as z from "zod"
 import {
   usersCreateUser,
+  usersReadUserById,
+  usersDeleteUserById,
   usersReadAllUsers,
   usersToggleState,
   usersUpdateUserById,
@@ -23,6 +25,7 @@ const { $api } = useNuxtApp()
 const { t } = useI18n()
 
 const defaultColumns = [
+  { id: "actions", header: t("moderation.edit") },
   {
     accessorKey: "id",
     header: "#",
@@ -60,7 +63,63 @@ const defaultColumns = [
   },
 ]
 
+const authStore = useAuthStore()
 const toast = useToast()
+const page = ref(0)
+const editing = ref<CustomUserRead | null>(null)
+const deleting = ref<CustomUserRead | null>(null)
+const editState = reactive({ full_name: "", email: "", role: "user" })
+const editSchema = z.object({
+  full_name: z.string(),
+  email: z.email(),
+  role: z.string().min(1),
+})
+async function editUser(user: CustomUserRead) {
+  try {
+    editing.value = await usersReadUserById({
+      client: $api,
+      path: { user_id: user.id },
+    })
+    Object.assign(editState, {
+      full_name: editing.value.full_name ?? "",
+      email: editing.value.email,
+      role: editing.value.role ?? "user",
+    })
+  } catch {
+    notifyError()
+  }
+}
+async function saveUser() {
+  if (!editing.value) return
+  try {
+    await usersUpdateUserById({
+      client: $api,
+      path: { user_id: editing.value.id },
+      body: { ...editState },
+    })
+    editing.value = null
+    await getAllUsers()
+  } catch {
+    notifyError()
+  }
+}
+async function deleteUser() {
+  if (!deleting.value) return
+  try {
+    await usersDeleteUserById({
+      client: $api,
+      path: { user_id: deleting.value.id },
+    })
+    deleting.value = null
+    await getAllUsers()
+  } catch {
+    notifyError()
+  }
+}
+async function changePage(delta: number) {
+  page.value += delta
+  await getAllUsers()
+}
 const selectedColumns = ref(defaultColumns)
 const isNewUserModalOpen = ref(false)
 
@@ -83,7 +142,10 @@ function notifyError() {
 
 async function getAllUsers() {
   try {
-    userProfiles.value = await usersReadAllUsers({ client: $api })
+    userProfiles.value = await usersReadAllUsers({
+      client: $api,
+      query: { page: page.value },
+    })
   } catch {
     notifyError()
   }
@@ -234,7 +296,77 @@ async function submit(event: FormSubmitEvent<Schema>) {
         </template>
       </UModal>
 
+      <UButton
+        :label="t('auth.reauth.title')"
+        @click="
+          () => {
+            authStore.reauthenticationRequired = true
+          }
+        "
+      />
+      <UButton :label="t('moderation.refresh')" @click="getAllUsers" />
+      <UModal
+        :open="!!editing"
+        :title="t('moderation.edit')"
+        @update:open="
+          (open) => {
+            if (!open) editing = null
+          }
+        "
+      >
+        <template #body>
+          <UForm
+            :state="editState"
+            :schema="editSchema"
+            class="space-y-4"
+            @submit="saveUser"
+          >
+            <UFormField name="full_name" :label="t('moderation.name')"
+              ><UInput v-model="editState.full_name" name="full_name"
+            /></UFormField>
+            <UFormField name="email" :label="t('common.email')"
+              ><UInput v-model="editState.email" name="email"
+            /></UFormField>
+            <UFormField name="role" :label="t('moderation.role')"
+              ><UInput v-model="editState.role" name="role"
+            /></UFormField>
+            <UButton type="submit" :label="t('common.save')" />
+          </UForm>
+        </template>
+      </UModal>
+      <UModal
+        :open="!!deleting"
+        :title="t('moderation.delete')"
+        :description="t('moderation.deleteDescription')"
+        @update:open="
+          (open) => {
+            if (!open) deleting = null
+          }
+        "
+      >
+        <template #body
+          ><UButton
+            color="error"
+            :label="t('moderation.delete')"
+            @click="deleteUser"
+        /></template>
+      </UModal>
       <UTable :data="userProfiles" :columns="columns" class="w-full">
+        <template #actions-cell="{ row }">
+          <UButton
+            :label="t('moderation.edit')"
+            @click="editUser(row.original)"
+          />
+          <UButton
+            color="error"
+            :label="t('moderation.delete')"
+            @click="
+              () => {
+                deleting = row.original
+              }
+            "
+          />
+        </template>
         <template #is_active-cell="{ row }">
           <USwitch
             :model-value="row.original.is_active"
@@ -273,6 +405,18 @@ async function submit(event: FormSubmitEvent<Schema>) {
           />
         </template>
       </UTable>
+      <div class="flex gap-2">
+        <UButton
+          :label="t('moderation.previous')"
+          :disabled="page === 0"
+          @click="changePage(-1)"
+        />
+        <UButton
+          :label="t('moderation.next')"
+          :disabled="!userProfiles.length"
+          @click="changePage(1)"
+        />
+      </div>
     </template>
   </UDashboardPanel>
 </template>

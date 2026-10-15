@@ -178,3 +178,88 @@ describe("moderation page", () => {
     expect(apiPaths().filter((p) => p === "GET /users/")).toHaveLength(2)
   })
 })
+
+describe("user administration", () => {
+  const body = () => new DOMWrapper(document.body)
+  const dialogWithTitle = (title: string) =>
+    vi.waitFor(() => {
+      const dialog = body()
+        .findAll('[role="dialog"]')
+        .find(
+          (item) =>
+            item.text().includes(title) &&
+            item.attributes("data-state") !== "closed",
+        )
+      expect(dialog).toBeDefined()
+      return dialog!
+    })
+  async function mountUsers() {
+    signIn({ role: "admin" })
+    mockApi("GET /users/", [other])
+    const wrapper = await mountSuspended(Moderation, { route: "/moderation" })
+    await flushPromises()
+    return wrapper
+  }
+  test("loads the individual user before updating profile and role", async () => {
+    const wrapper = await mountUsers()
+    mockApi("GET /users/user-2", other)
+    mockApi("POST /users/user-2", { ...other, role: "admin" })
+    await wrapper
+      .findAll("button")
+      .find((b) => b.text() === "Edit user")!
+      .trigger("click")
+    const dialog = await dialogWithTitle("Edit user")
+    await submitForm(dialog, {
+      full_name: "Edited",
+      email: other.email,
+      role: "admin",
+    })
+    expect(await requests.find((r) => r.method === "POST")!.json()).toEqual({
+      full_name: "Edited",
+      email: other.email,
+      role: "admin",
+    })
+    expect(apiPaths()).toContain("GET /users/user-2")
+  })
+  test("deletes only after confirmation", async () => {
+    const wrapper = await mountUsers()
+    mockApi("DELETE /users/user-2", { msg: "Deleted" })
+    await wrapper
+      .findAll("button")
+      .find((b) => b.text() === "Delete user")!
+      .trigger("click")
+    const dialog = await dialogWithTitle("Delete user")
+    expect(apiPaths()).not.toContain("DELETE /users/user-2")
+    await dialog
+      .findAll("button")
+      .find((b) => b.text() === "Delete user")!
+      .trigger("click")
+    await flushPromises()
+    expect(apiPaths()).toContain("DELETE /users/user-2")
+  })
+  test("loads the next and previous page and offers reauthentication", async () => {
+    const wrapper = await mountUsers()
+    const button = (label: string) =>
+      wrapper.findAll("button").find((b) => b.text() === label)!
+    await button("Refresh users").trigger("click")
+    await flushPromises()
+    expect(new URL(requests.at(-1)!.url).searchParams.get("page")).toBe("0")
+    await button("Next page").trigger("click")
+    await flushPromises()
+    expect(new URL(requests.at(-1)!.url).searchParams.get("page")).toBe("1")
+    await button("Previous page").trigger("click")
+    await flushPromises()
+    expect(new URL(requests.at(-1)!.url).searchParams.get("page")).toBe("0")
+    await button("Confirm your identity").trigger("click")
+    expect(useAuthStore().reauthenticationRequired).toBe(true)
+  })
+  test("reports when an individual profile cannot be loaded", async () => {
+    const wrapper = await mountUsers()
+    await wrapper
+      .findAll("button")
+      .find((b) => b.text() === "Edit user")!
+      .trigger("click")
+    await flushPromises()
+    expect(toastTitles()).toContain("Update error")
+  })
+})

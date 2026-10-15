@@ -27,13 +27,24 @@ function getTimeInSeconds(): number {
 
 function tokenExpired(token: string) {
   const expiry = tokenParser(token).exp
-  return typeof expiry !== "number" || getTimeInSeconds() >= expiry
+  return (
+    typeof expiry !== "number" ||
+    !Number.isFinite(expiry) ||
+    getTimeInSeconds() >= expiry
+  )
 }
 
 function tokenParser(token: string) {
-  const payload = token.split(".")[1]
-  if (!payload) throw new Error("Missing JWT payload")
-  return JSON.parse(Buffer.from(payload, "base64").toString())
+  try {
+    const payload = token.split(".")[1]
+    if (!payload) return {}
+    const parsed = JSON.parse(Buffer.from(payload, "base64").toString())
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : {}
+  } catch {
+    return {}
+  }
 }
 
 function getCommonItemsByKey<T, U, K extends keyof T & keyof U>(

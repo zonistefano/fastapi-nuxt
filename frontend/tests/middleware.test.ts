@@ -29,61 +29,38 @@ function signIn(is_superuser = false) {
 
 beforeEach(() => resetNuxt())
 
-describe("anonymous", () => {
-  test("lets visitors through", () => {
+describe("route guards", () => {
+  test("anonymous allows visitors and redirects authenticated users", () => {
     expect(run(anonymous)).toBeUndefined()
-  })
-
-  test("sends logged-in users home from an authentication page", () => {
     signIn()
-    run(anonymous, "/signup")
+    run(anonymous)
     expect(navigations).toEqual(["/"])
   })
-
-  test("recognizes authentication pages in another locale", () => {
-    resetNuxt({ locale: "it" })
-    signIn()
-    run(anonymous, "/it/login")
-    expect(navigations).toEqual(["/"])
-  })
-
-  test("aborts other navigations of logged-in users", () => {
-    signIn()
-    expect(run(anonymous, "/settings")).toBe(false)
-    expect(navigations).toHaveLength(0)
-  })
-})
-
-describe("authenticated", () => {
-  test("lets logged-in users through", () => {
+  test("authenticated redirects direct visits to login", () => {
+    run(authenticated)
+    expect(navigations).toEqual(["/login"])
     signIn()
     expect(run(authenticated)).toBeUndefined()
-    expect(toasts).toHaveLength(0)
   })
-
-  test("aborts and notifies visitors", () => {
-    expect(run(authenticated, "/blog")).toBe(false)
+  test("guards preserve the locale", () => {
+    resetNuxt({ locale: "it" })
+    run(authenticated)
+    expect(navigations).toEqual(["/it/login"])
+    signIn()
+    run(anonymous)
+    expect(navigations.at(-1)).toBe("/it/")
+  })
+  test("moderator requires a session and an administrator", () => {
+    run(moderator)
+    expect(navigations).toEqual(["/login"])
+    signIn()
+    run(moderator)
+    expect(navigations.at(-1)).toBe("/")
     expect(toasts[0]!.title).toBe("notifications.permissionDenied")
-  })
-
-  test("sends visitors home from an authentication page", () => {
-    run(authenticated, "/recover-password")
-    expect(navigations).toEqual(["/"])
-  })
-})
-
-describe("moderator", () => {
-  test("lets administrators through", () => {
     signIn(true)
     expect(run(moderator)).toBeUndefined()
+    useAuthStore().is_superuser = false
+    useAuthStore().role = "admin"
+    expect(run(moderator)).toBeUndefined()
   })
-
-  test.each([false, true])(
-    "aborts and notifies non-administrators (logged in: %p)",
-    (loggedIn) => {
-      if (loggedIn) signIn()
-      expect(run(moderator)).toBe(false)
-      expect(toasts[0]!.color).toBe("error")
-    },
-  )
 })

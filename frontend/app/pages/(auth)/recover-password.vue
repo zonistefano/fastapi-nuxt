@@ -9,6 +9,7 @@ definePageMeta({
 
 const authStore = useAuthStore()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const redirectRoute = "/"
 
 const schema = z.object({
@@ -28,7 +29,7 @@ async function submit(event: FormSubmitEvent<Schema>) {
       resolve(true)
     }, 2000)
   })
-  await navigateTo(redirectRoute)
+  await navigateTo(localePath(redirectRoute))
 }
 </script>
 

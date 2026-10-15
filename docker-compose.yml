@@ -57,6 +57,7 @@ services:
         NUXT_UMAMI_HOST: ${NUXT_UMAMI_HOST:-}
     expose: ['3000']
     environment:
+      NUXT_API_INTERNAL_URL: ${NUXT_API_INTERNAL_URL:-http://backend:8000}
       NUXT_PUBLIC_APP_NAME: ${NUXT_PUBLIC_APP_NAME:-FastAPI Nuxt}
       NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-http://localhost:8000}
       NUXT_PUBLIC_API_WS: ${NUXT_PUBLIC_API_WS:-ws://localhost:8000}

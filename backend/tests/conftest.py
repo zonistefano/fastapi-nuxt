@@ -16,6 +16,10 @@ for key, value in {
     "SECRET_KEY": "test-signing-key-" * 4,
     "TOTP_SECRET_KEY": base64.urlsafe_b64encode(b"t" * 32).decode(),
     "REQUIRE_EMAIL_VALIDATION": "false",
+    "SOCIAL_PROVIDERS": "[]",
+    "PASSKEY_CONFIG": "null",
+    "SOCIAL_SESSION_SECRET_KEY": "test-oauth-session-key-" * 3,
+    "SOCIAL_SESSION_HTTPS_ONLY": "false",
 }.items():
     os.environ.setdefault(key, value)
 

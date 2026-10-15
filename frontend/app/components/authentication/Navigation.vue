@@ -24,8 +24,9 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
 ])
 
 async function logout() {
-  authStore.logOut()
-  await navigateTo(redirectRoute)
+  const revocation = authStore.logOut()
+  await navigateTo(localePath(redirectRoute))
+  await revocation
 }
 </script>
 

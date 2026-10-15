@@ -1,8 +1,13 @@
 # Autenticazione
 
 L'autenticazione è delegata alla libreria [`fastapi-myauth`](https://github.com/zonistefano/fastapi_auth),
-fissata alla versione **1.6.0**. Il template non reimplementa i meccanismi di
+fissata alla versione **1.7.0**. Il template non reimplementa i meccanismi di
 sicurezza: li configura, estende il modello utente e fornisce il client Nuxt.
+
+La 1.7.0 fornisce le API pubbliche per popup OAuth, discovery dei metodi e schema
+completo. Il template usa direttamente `auth.get_router(include_disabled_methods=True)`;
+la [specifica dell'intervento nella libreria](auth-library-handoff.md) conserva
+il contesto della migrazione, senza costituire una guida d'uso aggiornata.
 
 ## Componenti backend
 
@@ -198,19 +203,139 @@ fidati con la variabile `FORWARDED_ALLOW_IPS` letta da Uvicorn perché l'IP clie
 
 ## Social login e passkey (opzionali)
 
-`fastapi-myauth` supporta provider OAuth/OIDC e WebAuthn, non attivi nel template.
-Per abilitarli:
+Gli extra `social` e `passkeys` della versione **1.7.0** sono installati. I due
+metodi restano disabilitati fino alla configurazione (`SOCIAL_PROVIDERS=[]`,
+`PASSKEY_CONFIG=null`). `GET /login/methods` comunica al frontend i provider
+abilitati, la disponibilità delle passkey e lo stato della registrazione. Con
+registrazione chiusa, signup mostra il relativo messaggio e rimanda al login. Le
+rotte opzionali sono sempre nel contratto generato tramite l'opzione pubblica
+`include_disabled_methods=True` e rispondono `404` quando il metodo non è
+configurato. Non servono configurazioni passkey fittizie o factory interni.
 
-1. aggiungi gli extra in `backend/pyproject.toml`
-   (`fastapi-myauth[social]==1.6.0`, `fastapi-myauth[passkeys]==1.6.0`) ed esegui
-   `uv lock`;
-2. passa `social_providers=(SocialProvider(...),)` e/o
-   `passkey_config=PasskeyConfig(rp_id=..., origins=(...,))` a `FastAuth` in
-   `app/src/auth/service.py`;
-3. rigenera il client API e implementa la UI.
+### OAuth/OIDC
 
-Le tabelle `socialaccount`, `passkeycredential` e `passkeyceremony` sono già
-create dalle migrazioni. Consulta la documentazione della libreria per i dettagli.
+Configura `SOCIAL_PROVIDERS` come lista JSON di provider. Ogni oggetto accetta
+`name`, `client_id`, `client_secret`, `server_metadata_url`,
+`trusts_email_verification` (default `false`), `scopes` e i nomi dei claim
+`subject_claim`, `email_claim`, `name_claim`, `email_verified_claim`.
+La validazione e la conversione sono fornite da `SocialProviderConfig` della
+libreria; `to_provider()` estrae il segreto per il client OAuth. Non registrare
+nei log il provider convertito. Le credenziali sono fornite dal provider:
+`make init` non le genera. Non
+inserirle nel frontend o nei file committati. Gli URL dei metadata richiedono
+HTTPS, salvo localhost per i test di sviluppo.
+
+Esempio di struttura (sostituisci i placeholder con credenziali esterne al repository):
+
+```dotenv
+SOCIAL_PROVIDERS=[{"name":"google","client_id":"REPLACE_WITH_PROVIDER_CLIENT_ID","client_secret":"REPLACE_WITH_PROVIDER_SECRET","server_metadata_url":"https://accounts.google.com/.well-known/openid-configuration","trusts_email_verification":true}]
+```
+
+Per Google il metadata URL è
+`https://accounts.google.com/.well-known/openid-configuration`, con i claim
+predefiniti; puoi impostare `trusts_email_verification=true` per fidarti del
+claim `email_verified`. Per un altro IdP configura i claim secondo il suo
+contratto, evitando di fidarti di email non verificate.
+
+Registra nell'IdP il callback
+`https://api.example.com/login/social/<name>/callback`. Dietro reverse proxy,
+mantieni l’header `Host` pubblico e configura `FORWARDED_ALLOW_IPS` con gli
+indirizzi fidati affinché Uvicorn rispetti lo schema HTTPS inoltrato dal proxy. Il frontend mostra
+automaticamente i provider configurati su login e signup. La libreria gestisce
+state, nonce, PKCE e verifica dell'identità. Il template aggiunge
+`SessionMiddleware` solo quando è configurato almeno un provider, con cookie
+HttpOnly, SameSite=Lax e durata di 300 secondi. La chiave persistente separata
+`SOCIAL_SESSION_SECRET_KEY` è generata da `make init` ed è obbligatoria quando
+si abilita il social login. `SOCIAL_SESSION_HTTPS_ONLY=true` imposta Secure:
+usa `false` soltanto nello sviluppo locale con backend HTTP. Questa scelta è
+esplicita e non dipende dall'URL del frontend. Il cookie contiene stato, nonce,
+verifier PKCE ed eventuale intento di collegamento firmati, non cifrati; non
+contiene i token della sessione applicativa.
+
+`GET /login/social/{provider}` e `POST /login/social/{provider}/link`
+restituiscono `{url}` al client tipizzato; la UI apre il provider in una finestra
+secondaria. `FastAuth(..., social_popup=SocialPopupConfig(...))` seleziona il
+trasporto browser della libreria. Il suo callback restituisce una pagina HTML che
+trasmette i token tramite `postMessage` alla sola origine `FRONTEND_URL`, poi
+chiude la finestra. Il frontend verifica sia l'origine del backend sia la
+finestra mittente. I token non passano nella query string o nel fragment.
+Il template deriva l'origine destinataria da `FRONTEND_URL`; la libreria la
+valida e canonicalizza. Usa HTTPS fuori da localhost/loopback e configura
+l'URL pubblico dell'app. CORS deve consentire quell'origine con credenziali.
+Gli errori attesi del callback producono HTML con stato HTTP 200 e messaggio
+`{type: "auth:social", error: true}`; la UI gestisce il messaggio come errore.
+La pagina usa CSP con nonce e header che impediscono cache e framing.
+Il popup deve mantenere `window.opener`: verifica le policy COOP lungo l'intera
+navigazione verso l'IdP. Per deployment su siti distinti, considera i limiti
+sui cookie di terze parti; preferisci frontend e API nello stesso sito.
+
+Nelle impostazioni di sicurezza sono disponibili collegamento e scollegamento
+(`DELETE /login/social/{provider}`). L'associazione a un account locale resta
+**esplicita**, con autenticazione recente ed email locale verificata. Lo
+scollegamento revoca le sessioni; la UI torna al login. Il backend impedisce di
+rimuovere l'unico metodo di accesso.
+
+### Passkey / WebAuthn
+
+Configura, ad esempio, `PASSKEY_CONFIG` con un oggetto JSON contenente
+`rp_id: "example.com"`, `origins: ["https://app.example.com"]` e opzionalmente
+`rp_name`, `timeout_ms`, `challenge_ttl_seconds`. Per sviluppo locale usa
+`rp_id: "localhost"` e `origins: ["http://localhost:3000"]`. Non utilizzare
+wildcard: RP ID e origini devono corrispondere al deployment.
+
+```dotenv
+PASSKEY_CONFIG={"rp_id":"localhost","origins":["http://localhost:3000"],"rp_name":"My application"}
+```
+
+La UI usa `@simplewebauthn/browser` per le cerimonie del browser e la libreria
+backend per la verifica. Login offre l'accesso con una passkey già registrata;
+le impostazioni consentono registrazione, elenco, rinomina e rimozione. Registrazione e rimozione revocano le sessioni: dopo il successo la UI chiede
+un nuovo accesso. La registrazione richiede un account esistente e autenticazione recente. Il login
+passkey segue anche l'eventuale challenge TOTP della libreria. Per i dettagli
+browser vedi la [documentazione del client WebAuthn](https://simplewebauthn.dev/docs/packages/browser).
+
+Il pulsante di accesso è sempre presente quando il backend abilita le passkey;
+un browser senza WebAuthn mostra una spiegazione e mantiene disponibili gli altri
+metodi. La pagina login attiva anche l'autocompletamento passkey (Conditional UI)
+quando supportato, tramite il campo email con `autocomplete="username webauthn"`.
+L'attesa non blocca il form: inviare il form password/magic link o scegliere un provider social annulla la
+cerimonia pendente, così come uscire dalla pagina. Il pulsante esplicito richiede
+una nuova challenge. Errori dell'autocompletamento e annullamenti del browser non
+mostrano notifiche di credenziali errate; un errore dell'accesso esplicito consente
+di riprovare o scegliere un altro metodo.
+
+#### Invito facoltativo alla creazione
+
+In `frontend/app/app.config.ts`, `auth.passkeyEnrollment` controlla la proposta
+dopo il login:
+
+```ts
+auth: {
+  passkeyEnrollment: {
+    enabled: false,
+    cooldownDays: 30,
+  },
+},
+```
+
+Il template la lascia disattivata: ogni progetto può abilitarla senza modificare
+le API o la configurazione WebAuthn. Se attiva, un banner richiudibile compare
+solo dopo un nuovo login completo con password, magic link o social (incluso
+l'eventuale TOTP), con WebAuthn disponibile e nessuna passkey registrata. Ripristino
+della sessione, rinnovo token, ri-autenticazione e login passkey non propongono
+la creazione. La provenienza del challenge passkey viene conservata nello store
+anche ricaricando la pagina TOTP. Se discovery o elenco passkey falliscono, il
+banner non compare e l'accesso prosegue.
+
+«Crea passkey» apre la sezione Passkey nelle impostazioni di sicurezza, dove
+l'utente sceglie il nome e avvia esplicitamente la registrazione. Prima di
+aggiungere o rimuovere una passkey, la UI avvisa che servirà accedere nuovamente.
+«Non ora», chiusura e apertura delle impostazioni rinviano ulteriori inviti per
+`cooldownDays` giorni. Il rinvio usa `localStorage` con chiave
+`passkey-enrollment:<id utente>`: è separato per account, vale solo nello stesso
+browser e non contiene token né credenziali. Se lo storage è negato, la chiusura
+vale per l'invito corrente; cancellare i dati del browser azzera il rinvio.
+L'aggiunta manuale nelle impostazioni resta sempre disponibile.
 
 ## Client frontend
 
@@ -218,6 +343,7 @@ create dalle migrazioni. Consulta la documentazione della libreria per i dettagl
 | --- | --- |
 | `app/stores/tokens.ts` | Store Pinia `tokens`: access/refresh token, persistiti in cookie; login password/magic/TOTP; `refreshTokens()` con deduplica delle richieste concorrenti. |
 | `app/stores/auth.ts` | Store `authUser`: profilo utente (cookie, 90 giorni), `logIn`, `logOut`, `getUserProfile`, aggiornamento profilo, TOTP, conferma email, recupero/reset password. Getter `loggedIn`, `isAdmin`. |
+| `app/composables/useAuthenticationMethods.ts` | Caricamento condiviso dei metodi disponibili, usato anche nel rendering server di login e signup. |
 | `app/plugins/api.ts` | Crea i client `$api` (autenticato) e `$publicApi`. |
 | `app/api/transport.ts` | Aggiunge il Bearer, ripete una volta dopo `401` con token rinnovato, esegue il logout se il rinnovo fallisce, notifica i `403`. |
 | `app/middleware/` | `authenticated`, `anonymous`, `moderator`. |
@@ -225,13 +351,40 @@ create dalle migrazioni. Consulta la documentazione della libreria per i dettagl
 | `app/pages/settings/` | Profilo (`index.vue`) e sicurezza/TOTP (`security.vue`). |
 | `app/pages/moderation.vue` | Gestione utenti per amministratori. |
 
-Dopo cambio password o email il client torna al login. La UI non include ancora
-form per ri-autenticazione, login con recovery code, rigenerazione dei codici,
-passkey e social login: gli endpoint esistono e possono essere integrati.
+Dopo cambio password o email il client torna al login. Le impostazioni di
+sicurezza offrono ri-autenticazione, rigenerazione dei recovery code, logout
+globale ed eliminazione dell'account con conferma. Un `403` con dettaglio
+`Recent authentication required.` apre il dialogo di ri-autenticazione; dopo
+la conferma l'utente ripete l'operazione. Le scritture non vengono ripetute
+automaticamente. Account senza password e senza TOTP devono accedere nuovamente
+con magic link, provider o passkey.
+
+La pagina TOTP consente anche un recovery code. Un codice errato conserva il
+challenge per un nuovo tentativo. I codici di recupero sono mostrati solo nel
+modale corrente, mai persistiti. Il rinnovo concorrente è deduplicato; risposte
+di rinnovo arrivate dopo logout o cambio sessione vengono scartate e il nuovo
+refresh token inutilizzato viene revocato. Il logout esplicito revoca il refresh
+token corrente, mentre `clearSession()` cancella solo lo stato locale (errori
+401, account eliminato o credenziali cambiate). La revoca del solo refresh non
+invalida un access token già emesso: per revocare subito tutti gli accessi usa
+il logout globale.
+
+All'avvio il profilo viene letto solo con una sessione utilizzabile: magic link
+e challenge TOTP sopravvivono al caricamento della pagina. I cookie malformati
+sono trattati come token scaduti. Il profilo persistito serve alla UI; la
+sicurezza resta sul backend. Il middleware amministrativo ammette superuser e
+ruolo `admin`, sempre con account attivo e sessione valida. Le redirezioni auth
+rispettano la lingua corrente. Il link di conferma email `/?token=...` viene
+consumato dalla homepage e rimosso tramite redirezione al login.
+
+La moderazione comprende elenco paginato, lettura del singolo utente, modifica
+di nome/email/ruolo, attivazione, privilegi superuser, creazione ed eliminazione
+con conferma. Tutte le operazioni sono soggette ai controlli amministrativi e
+all'autenticazione recente del backend.
 
 ## Aggiornare `fastapi-myauth`
 
-La versione è fissata (`==1.6.0`) perché le minor possono cambiare contratti e
+La versione è fissata (`==1.7.0`) perché le minor possono cambiare contratti e
 schema. Per aggiornare: leggi il changelog della libreria, aggiorna il vincolo,
 `uv lock`, genera ed esamina una migrazione, `make api_generate`, adatta gli store
 e verifica con `make check test`.

@@ -10,18 +10,39 @@ import { client } from "./client.gen"
 import type {
   HealthHealthCheckData,
   HealthHealthCheckResponses,
+  LoginAuthenticationOptionsData,
+  LoginAuthenticationOptionsResponses,
+  LoginAuthenticationVerifyData,
+  LoginAuthenticationVerifyErrors,
+  LoginAuthenticationVerifyResponses,
   LoginConfirmEmailData,
   LoginConfirmEmailErrors,
   LoginConfirmEmailResponses,
   LoginCreateUserProfileData,
   LoginCreateUserProfileErrors,
   LoginCreateUserProfileResponses,
+  LoginDeletePasskeyData,
+  LoginDeletePasskeyErrors,
+  LoginDeletePasskeyResponses,
   LoginDisableTotpAuthenticationData,
   LoginDisableTotpAuthenticationErrors,
   LoginDisableTotpAuthenticationResponses,
   LoginEnableTotpAuthenticationData,
   LoginEnableTotpAuthenticationErrors,
   LoginEnableTotpAuthenticationResponses,
+  LoginFastapiMyauthSocialCallbackData,
+  LoginFastapiMyauthSocialCallbackErrors,
+  LoginFastapiMyauthSocialCallbackResponses,
+  LoginFastapiMyauthSocialLinkData,
+  LoginFastapiMyauthSocialLinkErrors,
+  LoginFastapiMyauthSocialLinkResponses,
+  LoginFastapiMyauthSocialLoginData,
+  LoginFastapiMyauthSocialLoginErrors,
+  LoginFastapiMyauthSocialLoginResponses,
+  LoginListPasskeysData,
+  LoginListPasskeysResponses,
+  LoginLoginMethodsData,
+  LoginLoginMethodsResponses,
   LoginLoginWithMagicLinkData,
   LoginLoginWithMagicLinkErrors,
   LoginLoginWithMagicLinkResponses,
@@ -46,6 +67,14 @@ import type {
   LoginRefreshTokenResponses,
   LoginRegenerateRecoveryCodesData,
   LoginRegenerateRecoveryCodesResponses,
+  LoginRegistrationOptionsData,
+  LoginRegistrationOptionsResponses,
+  LoginRegistrationVerifyData,
+  LoginRegistrationVerifyErrors,
+  LoginRegistrationVerifyResponses,
+  LoginRenamePasskeyData,
+  LoginRenamePasskeyErrors,
+  LoginRenamePasskeyResponses,
   LoginRequestNewTotpData,
   LoginRequestNewTotpResponses,
   LoginResetPasswordData,
@@ -53,6 +82,9 @@ import type {
   LoginResetPasswordResponses,
   LoginRevokeRefreshTokenData,
   LoginRevokeRefreshTokenResponses,
+  LoginUnlinkSocialAccountData,
+  LoginUnlinkSocialAccountErrors,
+  LoginUnlinkSocialAccountResponses,
   LoginValidateMagicLinkData,
   LoginValidateMagicLinkErrors,
   LoginValidateMagicLinkResponses,
@@ -223,6 +255,24 @@ export const loginLoginWithMagicLink = <ThrowOnError extends boolean = true>(
 }
 
 /**
+ * Login Methods
+ */
+export const loginLoginMethods = <ThrowOnError extends boolean = true>(
+  options?: Options<LoginLoginMethodsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    LoginLoginMethodsResponses,
+    unknown,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    url: "/login/methods",
+    ...options,
+  })
+}
+
+/**
  * Request New Totp
  *
  * Request new keys to enable TOTP on the user account.
@@ -268,6 +318,174 @@ export const loginLoginWithOauth2 = <ThrowOnError extends boolean = true>(
     ...options,
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * List Passkeys
+ */
+export const loginListPasskeys = <ThrowOnError extends boolean = true>(
+  options?: Options<LoginListPasskeysData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).get<
+    LoginListPasskeysResponses,
+    unknown,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/passkeys/",
+    ...options,
+  })
+}
+
+/**
+ * Authentication Options
+ */
+export const loginAuthenticationOptions = <ThrowOnError extends boolean = true>(
+  options?: Options<LoginAuthenticationOptionsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    LoginAuthenticationOptionsResponses,
+    unknown,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    url: "/login/passkeys/authenticate/options",
+    ...options,
+  })
+}
+
+/**
+ * Authentication Verify
+ */
+export const loginAuthenticationVerify = <ThrowOnError extends boolean = true>(
+  options: Options<LoginAuthenticationVerifyData, ThrowOnError>,
+) => {
+  return (options.client ?? client).post<
+    LoginAuthenticationVerifyResponses,
+    LoginAuthenticationVerifyErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    url: "/login/passkeys/authenticate/verify",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Registration Options
+ */
+export const loginRegistrationOptions = <ThrowOnError extends boolean = true>(
+  options?: Options<LoginRegistrationOptionsData, ThrowOnError>,
+) => {
+  return (options?.client ?? client).post<
+    LoginRegistrationOptionsResponses,
+    unknown,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/passkeys/register/options",
+    ...options,
+  })
+}
+
+/**
+ * Registration Verify
+ */
+export const loginRegistrationVerify = <ThrowOnError extends boolean = true>(
+  options: Options<LoginRegistrationVerifyData, ThrowOnError>,
+) => {
+  return (options.client ?? client).post<
+    LoginRegistrationVerifyResponses,
+    LoginRegistrationVerifyErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/passkeys/register/verify",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Delete Passkey
+ */
+export const loginDeletePasskey = <ThrowOnError extends boolean = true>(
+  options: Options<LoginDeletePasskeyData, ThrowOnError>,
+) => {
+  return (options.client ?? client).delete<
+    LoginDeletePasskeyResponses,
+    LoginDeletePasskeyErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/passkeys/{passkey_id}",
+    ...options,
+  })
+}
+
+/**
+ * Rename Passkey
+ */
+export const loginRenamePasskey = <ThrowOnError extends boolean = true>(
+  options: Options<LoginRenamePasskeyData, ThrowOnError>,
+) => {
+  return (options.client ?? client).patch<
+    LoginRenamePasskeyResponses,
+    LoginRenamePasskeyErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/passkeys/{passkey_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
       ...options.headers,
     },
   })
@@ -427,6 +645,96 @@ export const loginCreateUserProfile = <ThrowOnError extends boolean = true>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+  })
+}
+
+/**
+ * Unlink Social Account
+ */
+export const loginUnlinkSocialAccount = <ThrowOnError extends boolean = true>(
+  options: Options<LoginUnlinkSocialAccountData, ThrowOnError>,
+) => {
+  return (options.client ?? client).delete<
+    LoginUnlinkSocialAccountResponses,
+    LoginUnlinkSocialAccountErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/social/{provider}",
+    ...options,
+  })
+}
+
+/**
+ * Fastapi Myauth Social Login
+ */
+export const loginFastapiMyauthSocialLogin = <
+  ThrowOnError extends boolean = true,
+>(
+  options: Options<LoginFastapiMyauthSocialLoginData, ThrowOnError>,
+) => {
+  return (options.client ?? client).get<
+    LoginFastapiMyauthSocialLoginResponses,
+    LoginFastapiMyauthSocialLoginErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    url: "/login/social/{provider}",
+    ...options,
+  })
+}
+
+/**
+ * Fastapi Myauth Social Callback
+ */
+export const loginFastapiMyauthSocialCallback = <
+  ThrowOnError extends boolean = true,
+>(
+  options: Options<LoginFastapiMyauthSocialCallbackData, ThrowOnError>,
+) => {
+  return (options.client ?? client).get<
+    LoginFastapiMyauthSocialCallbackResponses,
+    LoginFastapiMyauthSocialCallbackErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    url: "/login/social/{provider}/callback",
+    ...options,
+  })
+}
+
+/**
+ * Fastapi Myauth Social Link
+ */
+export const loginFastapiMyauthSocialLink = <
+  ThrowOnError extends boolean = true,
+>(
+  options: Options<LoginFastapiMyauthSocialLinkData, ThrowOnError>,
+) => {
+  return (options.client ?? client).post<
+    LoginFastapiMyauthSocialLinkResponses,
+    LoginFastapiMyauthSocialLinkErrors,
+    ThrowOnError,
+    "data"
+  >({
+    responseStyle: "data",
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/login/social/{provider}/link",
+    ...options,
   })
 }
 

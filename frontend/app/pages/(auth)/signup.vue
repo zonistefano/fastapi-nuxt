@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAuthenticationMethods } from "~/composables/useAuthenticationMethods"
 import * as z from "zod"
 import { loginCreateUserProfile } from "~/api/generated"
 import { tokenParser, tokenIsTOTP } from "@/utilities"
@@ -9,12 +10,14 @@ definePageMeta({
   middleware: ["anonymous"],
 })
 
+const { data: methods } = await useAuthenticationMethods()
 const authStore = useAuthStore()
 const tokenStore = useTokenStore()
 const route = useRoute()
 const toast = useToast()
 const { $publicApi } = useNuxtApp()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const redirectAfterLogin = "/"
 const redirectAfterMagic = "/magic"
 const redirectTOTP = "/totp"
@@ -55,19 +58,6 @@ const schema_oauth = z.object({
 type Schema = z.output<typeof schema>
 type SchemaOauth = z.output<typeof schema_oauth>
 
-const providers = [
-  {
-    label: "Google",
-    icon: "i-simple-icons-google",
-    onClick: () => {},
-  },
-  {
-    label: "GitHub",
-    icon: "i-simple-icons-github",
-    onClick: () => {},
-  },
-]
-
 async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
   const password =
     oauth.value && "password" in event.data ? event.data.password : undefined
@@ -80,7 +70,7 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
       })
       if ("msg" in response) {
         toast.add({ title: t("auth.signup.title"), description: response.msg })
-        await navigateTo("/login")
+        await navigateTo(localePath("/login"))
         return
       }
     } catch {
@@ -94,11 +84,11 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
   }
   await authStore.logIn({ username: event.data.email, password })
   if (authStore.loggedIn) {
-    await navigateTo(redirectAfterLogin)
+    await navigateTo(localePath(redirectAfterLogin))
     return
   }
   if (tokenStore.token && tokenIsTOTP(tokenStore.token)) {
-    await navigateTo(redirectTOTP)
+    await navigateTo(localePath(redirectTOTP))
     return
   }
   if (
@@ -108,7 +98,7 @@ async function submit(event: FormSubmitEvent<Schema | SchemaOauth>) {
       "fingerprint",
     )
   )
-    await navigateTo(redirectAfterMagic)
+    await navigateTo(localePath(redirectAfterMagic))
 }
 
 onMounted(async () => {
@@ -119,11 +109,11 @@ onMounted(async () => {
 
 <template>
   <UAuthForm
+    v-if="methods?.registration !== false"
     :title="t('auth.signup.title')"
     icon="i-lucide-lock"
     :fields="oauth ? fields_oauth : fields"
     :schema="oauth ? schema_oauth : schema"
-    :providers="providers"
     @submit="submit"
   >
     <template #description>
@@ -148,6 +138,7 @@ onMounted(async () => {
       </div>
     </template>
     <template #footer>
+      <AuthenticationOptions />
       {{ t("auth.terms") }}
       <NuxtLinkLocale to="/" class="text-primary font-medium">{{
         t("auth.termsLink")
@@ -155,4 +146,11 @@ onMounted(async () => {
       >.
     </template>
   </UAuthForm>
+  <UAlert v-else :title="t('auth.signup.closed')">
+    <template #description
+      ><NuxtLinkLocale to="/login">{{
+        t("auth.login.title")
+      }}</NuxtLinkLocale></template
+    >
+  </UAlert>
 </template>

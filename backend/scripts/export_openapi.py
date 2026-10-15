@@ -10,6 +10,11 @@ from pathlib import Path
 def export_schema(output: Path) -> None:
     # Only this short-lived process uses these public, non-production settings.
     os.environ.update(
+        SOCIAL_PROVIDERS="[]",
+        PASSKEY_CONFIG="null",
+        FRONTEND_URL="http://localhost:3000",
+        SOCIAL_SESSION_SECRET_KEY="openapi-export-only-oauth-session-key",
+        SOCIAL_SESSION_HTTPS_ONLY="true",
         PROJECT_NAME="FastAPI Nuxt API",
         ENABLE_DOCS="true",
         POSTGRES_SERVER="localhost",

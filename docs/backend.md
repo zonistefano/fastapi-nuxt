@@ -10,6 +10,8 @@ dipendenze bloccate in `backend/uv.lock` e gestite con uv.
 - titolo da `PROJECT_NAME`; docs e schema OpenAPI disattivabili con `ENABLE_DOCS`;
 - `RateLimitMiddleware` (sempre) e `CORSMiddleware` (se `BACKEND_CORS_ORIGINS` non è
   vuota, con header `Retry-After` esposto);
+- `SessionMiddleware` soltanto con provider social configurati, per lo stato
+  temporaneo OAuth; chiave separata e cookie Secure configurati esplicitamente;
 - `operationId` di ogni rotta nel formato `{primo_tag}_{nome_funzione}`, da cui
   derivano i nomi dell'SDK frontend;
 - `GET /health-check/` — liveness probe esente dal rate limit; non verifica il

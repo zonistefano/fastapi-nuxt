@@ -239,6 +239,24 @@ export type HttpValidationError = {
 }
 
 /**
+ * LoginMethods
+ */
+export type LoginMethods = {
+  /**
+   * Passkeys
+   */
+  passkeys: boolean
+  /**
+   * Registration
+   */
+  registration: boolean
+  /**
+   * Social Providers
+   */
+  social_providers: Array<string>
+}
+
+/**
  * Msg
  */
 export type Msg = {
@@ -260,6 +278,106 @@ export type NewTotpResponse = {
    * Uri
    */
   uri: string
+}
+
+/**
+ * PasskeyAuthenticationVerify
+ */
+export type PasskeyAuthenticationVerify = {
+  /**
+   * Ceremony Id
+   */
+  ceremony_id: string
+  /**
+   * Credential
+   */
+  credential: {
+    [key: string]: unknown
+  }
+}
+
+/**
+ * PasskeyOptions
+ */
+export type PasskeyOptions = {
+  /**
+   * Ceremony Id
+   */
+  ceremony_id: string
+  /**
+   * Options
+   */
+  options: {
+    [key: string]: unknown
+  }
+}
+
+/**
+ * PasskeyRead
+ */
+export type PasskeyRead = {
+  /**
+   * Backed Up
+   */
+  backed_up: boolean
+  /**
+   * Created
+   */
+  created: string
+  /**
+   * Credential Id
+   */
+  credential_id: string
+  /**
+   * Device Type
+   */
+  device_type: string
+  /**
+   * Id
+   */
+  id: string
+  /**
+   * Modified
+   */
+  modified: string
+  /**
+   * Name
+   */
+  name: string
+  /**
+   * Transports
+   */
+  transports: Array<string>
+}
+
+/**
+ * PasskeyRegistrationVerify
+ */
+export type PasskeyRegistrationVerify = {
+  /**
+   * Ceremony Id
+   */
+  ceremony_id: string
+  /**
+   * Credential
+   */
+  credential: {
+    [key: string]: unknown
+  }
+  /**
+   * Name
+   */
+  name: string
+}
+
+/**
+ * PasskeyUpdate
+ */
+export type PasskeyUpdate = {
+  /**
+   * Name
+   */
+  name: string
 }
 
 /**
@@ -285,6 +403,16 @@ export type SecurityChangeResponse = {
    */
   msg: string
   tokens: Token
+}
+
+/**
+ * SocialAuthorizationURL
+ */
+export type SocialAuthorizationUrl = {
+  /**
+   * Url
+   */
+  url: string
 }
 
 /**
@@ -495,6 +623,23 @@ export type LoginLoginWithMagicLinkResponses = {
 export type LoginLoginWithMagicLinkResponse =
   LoginLoginWithMagicLinkResponses[keyof LoginLoginWithMagicLinkResponses]
 
+export type LoginLoginMethodsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/login/methods"
+}
+
+export type LoginLoginMethodsResponses = {
+  /**
+   * Successful Response
+   */
+  200: LoginMethods
+}
+
+export type LoginLoginMethodsResponse =
+  LoginLoginMethodsResponses[keyof LoginLoginMethodsResponses]
+
 export type LoginRequestNewTotpData = {
   body?: never
   path?: never
@@ -538,6 +683,177 @@ export type LoginLoginWithOauth2Responses = {
 
 export type LoginLoginWithOauth2Response =
   LoginLoginWithOauth2Responses[keyof LoginLoginWithOauth2Responses]
+
+export type LoginListPasskeysData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/login/passkeys/"
+}
+
+export type LoginListPasskeysResponses = {
+  /**
+   * Response Login List Passkeys
+   *
+   * Successful Response
+   */
+  200: Array<PasskeyRead>
+}
+
+export type LoginListPasskeysResponse =
+  LoginListPasskeysResponses[keyof LoginListPasskeysResponses]
+
+export type LoginAuthenticationOptionsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/login/passkeys/authenticate/options"
+}
+
+export type LoginAuthenticationOptionsResponses = {
+  /**
+   * Successful Response
+   */
+  200: PasskeyOptions
+}
+
+export type LoginAuthenticationOptionsResponse =
+  LoginAuthenticationOptionsResponses[keyof LoginAuthenticationOptionsResponses]
+
+export type LoginAuthenticationVerifyData = {
+  body: PasskeyAuthenticationVerify
+  path?: never
+  query?: never
+  url: "/login/passkeys/authenticate/verify"
+}
+
+export type LoginAuthenticationVerifyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginAuthenticationVerifyError =
+  LoginAuthenticationVerifyErrors[keyof LoginAuthenticationVerifyErrors]
+
+export type LoginAuthenticationVerifyResponses = {
+  /**
+   * Successful Response
+   */
+  200: Token
+}
+
+export type LoginAuthenticationVerifyResponse =
+  LoginAuthenticationVerifyResponses[keyof LoginAuthenticationVerifyResponses]
+
+export type LoginRegistrationOptionsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/login/passkeys/register/options"
+}
+
+export type LoginRegistrationOptionsResponses = {
+  /**
+   * Successful Response
+   */
+  200: PasskeyOptions
+}
+
+export type LoginRegistrationOptionsResponse =
+  LoginRegistrationOptionsResponses[keyof LoginRegistrationOptionsResponses]
+
+export type LoginRegistrationVerifyData = {
+  body: PasskeyRegistrationVerify
+  path?: never
+  query?: never
+  url: "/login/passkeys/register/verify"
+}
+
+export type LoginRegistrationVerifyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginRegistrationVerifyError =
+  LoginRegistrationVerifyErrors[keyof LoginRegistrationVerifyErrors]
+
+export type LoginRegistrationVerifyResponses = {
+  /**
+   * Successful Response
+   */
+  200: PasskeyRead
+}
+
+export type LoginRegistrationVerifyResponse =
+  LoginRegistrationVerifyResponses[keyof LoginRegistrationVerifyResponses]
+
+export type LoginDeletePasskeyData = {
+  body?: never
+  path: {
+    /**
+     * Passkey Id
+     */
+    passkey_id: string
+  }
+  query?: never
+  url: "/login/passkeys/{passkey_id}"
+}
+
+export type LoginDeletePasskeyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginDeletePasskeyError =
+  LoginDeletePasskeyErrors[keyof LoginDeletePasskeyErrors]
+
+export type LoginDeletePasskeyResponses = {
+  /**
+   * Successful Response
+   */
+  200: Msg
+}
+
+export type LoginDeletePasskeyResponse =
+  LoginDeletePasskeyResponses[keyof LoginDeletePasskeyResponses]
+
+export type LoginRenamePasskeyData = {
+  body: PasskeyUpdate
+  path: {
+    /**
+     * Passkey Id
+     */
+    passkey_id: string
+  }
+  query?: never
+  url: "/login/passkeys/{passkey_id}"
+}
+
+export type LoginRenamePasskeyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginRenamePasskeyError =
+  LoginRenamePasskeyErrors[keyof LoginRenamePasskeyErrors]
+
+export type LoginRenamePasskeyResponses = {
+  /**
+   * Successful Response
+   */
+  200: PasskeyRead
+}
+
+export type LoginRenamePasskeyResponse =
+  LoginRenamePasskeyResponses[keyof LoginRenamePasskeyResponses]
 
 export type LoginReauthenticateData = {
   body: Reauthentication
@@ -687,6 +1003,134 @@ export type LoginCreateUserProfileResponses = {
 
 export type LoginCreateUserProfileResponse =
   LoginCreateUserProfileResponses[keyof LoginCreateUserProfileResponses]
+
+export type LoginUnlinkSocialAccountData = {
+  body?: never
+  path: {
+    /**
+     * Provider
+     */
+    provider: string
+  }
+  query?: never
+  url: "/login/social/{provider}"
+}
+
+export type LoginUnlinkSocialAccountErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginUnlinkSocialAccountError =
+  LoginUnlinkSocialAccountErrors[keyof LoginUnlinkSocialAccountErrors]
+
+export type LoginUnlinkSocialAccountResponses = {
+  /**
+   * Successful Response
+   */
+  200: Msg
+}
+
+export type LoginUnlinkSocialAccountResponse =
+  LoginUnlinkSocialAccountResponses[keyof LoginUnlinkSocialAccountResponses]
+
+export type LoginFastapiMyauthSocialLoginData = {
+  body?: never
+  path: {
+    /**
+     * Provider
+     */
+    provider: string
+  }
+  query?: never
+  url: "/login/social/{provider}"
+}
+
+export type LoginFastapiMyauthSocialLoginErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginFastapiMyauthSocialLoginError =
+  LoginFastapiMyauthSocialLoginErrors[keyof LoginFastapiMyauthSocialLoginErrors]
+
+export type LoginFastapiMyauthSocialLoginResponses = {
+  /**
+   * Successful Response
+   */
+  200: SocialAuthorizationUrl
+}
+
+export type LoginFastapiMyauthSocialLoginResponse =
+  LoginFastapiMyauthSocialLoginResponses[keyof LoginFastapiMyauthSocialLoginResponses]
+
+export type LoginFastapiMyauthSocialCallbackData = {
+  body?: never
+  path: {
+    /**
+     * Provider
+     */
+    provider: string
+  }
+  query?: never
+  url: "/login/social/{provider}/callback"
+}
+
+export type LoginFastapiMyauthSocialCallbackErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginFastapiMyauthSocialCallbackError =
+  LoginFastapiMyauthSocialCallbackErrors[keyof LoginFastapiMyauthSocialCallbackErrors]
+
+export type LoginFastapiMyauthSocialCallbackResponses = {
+  /**
+   * Successful Response
+   */
+  200: string
+}
+
+export type LoginFastapiMyauthSocialCallbackResponse =
+  LoginFastapiMyauthSocialCallbackResponses[keyof LoginFastapiMyauthSocialCallbackResponses]
+
+export type LoginFastapiMyauthSocialLinkData = {
+  body?: never
+  path: {
+    /**
+     * Provider
+     */
+    provider: string
+  }
+  query?: never
+  url: "/login/social/{provider}/link"
+}
+
+export type LoginFastapiMyauthSocialLinkErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type LoginFastapiMyauthSocialLinkError =
+  LoginFastapiMyauthSocialLinkErrors[keyof LoginFastapiMyauthSocialLinkErrors]
+
+export type LoginFastapiMyauthSocialLinkResponses = {
+  /**
+   * Successful Response
+   */
+  200: SocialAuthorizationUrl
+}
+
+export type LoginFastapiMyauthSocialLinkResponse =
+  LoginFastapiMyauthSocialLinkResponses[keyof LoginFastapiMyauthSocialLinkResponses]
 
 export type LoginDisableTotpAuthenticationData = {
   body: CustomUserUpdate

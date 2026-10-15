@@ -10,6 +10,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const route = useRoute()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const redirectRoute = "/login"
 
 const schema = z
@@ -33,21 +34,22 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function submit(event: FormSubmitEvent<Schema>) {
-  await authStore.resetPassword(
+  const success = await authStore.resetPassword(
     event.data.password,
     route.query.token as string,
   )
+  if (!success) return
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(true)
     }, 2000)
   })
-  await navigateTo(redirectRoute)
+  await navigateTo(localePath(redirectRoute))
 }
 
 onMounted(async () => {
   // Check if token exists
-  if (!route.query || !route.query.token) await navigateTo("/")
+  if (!route.query || !route.query.token) await navigateTo(localePath("/"))
 })
 </script>
 
