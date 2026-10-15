@@ -1,8 +1,8 @@
-import { translate as t } from "@/utilities"
+import { pathWithoutLocale, translate as t } from "@/utilities"
 
 export default defineNuxtRouteMiddleware((_to, from) => {
   const authStore = useAuthStore()
-  const routes = ["/login", "/join", "/recover-password", "/reset-password"]
+  const routes = ["/login", "/signup", "/recover-password", "/reset-password"]
   if (!authStore.loggedIn) {
     const toast = useToast()
     toast.add({
@@ -11,7 +11,9 @@ export default defineNuxtRouteMiddleware((_to, from) => {
       icon: "i-heroicons-exclamation-circle",
       color: "error",
     })
-    if (routes.includes(from.path)) return navigateTo("/")
+    const locale = useNuxtApp().$i18n.locale.value
+    if (routes.includes(pathWithoutLocale(from.path, locale)))
+      return navigateTo("/")
     else return abortNavigation()
   }
 })

@@ -132,6 +132,10 @@ cd frontend && bun run test && bun run typecheck && bun run lint
   `it.ts`. Link interni con `useLocalePath()`. Fuori dai componenti usa
   `translate` da `@/utilities`.
 - `app/utilities/` non è auto-importata: `import { … } from "@/utilities"`.
+- Test: per ogni logica nuova (utility, store, composable, middleware, plugin)
+  aggiungi test in `frontend/tests/` con gli helper di `tests/nuxt.ts`
+  (`resetNuxt()`, `mockApi()`); la soglia di copertura è in `bunfig.toml`, non
+  abbassarla per far passare i test (vedi `docs/frontend.md#test`).
 - Contenuti Nuxt Content: mantieni le versioni `en` e `it` allineate e rispetta
   gli schemi in `content.config.ts` / `content/types.ts`.
 - Navigazione: sidebar in `app/layouts/dashboard.vue`, header pubblico in

@@ -32,9 +32,12 @@ export const useTokenStore = defineStore("tokens", {
       return !!state.refresh_token && !tokenExpired(state.refresh_token)
     },
     hasValidToken(): boolean {
+      if (!this.token) return false
+      if (!this.hasActiveAccessToken && !this.hasUsableRefreshToken)
+        return false
+      // TOTP challenges and magic-link claims are not session tokens
       return (
-        (this.hasActiveAccessToken || this.hasUsableRefreshToken) &&
-        !tokenIsTOTP(this.token)
+        !tokenIsTOTP(this.token) && !("fingerprint" in tokenParser(this.token))
       )
     },
   },

@@ -14,7 +14,7 @@ make dev_frontend         # dev server containerizzato
 make dev_frontend_local   # dev server sull'host con ../.env
 make lint_frontend        # ESLint, zero warning ammessi
 make typecheck            # nuxt typecheck (vue-tsc)
-make test_frontend        # bun test ./tests
+make test_frontend        # bun run test (bun test + copertura)
 make format_frontend      # eslint --fix + prettier --write
 make build_frontend       # immagine di produzione
 ```
@@ -118,7 +118,9 @@ definePageMeta({ layout: "dashboard", middleware: ["authenticated"] })
 ## Stato e autenticazione
 
 - `useTokenStore()` conserva access e refresh token (cookie) e gestisce login e
-  rinnovo.
+  rinnovo. `hasValidToken` è vero solo per una sessione: le sfide TOTP e i
+  claim del magic link non contano, quindi `logIn`, `magicLogin` e `totpLogin`
+  caricano il profilo solo dopo l'ultimo passaggio del login.
 - `useAuthStore()` conserva il profilo (cookie, 90 giorni) ed espone
   `loggedIn`, `isAdmin`, `logIn`, `logOut`, `getUserProfile`, `updateUserProfile`…
 - `app.vue` chiama `authStore.getUserProfile()` a ogni caricamento, anche in SSR:
@@ -228,14 +230,48 @@ private (fuori da `public`) sono disponibili solo sul server Nitro. Vedi
 
 ## Test
 
-`frontend/tests/` usa il runner integrato di Bun (`bun:test`):
+`frontend/tests/` usa il runner integrato di Bun (`bun:test`) e copre la logica
+non-UI: utility, transport, store, middleware e plugin. Componenti e pagine non
+sono testati (servirebbero `@nuxt/test-utils` e Vitest).
 
-- `api-client.test.ts` — serializzazione dell'SDK generato e comportamento del
-  transport (retry dopo 401, logout, 403);
-- `auth-tokens.test.js` — logica dei token.
+| File | Contenuto |
+| --- | --- |
+| `setup.ts` | precaricato da `bunfig.toml`: installa i finti auto-import Nuxt e registra gli store |
+| `nuxt.ts` | doppioni di test e helper: `resetNuxt()`, `mockApi()`, `toasts`, `navigations`, `requests`, `jwt()`, `sessionTokens()` |
+| `tsconfig.json` | estende `.nuxt/tsconfig.app.json` per risolvere gli alias `~` e `@` (passato con `--tsconfig-override`) |
+| `api-client.test.ts` | serializzazione dell'SDK generato e transport (retry dopo 401, logout, 403) |
+| `stores/*.test.ts` | `useTokenStore()` e `useAuthStore()`: login, magic link, TOTP, refresh, profilo, recupero password |
+| `middleware.test.ts`, `plugins/api.test.ts` | middleware di rotta e plugin `$api`/`$publicApi` |
+| `utilities.test.ts` | funzioni di `app/utilities/` |
+| `i18n.test.ts` | stesse chiavi in `en.ts` e `it.ts`, nessun testo vuoto, stessi file in `content/en` e `content/it` |
+| `coverage.test.ts` | importa ogni modulo di `api/`, `composables/`, `middleware/`, `plugins/`, `stores/`, `utilities/` |
 
-Testa la logica pura (utility, transport, store) iniettando `fetch` finti, come
-nei test esistenti.
+Nei test gli auto-import (`useNuxtApp`, `useToast`, `navigateTo`, `defineStore`,
+…) sono sostituiti da `tests/nuxt.ts`; `$api` e `$publicApi` sono client
+generati veri con un `fetch` finto che risponde alle rotte registrate con
+`mockApi("METHOD /percorso", corpo | handler)` (404 altrimenti). Chiama
+`resetNuxt()` in `beforeEach` per ripartire con Pinia, mock e registri vuoti.
+Se il codice usa un nuovo auto-import Nuxt, aggiungilo a `installNuxtGlobals()`.
+
+```ts
+import { beforeEach, expect, test } from "bun:test"
+import { mockApi, requests, resetNuxt, sessionTokens } from "../nuxt"
+
+beforeEach(() => resetNuxt())
+
+test("loads the profile", async () => {
+  useTokenStore().setTokens(sessionTokens())
+  mockApi("GET /users/me", { id: "user-1", email: "a@example.com" /* … */ })
+  await useAuthStore().getUserProfile()
+  expect(requests).toHaveLength(1)
+})
+```
+
+La copertura è sempre attiva: `bunfig.toml` impone almeno il 95% di righe e
+funzioni (il codice generato è escluso) e `bun run test` fallisce sotto soglia.
+Bun misura solo i file importati, per questo `coverage.test.ts` carica tutti i
+moduli di logica: un nuovo store, composable o utility senza test abbassa la
+copertura invece di restare invisibile. Aggiungi i test insieme al codice.
 
 ## Container
 

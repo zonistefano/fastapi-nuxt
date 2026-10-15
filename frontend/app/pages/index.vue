@@ -32,7 +32,8 @@ onMounted(async () => {
     })
     if (!authStore.loggedIn)
       await authStore.magicLogin(route.query.magic as string)
-    if (tokenIsTOTP(tokenStore.token)) await navigateTo(redirectTOTP)
+    if (tokenStore.token && tokenIsTOTP(tokenStore.token))
+      await navigateTo(redirectTOTP)
     else await navigateTo(redirectAfterLogin)
   }
 })

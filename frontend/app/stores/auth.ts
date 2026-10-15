@@ -54,7 +54,8 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.getTokens(payload)
-        await nuxtApp.runWithContext(() => this.getUserProfile())
+        if (this.tokenStore.hasValidToken)
+          await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -69,7 +70,8 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.validateMagicTokens(token)
-        await nuxtApp.runWithContext(() => this.getUserProfile())
+        if (this.tokenStore.hasValidToken)
+          await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),
@@ -84,7 +86,8 @@ export const useAuthStore = defineStore("authUser", {
       const toast = useToast()
       try {
         await this.tokenStore.validateTOTPClaim(claim)
-        await nuxtApp.runWithContext(() => this.getUserProfile())
+        if (this.tokenStore.hasValidToken)
+          await nuxtApp.runWithContext(() => this.getUserProfile())
       } catch {
         toast.add({
           title: t("notifications.loginError"),

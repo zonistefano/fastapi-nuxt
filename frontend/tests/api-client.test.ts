@@ -176,6 +176,33 @@ describe("authenticated transport", () => {
     expect(logouts).toBe(1)
   })
 
+  test("sends no token when logged out and passes other errors through", async () => {
+    const calls: string[] = []
+    const transport = createAuthenticatedFetch(
+      {
+        getToken: () => "",
+        refresh: async () => {
+          calls.push("refresh")
+          return false
+        },
+        onUnauthorized: async () => {
+          calls.push("unauthorized")
+        },
+        onForbidden: () => {
+          calls.push("forbidden")
+        },
+      },
+      async (input) => {
+        const request = new Request(input)
+        expect(request.headers.get("Authorization")).toBeNull()
+        expect(request.headers.get("Cache-Control")).toBe("no-cache")
+        return new Response(null, { status: 500 })
+      },
+    )
+    expect((await transport("https://api.example.com/users/")).status).toBe(500)
+    expect(calls).toEqual([])
+  })
+
   test("keeps tokens isolated between client instances and handles forbidden", async () => {
     let forbidden = 0
     const makeTransport = (token: string) =>

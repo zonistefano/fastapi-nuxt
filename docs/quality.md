@@ -42,8 +42,8 @@ I test non usano mai il database di sviluppo né il tuo `.env`.
 
 ## Test frontend
 
-`make test_frontend` esegue `bun test ./tests`. Vedi
-[Frontend → Test](frontend.md#test).
+`make test_frontend` esegue `bun run test` (`bun test` con copertura e soglia
+minima del 95% su righe e funzioni). Vedi [Frontend → Test](frontend.md#test).
 
 ## Stile del codice
 

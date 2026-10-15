@@ -12,6 +12,7 @@ const redirectRoute = "/login"
 
 onMounted(async () => {
   if (
+    !tokenStore.token ||
     !Object.prototype.hasOwnProperty.call(
       tokenParser(tokenStore.token),
       "fingerprint",
