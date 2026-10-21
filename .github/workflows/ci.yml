@@ -13,7 +13,7 @@ jobs:
   tooling:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version-file: .python-version
@@ -23,7 +23,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
         with:
           version-file: .uv-version
@@ -46,7 +46,7 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=4096
       NUXT_TELEMETRY_DISABLED: '1'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
@@ -67,7 +67,7 @@ jobs:
   production-images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version-file: .python-version
